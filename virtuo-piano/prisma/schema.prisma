@@ -48,14 +48,14 @@ model User {
 
 model Key {
   id      String  @id @default(uuid())
-  name    String 
+  name    String  @unique
   notes   Json
   songs   Songs[]
 }
 
 model GameMode {
   id          String    @id @default(uuid())
-  name        String 
+  name        String    @unique
   description String?
   scores      Scores[]
 }
