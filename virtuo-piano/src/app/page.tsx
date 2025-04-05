@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/authoption';
 import Image from 'next/image';
 import prisma from '@/lib/prisma';
 import { User } from '@/common/types';
+import SignOutButton from '@/components/SignOutButton';
 
 async function getUsers(): Promise<User[]> {
   const users = await prisma.user.findMany({
@@ -28,6 +29,9 @@ export default async function Home() {
 
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
+      <div className="w-full flex justify-end">
+        <SignOutButton />
+      </div>
       <main className="flex flex-col gap-[32px] row-start-2 items-center w-full max-w-4xl">
         <h1 className="text-2xl font-bold mb-4">Liste des Utilisateurs</h1>
 
