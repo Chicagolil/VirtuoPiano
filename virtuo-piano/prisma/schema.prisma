@@ -14,13 +14,112 @@ datasource db {
 }
 
 
-model User {
-  id        Int   @id @default(uuid())
-  email     String   @unique
-  password  String
-  userName  String
-  level     Int      @default(1)
-  preferences String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+enum SourceType {
+  library
+  composition
+  import
 }
+
+enum SongType {
+  song
+  scaleEx
+  chordEx
+  rythmEx
+  sightReading
+  arpeggioEx
+  earTraining
+}
+
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  password      String
+  userName      String
+  level         Int       @default(1)
+  preferences   String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  scores        Scores[]
+  compositions  UsersCompositions[]
+  favorites     UsersFavorites[]
+  imports       UsersImports[]
+}
+
+model Key {
+  id      String  @id @default(uuid())
+  name    String  @unique
+  notes   Json
+  songs   Songs[]
+}
+
+model GameMode {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  description String?
+  scores      Scores[]
+}
+
+
+model Songs {
+  id             String    @id @default(uuid())
+  title          String
+  composer       String? 
+  genre          String? 
+  tempo          Int 
+  duration_ms    Int 
+  notes          Json 
+  timeSignature  String
+  SourceType     SourceType 
+  Level          Int 
+  SongType       SongType
+  key_id         String 
+  key            Key       @relation(fields: [key_id], references: [id])
+  scores         Scores[]
+  userCompositions UsersCompositions[]
+  userFavorites  UsersFavorites[]
+  userImports    UsersImports[]
+}
+
+model Scores {
+  id             String    @id @default(uuid())
+  correctNotes   Int?
+  missedNotes    Int?
+  wrongNotes     Int?
+  totalPoints    Int? 
+  maxMultiplier  Int? 
+  maxCombo       Int? 
+  played_at      DateTime  @default(now())
+  user_id        String
+  song_id        String
+  mode_id        String
+  user           User      @relation(fields: [user_id], references: [id])
+  song           Songs     @relation(fields: [song_id], references: [id])
+  mode           GameMode  @relation(fields: [mode_id], references: [id])
+}
+
+model UsersCompositions {
+  user_id        String
+  song_id        String
+  user           User      @relation(fields: [user_id], references: [id])
+  song           Songs     @relation(fields: [song_id], references: [id])
+  @@id([user_id, song_id]) 
+}
+
+model UsersFavorites {
+  user_id        String
+  song_id        String
+  user           User      @relation(fields: [user_id], references: [id])
+  song           Songs     @relation(fields: [song_id], references: [id])
+  @@id([user_id, song_id]) 
+}
+
+model UsersImports {
+  user_id        String
+  song_id        String
+  user           User      @relation(fields: [user_id], references: [id])
+  song           Songs     @relation(fields: [song_id], references: [id])
+  @@id([user_id, song_id]) 
+}
+
+
