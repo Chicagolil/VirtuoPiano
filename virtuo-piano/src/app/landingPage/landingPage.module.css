@@ -7,21 +7,11 @@
   padding: 2rem;
 }
 
-.title {
-  font-size: 2.25rem;
-  font-weight: 700;
-  margin-bottom: 4rem;
-  color: white;
-}
-
 .cardsContainer {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 2rem;
   max-width: 80rem;
-}
-
-.signOutContainer {
-  margin-top: 4rem;
+  z-index: 1;
 }
