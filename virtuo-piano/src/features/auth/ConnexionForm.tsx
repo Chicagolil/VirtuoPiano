@@ -71,40 +71,43 @@ export default function ConnexionForm({
   };
 
   return (
-    <div>
+    <div className="bg-black/30 backdrop-blur-sm p-8 rounded-lg shadow-xl max-w-md mx-auto">
       {isRegistered ? (
         <form onSubmit={handleLogin} className="space-y-4">
+          <h2 className="text-2xl font-bold text-white mb-6 text-center">
+            Connexion
+          </h2>
           <input
             type="email"
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full p-2 border rounded"
+            className="w-full p-3 border border-gray-600 rounded bg-black/50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
           />
           <input
             type="password"
             placeholder="Mot de passe"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-2 border rounded"
+            className="w-full p-3 border border-gray-600 rounded bg-black/50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
           />
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white p-2 rounded"
+            className="w-full bg-orange-600 hover:bg-orange-700 text-white p-3 rounded font-medium transition-colors"
           >
             Se connecter
           </button>
-          {error && <p className="text-red-500 text-sm">{error}</p>}
+          {error && <p className="text-red-400 text-sm">{error}</p>}
         </form>
       ) : (
         <>
           <div>
-            <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            <h2 className="text-2xl font-bold text-white mb-6 text-center">
               Créer un compte
             </h2>
           </div>
-          <form className="mt-8 space-y-6" onSubmit={handleRegister}>
-            <div className="rounded-md shadow-sm -space-y-px">
+          <form className="space-y-6" onSubmit={handleRegister}>
+            <div className="rounded-md shadow-sm space-y-4">
               <div>
                 <label htmlFor="userName" className="sr-only">
                   Nom d'utilisateur
@@ -114,7 +117,7 @@ export default function ConnexionForm({
                   name="userName"
                   type="text"
                   required
-                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                  className="appearance-none relative block w-full px-3 py-3 border border-gray-600 placeholder-gray-400 text-white bg-black/50 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent sm:text-sm"
                   placeholder="Nom d'utilisateur"
                 />
               </div>
@@ -128,7 +131,7 @@ export default function ConnexionForm({
                   type="email"
                   autoComplete="email"
                   required
-                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                  className="appearance-none relative block w-full px-3 py-3 border border-gray-600 placeholder-gray-400 text-white bg-black/50 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent sm:text-sm"
                   placeholder="Adresse email"
                 />
               </div>
@@ -142,21 +145,21 @@ export default function ConnexionForm({
                   type="password"
                   autoComplete="new-password"
                   required
-                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                  className="appearance-none relative block w-full px-3 py-3 border border-gray-600 placeholder-gray-400 text-white bg-black/50 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent sm:text-sm"
                   placeholder="Mot de passe"
                 />
               </div>
             </div>
 
             {error && (
-              <div className="text-red-500 text-sm text-center">{error}</div>
+              <div className="text-red-400 text-sm text-center">{error}</div>
             )}
 
             <div>
               <button
                 type="submit"
                 disabled={loading}
-                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+                className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 transition-colors"
               >
                 {loading ? 'Création en cours...' : 'Créer un compte'}
               </button>

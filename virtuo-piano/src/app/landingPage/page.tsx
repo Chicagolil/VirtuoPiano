@@ -1,17 +1,68 @@
 'use client';
 
 import SignOutButton from '@/components/SignOutButton';
-import prisma from '@/lib/prisma';
-import { User } from '@/common/types';
-import Image from 'next/image';
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import Card from '@/components/utils/Card';
+import { FaBook, FaVideo, FaUsers } from 'react-icons/fa';
+import styles from './landingPage.module.css';
 
+import {
+  Star,
+  Sparkles,
+  Medal,
+  ChartLine,
+  CassetteTape,
+  FileMusic,
+} from 'lucide-react';
+import React from 'react';
+
+import MusicNotes from '@/features/musicNotes/MusicNotes';
 export default function LandingPage() {
   return (
-    <div className="pixel-background">
-      <h1>Hello</h1>
+    <div className={`${styles.container}`}>
+      <MusicNotes />
+
+      <div className={styles.cardsContainer}>
+        <Card
+          text="Librairie"
+          activeColor="#e0f2fe"
+          icon={<FileMusic size={45} />}
+          pixelProps={{
+            colors: ['#e0f2fe', '#7dd3fc', '#0ea5e9', '#fef08a', '#fde047'],
+            gap: 10,
+            speed: 25,
+          }}
+        />
+        <Card
+          text="Classement"
+          activeColor="#e0f2fe"
+          icon={<Medal size={45} />}
+          pixelProps={{
+            colors: ['#e0f2fe', '#7dd3fc', '#0ea5e9', '#fef08a', '#fde047'],
+            gap: 10,
+            speed: 25,
+          }}
+        />
+        <Card
+          text="Performances"
+          activeColor="#e0f2fe"
+          icon={<ChartLine size={45} />}
+          pixelProps={{
+            colors: ['#e0f2fe', '#7dd3fc', '#0ea5e9', '#fef08a', '#fde047'],
+            gap: 10,
+            speed: 25,
+          }}
+        />
+        <Card
+          text="Favoris"
+          activeColor="#e0f2fe"
+          icon={<Star size={45} />}
+          pixelProps={{
+            colors: ['#e0f2fe', '#7dd3fc', '#0ea5e9', '#fef08a', '#fde047'],
+            gap: 10,
+            speed: 25,
+          }}
+        />
+      </div>
     </div>
   );
 }
