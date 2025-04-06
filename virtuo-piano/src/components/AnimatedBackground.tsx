@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 
 interface AnimatedBackgroundProps {
@@ -45,8 +45,36 @@ const AnimatedBackground = ({
 }: AnimatedBackgroundProps) => {
   const backgroundRef = useRef<HTMLDivElement>(null);
   const particlesRef = useRef<HTMLDivElement>(null);
+  const [particlesBackground, setParticlesBackground] = useState<string>('');
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Générer les particules dynamiquement
+  const generateParticles = () => {
+    const particles = [];
+    for (let i = 0; i < particleCount; i++) {
+      const x = Math.random() * 100;
+      const y = Math.random() * 100;
+      const opacity = particleOpacity * (0.8 + Math.random() * 0.4); // Variation d'opacité
+
+      particles.push(
+        `radial-gradient(circle at ${x}% ${y}%, ${particleColor.replace(
+          '0.12',
+          opacity.toString()
+        )} 0%, transparent ${particleSize}%)`
+      );
+    }
+    return particles.join(', ');
+  };
+
+  // Effet pour marquer le composant comme monté (côté client uniquement)
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
+    // Générer les particules une seule fois au montage
+    setParticlesBackground(generateParticles());
+
     if (!backgroundRef.current || !particlesRef.current) return;
 
     // Animation du dégradé de fond
@@ -84,7 +112,7 @@ const AnimatedBackground = ({
             ease: 'power1.inOut',
           },
           index * 0.5
-        ); // Décalage pour créer un effet plus naturel
+        );
       });
 
       // Répéter l'animation
@@ -99,46 +127,56 @@ const AnimatedBackground = ({
       gsap.killTweensOf(backgroundRef.current);
       gsap.killTweensOf(particlesRef.current);
     };
-  }, [gradientSpeed, particleSpeed, particleCount]);
-
-  // Générer les particules dynamiquement
-  const generateParticles = () => {
-    const particles = [];
-    for (let i = 0; i < particleCount; i++) {
-      const x = Math.random() * 100;
-      const y = Math.random() * 100;
-      const opacity = particleOpacity * (0.8 + Math.random() * 0.4); // Variation d'opacité
-
-      particles.push(
-        `radial-gradient(circle at ${x}% ${y}%, ${particleColor.replace(
-          '0.12',
-          opacity.toString()
-        )} 0%, transparent ${particleSize}%)`
-      );
-    }
-    return particles.join(', ');
-  };
+  }, [
+    gradientSpeed,
+    particleSpeed,
+    particleCount,
+    particleColor,
+    particleOpacity,
+    particleSize,
+  ]);
 
   const positionClass = position === 'fixed' ? 'fixed' : 'absolute';
+
+  // Styles de base pour le rendu initial (côté serveur)
+  const baseStyles = {
+    backgroundImage: `linear-gradient(135deg, ${gradientColors.start} 0%, ${gradientColors.middle} 50%, ${gradientColors.end} 100%)`,
+    backgroundSize: '400% 400%',
+  };
+
+  const particlesBaseStyles = {
+    backgroundImage: '',
+    backgroundSize: '300% 300%',
+    pointerEvents: 'none' as const,
+  };
+
+  // Styles pour le rendu côté client
+  const clientStyles = isMounted
+    ? {
+        backgroundImage: `linear-gradient(135deg, ${gradientColors.start} 0%, ${gradientColors.middle} 50%, ${gradientColors.end} 100%)`,
+        backgroundSize: '400% 400%',
+      }
+    : baseStyles;
+
+  const particlesClientStyles = isMounted
+    ? {
+        backgroundImage: particlesBackground,
+        backgroundSize: '300% 300%',
+        pointerEvents: 'none' as const,
+      }
+    : particlesBaseStyles;
 
   return (
     <>
       <div
         ref={backgroundRef}
         className={`${positionClass} inset-0 z-[-2] ${className}`}
-        style={{
-          background: `linear-gradient(135deg, ${gradientColors.start} 0%, ${gradientColors.middle} 50%, ${gradientColors.end} 100%)`,
-          backgroundSize: '400% 400%',
-        }}
+        style={clientStyles}
       />
       <div
         ref={particlesRef}
         className={`${positionClass} inset-0 z-[-1] ${className}`}
-        style={{
-          background: generateParticles(),
-          backgroundSize: '300% 300%',
-          pointerEvents: 'none',
-        }}
+        style={particlesClientStyles}
       />
     </>
   );
