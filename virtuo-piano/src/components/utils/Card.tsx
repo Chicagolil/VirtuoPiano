@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styles from './Card.module.css';
-import PixelCanvas from './PixelCanvas';
+import PixelCanvas from '../effects/PixelCanvas';
 
 interface CardProps {
   color?: string;
