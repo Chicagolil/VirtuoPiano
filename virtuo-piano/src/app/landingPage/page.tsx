@@ -8,6 +8,8 @@ import { BsMusicPlayer } from 'react-icons/bs';
 import { LuKeyboardMusic } from 'react-icons/lu';
 import { Star } from 'lucide-react';
 
+import CardHoverDemo from '@/components/card/CardHoverDemo';
+
 export default function LandingPage() {
   return (
     <div className={`pixel-background ${styles.container}`}>
@@ -18,12 +20,14 @@ export default function LandingPage() {
           text="Librairie"
           icon={<BsMusicPlayer className={styles.icon} />}
         />
+
         <Card text="Leaderboard" icon={<FaBook className={styles.icon} />} />
         <Card
           text="Performances"
           icon={<LuKeyboardMusic className={styles.icon} />}
         />
         <Card text="Favoris" icon={<Star className={styles.icon} />} />
+        <CardHoverDemo />
       </div>
 
       <div className={styles.signOutContainer}>
