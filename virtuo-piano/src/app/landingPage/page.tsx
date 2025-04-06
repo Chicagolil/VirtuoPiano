@@ -1,21 +1,13 @@
 'use client';
 
-import SignOutButton from '@/components/SignOutButton';
 import Card from '@/components/utils/Card';
-import { FaBook, FaVideo, FaUsers } from 'react-icons/fa';
 import styles from './landingPage.module.css';
 
-import {
-  Star,
-  Sparkles,
-  Medal,
-  ChartLine,
-  CassetteTape,
-  FileMusic,
-} from 'lucide-react';
+import { Star, Medal, ChartLine, FileMusic } from 'lucide-react';
 import React from 'react';
 
 import MusicNotes from '@/features/musicNotes/MusicNotes';
+
 export default function LandingPage() {
   return (
     <div className={`${styles.container}`}>

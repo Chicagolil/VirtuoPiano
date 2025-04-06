@@ -110,7 +110,7 @@ export default function ConnexionForm({
             <div className="rounded-md shadow-sm space-y-4">
               <div>
                 <label htmlFor="userName" className="sr-only">
-                  Nom d'utilisateur
+                  Nom Utilisateur
                 </label>
                 <input
                   id="userName"

@@ -64,7 +64,8 @@ const Card: React.FC<CardProps> = ({
       className={styles.card}
       style={{
         backgroundColor: 'transparent',
-        ...(activeColor && ({ '--active-color': activeColor } as any)),
+        ...(activeColor &&
+          ({ '--active-color': activeColor } as { '--active-color': string })),
       }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
