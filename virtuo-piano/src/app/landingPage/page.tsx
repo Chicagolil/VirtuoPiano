@@ -7,6 +7,7 @@ import { Star, Medal, ChartLine, FileMusic } from 'lucide-react';
 import React from 'react';
 
 import MusicNotes from '@/features/musicNotes/MusicNotes';
+import SignOutButton from '@/components/SignOutButton';
 
 export default function LandingPage() {
   return (
@@ -54,6 +55,7 @@ export default function LandingPage() {
             speed: 25,
           }}
         />
+        <SignOutButton />
       </div>
     </div>
   );
