@@ -35,7 +35,10 @@ class Pixel {
     color: string,
     speed: number,
     delay: number,
-    distanceToCenter: number
+    distanceToCenter: number,
+    sizeStep?: number,
+    maxSize?: number,
+    counterStep?: number
   ) {
     this.width = canvas.width;
     this.height = canvas.height;
@@ -43,15 +46,15 @@ class Pixel {
     this.x = x;
     this.y = y;
     this.color = color;
-    this.speed = this.getRandomValue(0.1, 0.9) * speed;
+    this.speed = speed;
     this.size = 0;
-    this.sizeStep = Math.random() * 0.8;
+    this.sizeStep = sizeStep || 0.4;
     this.minSize = 0.5;
     this.maxSizeInteger = 3;
-    this.maxSize = this.getRandomValue(this.minSize, this.maxSizeInteger);
+    this.maxSize = maxSize || 2;
     this.delay = delay;
     this.counter = 0;
-    this.counterStep = Math.random() * 4 + (this.width + this.height) * 0.01;
+    this.counterStep = counterStep || 2;
     this.isIdle = false;
     this.isReverse = false;
     this.isShimmer = false;
@@ -162,10 +165,9 @@ const PixelCanvas = forwardRef<PixelCanvasHandle, PixelCanvasProps>(
     const animationRef = useRef<number | null>(null);
     const [ctx, setCtx] = useState<CanvasRenderingContext2D | null>(null);
     const timeIntervalRef = useRef(1000 / 60);
-    const timePreviousRef = useRef(performance.now());
-    const reducedMotionRef = useRef(
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    );
+    const timePreviousRef = useRef(0);
+    const reducedMotionRef = useRef(false);
+    const [isClient, setIsClient] = useState(false);
 
     // Expose les méthodes au parent via la ref
     useImperativeHandle(ref, () => ({
@@ -205,14 +207,24 @@ const PixelCanvas = forwardRef<PixelCanvasHandle, PixelCanvasProps>(
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
 
+      let colorIndex = 0;
+
       for (let x = 0; x < canvas.width; x += actualGap) {
         for (let y = 0; y < canvas.height; y += actualGap) {
-          const color = colors[Math.floor(Math.random() * colors.length)];
+          const color = colors[colorIndex % colors.length];
+          colorIndex++;
+
           const distanceToCenter = Math.sqrt(
             Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2)
           );
           const delay = reducedMotionRef.current ? 0 : distanceToCenter * 0.5;
           const actualSpeed = Math.max(0, Math.min(100, speed)) * 0.002;
+
+          const sizeStep = isClient ? Math.random() * 0.8 : 0.4;
+          const maxSize = isClient ? Math.random() * (3 - 0.5) + 0.5 : 2;
+          const counterStep = isClient
+            ? Math.random() * 4 + (canvas.width + canvas.height) * 0.01
+            : 2;
 
           const pixel = new Pixel(
             canvas,
@@ -222,15 +234,15 @@ const PixelCanvas = forwardRef<PixelCanvasHandle, PixelCanvasProps>(
             color,
             actualSpeed,
             delay,
-            distanceToCenter
+            distanceToCenter,
+            sizeStep,
+            maxSize,
+            counterStep
           );
           pixel.size = 0.2;
           pixelsRef.current.push(pixel);
         }
       }
-
-      // Ne pas déclencher l'animation appear au chargement initial
-      // handleAnimation('appear');
     };
 
     const animate = (fnName: 'appear' | 'disappear') => {
@@ -289,11 +301,22 @@ const PixelCanvas = forwardRef<PixelCanvasHandle, PixelCanvasProps>(
     };
 
     useEffect(() => {
+      setIsClient(true);
+      timePreviousRef.current = performance.now();
+    }, []);
+
+    useEffect(() => {
       if (!canvasRef.current) return;
 
       const context = canvasRef.current.getContext('2d');
       if (context) {
         setCtx(context);
+      }
+
+      if (typeof window !== 'undefined') {
+        reducedMotionRef.current = window.matchMedia(
+          '(prefers-reduced-motion: reduce)'
+        ).matches;
       }
     }, []);
 
@@ -304,11 +327,6 @@ const PixelCanvas = forwardRef<PixelCanvasHandle, PixelCanvasProps>(
 
       const resizeObserver = new ResizeObserver(handleResize);
       resizeObserver.observe(containerRef.current);
-
-      // Supprimer l'appel d'animation automatique
-      // setTimeout(() => {
-      //   handleAnimation('appear');
-      // }, 100);
 
       return () => {
         if (animationRef.current) {
@@ -357,7 +375,6 @@ const PixelCanvas = forwardRef<PixelCanvasHandle, PixelCanvasProps>(
       };
     }, [noFocus]);
 
-    // Réagir aux changements de isHovered
     useEffect(() => {
       if (isHovered) {
         handleAnimation('appear');

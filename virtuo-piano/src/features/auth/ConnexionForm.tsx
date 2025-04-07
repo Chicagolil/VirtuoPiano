@@ -60,7 +60,7 @@ export default function ConnexionForm({
         throw new Error(data.message || 'Une erreur est survenue');
       }
 
-      router.push('/auth/signin?registered=true');
+      router.push('/auth/login?registered=true');
     } catch (error) {
       setError(
         error instanceof Error ? error.message : 'Une erreur est survenue'
@@ -110,7 +110,7 @@ export default function ConnexionForm({
             <div className="rounded-md shadow-sm space-y-4">
               <div>
                 <label htmlFor="userName" className="sr-only">
-                  Nom d'utilisateur
+                  Nom Utilisateur
                 </label>
                 <input
                   id="userName"

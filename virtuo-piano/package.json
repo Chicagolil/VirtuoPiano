@@ -10,7 +10,8 @@
     "lint": "next lint",
     "seed": "tsx prisma/seed/seed.ts",
     "studio": "prisma studio",
-    "cleanDb": "tsx prisma/scripts/cleanDb.ts"
+    "cleanDb": "tsx prisma/scripts/cleanDb.ts",
+    "vercel-build": "prisma generate && prisma migrate deploy && next build"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.8.0",
