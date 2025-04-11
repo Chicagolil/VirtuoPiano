@@ -6,7 +6,7 @@ import styles from './landingPage.module.css';
 import { Star, Medal, ChartLine, FileMusic } from 'lucide-react';
 import React from 'react';
 
-import MusicNotes from '@/features/musicNotes/MusicNotes';
+import MusicNotes from '@/components/ui/MusicNotes';
 import SignOutButton from '@/components/SignOutButton';
 
 export default function LandingPage() {
