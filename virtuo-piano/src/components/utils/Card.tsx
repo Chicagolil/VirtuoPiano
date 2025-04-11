@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styles from './Card.module.css';
 import PixelCanvas from '../effects/PixelCanvas';
+import { useRouter } from 'next/navigation';
 
 interface CardProps {
   color?: string;
@@ -13,6 +14,7 @@ interface CardProps {
     noFocus?: boolean;
   };
   activeColor?: string;
+  href?: string;
 }
 
 // Définir l'interface pour le handle PixelCanvas
@@ -27,9 +29,11 @@ const Card: React.FC<CardProps> = ({
   icon,
   pixelProps,
   activeColor,
+  href,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const pixelCanvasRef = useRef<PixelCanvasHandle>(null);
+  const router = useRouter();
   const defaultColor = color || 'transparent';
   const pixelColors = pixelProps?.colors || [
     defaultColor !== 'transparent' ? defaultColor : '#ffffff',
@@ -50,6 +54,12 @@ const Card: React.FC<CardProps> = ({
     }
   };
 
+  const handleClick = () => {
+    if (href) {
+      router.push(href);
+    }
+  };
+
   useEffect(() => {
     // Force animation state on isHovered change
     if (isHovered && pixelCanvasRef.current) {
@@ -66,9 +76,11 @@ const Card: React.FC<CardProps> = ({
         backgroundColor: 'transparent',
         ...(activeColor &&
           ({ '--active-color': activeColor } as { '--active-color': string })),
+        cursor: href ? 'pointer' : 'default',
       }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      onClick={handleClick}
     >
       {pixelProps && (
         <div className={styles.pixelCanvas} style={{ zIndex: 0 }}>

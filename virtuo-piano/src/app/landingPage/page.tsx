@@ -19,6 +19,7 @@ export default function LandingPage() {
           text="Librairie"
           activeColor="#e0f2fe"
           icon={<FileMusic size={45} />}
+          href="/library"
           pixelProps={{
             colors: ['#e0f2fe', '#7dd3fc', '#0ea5e9', '#fef08a', '#fde047'],
             gap: 10,
@@ -29,6 +30,7 @@ export default function LandingPage() {
           text="Classement"
           activeColor="#e0f2fe"
           icon={<Medal size={45} />}
+          href="/leaderboard"
           pixelProps={{
             colors: ['#e0f2fe', '#7dd3fc', '#0ea5e9', '#fef08a', '#fde047'],
             gap: 10,
@@ -39,6 +41,7 @@ export default function LandingPage() {
           text="Performances"
           activeColor="#e0f2fe"
           icon={<ChartLine size={45} />}
+          href="/performances"
           pixelProps={{
             colors: ['#e0f2fe', '#7dd3fc', '#0ea5e9', '#fef08a', '#fde047'],
             gap: 10,
@@ -49,6 +52,7 @@ export default function LandingPage() {
           text="Favoris"
           activeColor="#e0f2fe"
           icon={<Star size={45} />}
+          href="/favorites"
           pixelProps={{
             colors: ['#e0f2fe', '#7dd3fc', '#0ea5e9', '#fef08a', '#fde047'],
             gap: 10,
