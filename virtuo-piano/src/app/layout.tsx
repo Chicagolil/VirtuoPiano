@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import AnimatedBackground from '@/components/AnimatedBackground';
+import { AuroraBackground } from '@/components/ui/aurora-background';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -18,10 +19,11 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body className={inter.className}>
-        <div className="relative min-h-screen">
-          <AnimatedBackground position="fixed" />
-          <div className="relative z-10">{children}</div>
-        </div>
+        <AuroraBackground>
+          <div className="relative min-h-screen">
+            <div className="relative z-10">{children}</div>
+          </div>
+        </AuroraBackground>
       </body>
     </html>
   );

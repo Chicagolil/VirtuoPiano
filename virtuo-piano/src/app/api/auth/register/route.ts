@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     });
 
     // Ne pas renvoyer le mot de passe
-    const { password: _, ...userWithoutPassword } = user;
+    const { password: _password, ...userWithoutPassword } = user;
 
     return NextResponse.json(
       { message: 'Utilisateur créé avec succès', user: userWithoutPassword },
