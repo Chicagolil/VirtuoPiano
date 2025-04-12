@@ -1,34 +1,79 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import styles from './Navbar.module.css';
+import LordIcon, { FavoriteHeart } from '../../components/LordIcon';
+
+// Dans votre composant :
 
 export default function Navbar() {
+  const pathname = usePathname();
+
   return (
     <nav className={styles.nav}>
       <div className={styles.container}>
         <div className={styles.logo}>
-          <Link href="/">Logo</Link>
+          <Link href="/">Virtuo Piano</Link>
         </div>
 
         <ul className={styles.menu}>
-          <ul className={styles.menu}>
+          <li className={pathname === '/library' ? styles.active : ''}>
             <Link href="/library">
-              <li className={styles.menuItem}>Librairie</li>
+              <span
+                className={`${styles.menuItem} ${
+                  pathname === '/library' ? styles.active : ''
+                }`}
+              >
+                Librairie
+              </span>
             </Link>
+          </li>
+
+          <li className={pathname === '/favorites' ? styles.active : ''}>
             <Link href="/favorites">
-              <li className={styles.menuItem}>Favoris</li>
+              <span
+                className={`${styles.menuItem} ${
+                  pathname === '/favorites' ? styles.active : ''
+                }`}
+              >
+                Favoris
+              </span>
             </Link>
+          </li>
+          <li className={pathname === '/performances' ? styles.active : ''}>
             <Link href="/performances">
-              <li className={styles.menuItem}>Performances</li>
+              <span
+                className={`${styles.menuItem} ${
+                  pathname === '/performances' ? styles.active : ''
+                }`}
+              >
+                Performances
+              </span>
             </Link>
+          </li>
+          <li className={pathname === '/leaderboard' ? styles.active : ''}>
             <Link href="/leaderboard">
-              <li className={styles.menuItem}>Classement</li>
+              <span
+                className={`${styles.menuItem} ${
+                  pathname === '/leaderboard' ? styles.active : ''
+                }`}
+              >
+                Classement
+              </span>
             </Link>
+          </li>
+          <li className={pathname === '/imports' ? styles.active : ''}>
             <Link href="/imports">
-              <li className={styles.menuItem}>Mes Chansons</li>
+              <span
+                className={`${styles.menuItem} ${
+                  pathname === '/imports' ? styles.active : ''
+                }`}
+              >
+                Mes Chansons
+              </span>
             </Link>
-          </ul>
+          </li>
         </ul>
       </div>
     </nav>
