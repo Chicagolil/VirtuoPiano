@@ -1,20 +1,34 @@
 'use client';
 
+import Link from 'next/link';
 import styles from './Navbar.module.css';
-import { useRouter } from 'next/navigation';
 
 export default function Navbar() {
-  const router = useRouter();
   return (
     <nav className={styles.nav}>
       <div className={styles.container}>
-        <div className={styles.logo} onClick={() => router.push('/')}>
-          Logo
+        <div className={styles.logo}>
+          <Link href="/">Logo</Link>
         </div>
+
         <ul className={styles.menu}>
-          <li className={styles.menuItem}>Accueil</li>
-          <li className={styles.menuItem}>Dashboard</li>
-          <li className={styles.menuItem}>Paramètres</li>
+          <ul className={styles.menu}>
+            <Link href="/library">
+              <li className={styles.menuItem}>Librairie</li>
+            </Link>
+            <Link href="/favorites">
+              <li className={styles.menuItem}>Favoris</li>
+            </Link>
+            <Link href="/performances">
+              <li className={styles.menuItem}>Performances</li>
+            </Link>
+            <Link href="/leaderboard">
+              <li className={styles.menuItem}>Classement</li>
+            </Link>
+            <Link href="/imports">
+              <li className={styles.menuItem}>Mes Chansons</li>
+            </Link>
+          </ul>
         </ul>
       </div>
     </nav>

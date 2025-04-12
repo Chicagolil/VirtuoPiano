@@ -3,7 +3,7 @@
 import Card from '@/components/utils/Card';
 import styles from './landingPage.module.css';
 
-import { Star, Medal, ChartLine, FileMusic } from 'lucide-react';
+import { Star, Medal, ChartLine, FileMusic, FolderUp } from 'lucide-react';
 import React from 'react';
 
 import MusicNotes from '@/components/ui/MusicNotes';
@@ -53,6 +53,17 @@ export default function LandingPage() {
           activeColor="#e0f2fe"
           icon={<Star size={45} />}
           href="/favorites"
+          pixelProps={{
+            colors: ['#e0f2fe', '#7dd3fc', '#0ea5e9', '#fef08a', '#fde047'],
+            gap: 10,
+            speed: 25,
+          }}
+        />
+        <Card
+          text="Mes Chansons"
+          activeColor="#e0f2fe"
+          icon={<FolderUp size={45} />}
+          href="/imports"
           pixelProps={{
             colors: ['#e0f2fe', '#7dd3fc', '#0ea5e9', '#fef08a', '#fde047'],
             gap: 10,
