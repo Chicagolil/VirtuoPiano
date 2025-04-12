@@ -1,0 +1,41 @@
+.signOutButton {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  display: flex;
+  align-items: center;
+  background-color: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 50px;
+  padding: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  width: 48px;
+  height: 48px;
+}
+
+.signOutButton:hover {
+  width: 190px;
+}
+
+.icon {
+  font-size: 28px;
+  min-width: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.text {
+  margin-left: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  font-size: 16px;
+}
+
+.signOutButton:hover .text {
+  opacity: 1;
+}

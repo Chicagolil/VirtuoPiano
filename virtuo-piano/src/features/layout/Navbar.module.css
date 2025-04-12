@@ -39,6 +39,8 @@
   font-weight: 600;
   cursor: pointer;
   transition: color 0.3s ease;
+  padding-bottom: 2rem;
+  padding-top: 0.5rem;
 }
 
 .logo:hover {
@@ -74,7 +76,7 @@
 
 .menuItem {
   display: block;
-  padding: 0.75rem;
+  padding: 0.6rem;
   cursor: pointer;
   transition: all 0.3s ease;
   border-radius: 0.5rem;
@@ -113,4 +115,10 @@
 .menuItem:hover::before,
 .menuItem.active::before {
   opacity: 1;
+}
+
+.menuItemWithIcon {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
