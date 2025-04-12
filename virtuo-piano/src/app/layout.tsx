@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'Virtuo Piano',
-  description: "Application d'apprentissage du piano",
+  description: "Application XR d'apprentissage du piano",
 };
 
 export default function RootLayout({
