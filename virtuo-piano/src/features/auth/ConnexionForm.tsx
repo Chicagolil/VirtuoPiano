@@ -108,7 +108,7 @@ export default function ConnexionForm({
             {loading ? (
               <div className="flex items-center justify-center gap-2">
                 <Spinner
-                  variant="infinite"
+                  variant="bars"
                   size={20}
                   className="text-orange-300 [animation-duration:1.2s]"
                 />
