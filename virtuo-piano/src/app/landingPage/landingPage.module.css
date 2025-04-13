@@ -21,3 +21,22 @@
   min-height: min-content;
   margin: auto;
 }
+
+@media (max-width: 768px) {
+  .container {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-top: 55rem;
+    padding-bottom: 105rem;
+    overflow-y: auto;
+    position: relative;
+  }
+
+  .cardsContainer {
+    gap: 1rem;
+    padding: 1rem 0;
+  }
+}
