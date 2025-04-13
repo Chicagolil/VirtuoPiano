@@ -1,5 +1,7 @@
+'use client';
+
 import Header from '@/features/layout/Header';
-import Navbar from '@/features/layout/Navbar';
+import NavbarContainer from '@/features/layout/NavbarContainer';
 import Footer from '@/features/layout/Footer';
 import styles from './layout.module.css';
 
@@ -10,10 +12,7 @@ export default function DashboardLayout({
 }) {
   return (
     <div className={styles.container}>
-      <div className={styles.navbar}>
-        <Navbar />
-      </div>
-
+      <NavbarContainer />
       <div className={styles.mainContent}>
         <header className={styles.header}>
           <Header />

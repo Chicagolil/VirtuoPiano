@@ -16,6 +16,7 @@ export default function Navbar() {
   const libraryIconRef = useRef<LottieIconHandle>(null);
   const leaderboardIconRef = useRef<LottieIconHandle>(null);
   const iconSize = Size.M;
+
   return (
     <nav className={styles.nav}>
       <div className={styles.container}>
