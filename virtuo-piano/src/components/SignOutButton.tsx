@@ -2,9 +2,15 @@
 
 import { signOut } from 'next-auth/react';
 import styles from './SignOutButton.module.css';
-import LottieIcon, { LottieIconHandle } from './ui/LottieIcon';
+import { LottieIconHandle } from './ui/LottieIcon';
 import { Size } from '@/common/constants/Size';
 import { useRef } from 'react';
+import dynamic from 'next/dynamic';
+
+const LottieIcon = dynamic(() => import('@/components/ui/LottieIcon'), {
+  ssr: false,
+});
+
 export default function SignOutButton() {
   const iconSize = Size.S;
   const signOutIconRef = useRef<LottieIconHandle>(null);

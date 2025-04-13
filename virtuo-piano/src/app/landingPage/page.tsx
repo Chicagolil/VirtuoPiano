@@ -8,6 +8,11 @@ import React from 'react';
 
 import MusicNotes from '@/components/ui/MusicNotes';
 import SignOutButton from '@/components/SignOutButton';
+import dynamic from 'next/dynamic';
+
+const LottieIcon = dynamic(() => import('@/components/ui/LottieIcon'), {
+  ssr: false,
+});
 
 export default function LandingPage() {
   return (
