@@ -19,7 +19,7 @@ export default function SignOutButton() {
       <span className={styles.icon}>
         <LottieIcon
           ref={signOutIconRef}
-          src="/icons/logout.json"
+          src="/icons/logOut.json"
           loop={true}
           autoplay={false}
           width={iconSize}
