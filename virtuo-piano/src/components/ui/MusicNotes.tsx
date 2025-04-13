@@ -20,9 +20,9 @@ export default function MusicNotes() {
             left,
             animationDelay: delay,
             animationDuration: duration,
-          }}
+          }}  
         >
-          {symbol}
+         {symbol}
         </div>
       );
     });

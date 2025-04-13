@@ -1,4 +1,7 @@
+'use client';
+
 import React, { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import styles from './Card.module.css';
 import PixelCanvas from '../effects/PixelCanvas';
 
@@ -13,59 +16,58 @@ interface CardProps {
     noFocus?: boolean;
   };
   activeColor?: string;
+  href?: string;
 }
 
-// Définir l'interface pour le handle PixelCanvas
 interface PixelCanvasHandle {
   handleAppear: () => void;
   handleDisappear: () => void;
 }
 
-const Card: React.FC<CardProps> = ({
+export default function Card({
   color,
   text,
   icon,
   pixelProps,
   activeColor,
-}) => {
+  href,
+}: CardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const pixelCanvasRef = useRef<PixelCanvasHandle>(null);
+
   const defaultColor = color || 'transparent';
   const pixelColors = pixelProps?.colors || [
     defaultColor !== 'transparent' ? defaultColor : '#ffffff',
   ];
 
-  // Fonction pour gérer le hover
   const handleMouseEnter = () => {
     setIsHovered(true);
-    if (pixelCanvasRef.current) {
-      pixelCanvasRef.current.handleAppear();
-    }
+    pixelCanvasRef.current?.handleAppear();
   };
 
   const handleMouseLeave = () => {
     setIsHovered(false);
-    if (pixelCanvasRef.current) {
-      pixelCanvasRef.current.handleDisappear();
-    }
+    pixelCanvasRef.current?.handleDisappear();
   };
 
   useEffect(() => {
-    // Force animation state on isHovered change
-    if (isHovered && pixelCanvasRef.current) {
-      pixelCanvasRef.current.handleAppear();
-    } else if (!isHovered && pixelCanvasRef.current) {
-      pixelCanvasRef.current.handleDisappear();
+    if (isHovered) {
+      pixelCanvasRef.current?.handleAppear();
+    } else {
+      pixelCanvasRef.current?.handleDisappear();
     }
   }, [isHovered]);
 
-  return (
+  const CardContent = (
     <div
       className={styles.card}
       style={{
         backgroundColor: 'transparent',
         ...(activeColor &&
-          ({ '--active-color': activeColor } as { '--active-color': string })),
+          ({
+            '--active-color': activeColor,
+          } as React.CSSProperties)),
+        cursor: href ? 'pointer' : 'default',
       }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
@@ -91,6 +93,13 @@ const Card: React.FC<CardProps> = ({
       </p>
     </div>
   );
-};
 
-export default Card;
+  // 👉 Si href existe, on wrappe dans <Link>, sinon on retourne juste la card
+  return href ? (
+    <Link href={href} className={styles.cardWrapper}>
+      {CardContent}
+    </Link>
+  ) : (
+    <div className={styles.cardWrapper}>{CardContent}</div>
+  );
+}

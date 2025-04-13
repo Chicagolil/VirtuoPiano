@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { TextShimmer } from '@/components/ui/text-shimmer';
+import { Spinner } from '@/components/ui/spinner';
 
 export default function ConnexionForm({
   isRegistered,
@@ -18,6 +19,8 @@ export default function ConnexionForm({
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
+    setError('');
 
     const res = await signIn('credentials', {
       email,
@@ -30,6 +33,7 @@ export default function ConnexionForm({
     } else {
       router.push('/');
     }
+    setLoading(false);
   };
 
   const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -93,9 +97,30 @@ export default function ConnexionForm({
           />
           <button
             type="submit"
-            className="w-full bg-orange-600 hover:bg-orange-700 text-white p-3 rounded font-medium transition-colors"
+            disabled={loading}
+            className={`w-full p-3 rounded font-medium transition-colors ${
+              loading
+                ? 'bg-orange-700 cursor-not-allowed'
+                : 'bg-orange-600 hover:bg-orange-700'
+            } text-white`}
           >
-            Se connecter
+            {loading ? (
+              <div className="flex items-center justify-center gap-2">
+                <Spinner
+                  variant="bars"
+                  size={20}
+                  className="text-orange-300 [animation-duration:1.2s]"
+                />
+                <TextShimmer
+                  duration={0.75}
+                  className="font-medium [--base-color:theme(colors.orange.500)] [--base-gradient-color:theme(colors.orange.300)] dark:[--base-color:theme(colors.orange.600)] dark:[--base-gradient-color:theme(colors.orange.400)]"
+                >
+                  Connexion en cours...
+                </TextShimmer>
+              </div>
+            ) : (
+              'Se connecter'
+            )}
           </button>
           {error && <p className="text-red-400 text-sm">{error}</p>}
         </form>

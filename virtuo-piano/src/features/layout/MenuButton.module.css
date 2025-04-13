@@ -1,0 +1,28 @@
+.menuButton {
+  display: none;
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  background: transparent;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  cursor: pointer;
+  color: white;
+  z-index: 1000;
+  transition: all 0.3s ease-in-out;
+}
+
+.menuButton:hover {
+  opacity: 0.7;
+}
+
+.menuButton.open {
+  left: 13rem;
+}
+
+@media (max-width: 768px) {
+  .menuButton {
+    display: block;
+  }
+}

@@ -1,0 +1,23 @@
+.navbar {
+  width: 16rem;
+  height: 100%;
+  position: fixed;
+  left: 0;
+  top: 0;
+  transition: transform 0.3s ease-in-out;
+  z-index: 999;
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    transform: translateX(-100%);
+  }
+
+  .navbar.open {
+    transform: translateX(0);
+  }
+
+  .navbar.open ~ :global(.menuButton) {
+    left: 13rem;
+  }
+}
