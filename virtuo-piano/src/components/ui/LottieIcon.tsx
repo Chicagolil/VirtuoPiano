@@ -11,7 +11,7 @@ export interface LottieIconHandle {
 }
 
 interface LottieIconProps {
-  src: string;
+  src: string | any;
   width?: number;
   height?: number;
   loop?: boolean;
@@ -25,32 +25,63 @@ const LottieIcon = forwardRef<LottieIconHandle, LottieIconProps>(
 
     useImperativeHandle(ref, () => ({
       play: () => {
-        animationRef.current?.setDirection(1);
-        animationRef.current?.play();
+        try {
+          animationRef.current?.setDirection(1);
+          animationRef.current?.play();
+        } catch (error) {
+          console.error('Error playing Lottie animation:', error);
+        }
       },
       playReverse: () => {
-        animationRef.current?.setDirection(-1);
-        animationRef.current?.play();
+        try {
+          animationRef.current?.setDirection(-1);
+          animationRef.current?.play();
+        } catch (error) {
+          console.error('Error playing reverse Lottie animation:', error);
+        }
       },
-      replay: () => animationRef.current?.goToAndPlay(0, true),
-
-      stop: () => animationRef.current?.stop(),
+      replay: () => {
+        try {
+          animationRef.current?.goToAndPlay(0, true);
+        } catch (error) {
+          console.error('Error replaying Lottie animation:', error);
+        }
+      },
+      stop: () => {
+        try {
+          animationRef.current?.stop();
+        } catch (error) {
+          console.error('Error stopping Lottie animation:', error);
+        }
+      },
     }));
 
     useEffect(() => {
       if (containerRef.current) {
-        animationRef.current = lottie.loadAnimation({
-          container: containerRef.current,
-          renderer: 'svg',
-          loop,
-          autoplay,
-          path: src,
-        });
-      }
+        try {
+          animationRef.current = lottie.loadAnimation({
+            container: containerRef.current,
+            renderer: 'svg',
+            loop,
+            autoplay,
+            path: src,
+          });
 
-      return () => {
-        animationRef.current?.destroy();
-      };
+          animationRef.current.addEventListener('error', (error: any) => {
+            console.error('Lottie animation error:', error);
+          });
+
+          return () => {
+            try {
+              animationRef.current?.destroy();
+            } catch (error) {
+              console.error('Error destroying Lottie animation:', error);
+            }
+          };
+        } catch (error) {
+          console.error('Error loading Lottie animation:', error);
+        }
+      }
     }, [src, loop, autoplay]);
 
     return <div ref={containerRef} style={{ width, height }} />;
