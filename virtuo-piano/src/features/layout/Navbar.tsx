@@ -3,10 +3,16 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import styles from './Navbar.module.css';
-import LottieIcon, { LottieIconHandle } from '@/components/ui/LottieIcon';
+import { LottieIconHandle } from '@/components/ui/LottieIcon';
 import { useRef } from 'react';
 import SignOutButton from '@/components/SignOutButton';
 import { Size } from '@/common/constants/Size';
+
+import dynamic from 'next/dynamic';
+
+const LottieIcon = dynamic(() => import('@/components/ui/LottieIcon'), {
+  ssr: false,
+});
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -37,7 +43,7 @@ export default function Navbar() {
               >
                 <LottieIcon
                   ref={libraryIconRef}
-                  src="/icons/library.json"
+                  src="/icons/Library.json"
                   loop={false}
                   autoplay={false}
                   width={iconSize}
@@ -106,7 +112,7 @@ export default function Navbar() {
               >
                 <LottieIcon
                   ref={leaderboardIconRef}
-                  src="/icons/leaderboard2.json"
+                  src="/icons/leaderBoard2.json"
                   loop={false}
                   autoplay={false}
                   width={iconSize}
