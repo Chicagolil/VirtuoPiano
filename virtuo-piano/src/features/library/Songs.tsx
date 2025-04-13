@@ -1,6 +1,7 @@
 'use client';
 
 import type { Songs } from '@prisma/client';
+import BentoGrid from '../BentoGrid/grid';
 
 interface SongsProps {
   songs: Songs[];
@@ -14,6 +15,7 @@ export default function Songs({ songs }: SongsProps) {
           <li key={song.id}>{song.title}</li>
         ))}
       </ul>
+      <BentoGrid />
     </div>
   );
 }
