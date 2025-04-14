@@ -15,7 +15,7 @@ const gridItems = [
 
 export default function BentoGrid() {
   return (
-    <div className="grid grid-cols-6 auto-rows-[190px] gap-8 p-6 max-w-6xl mx-auto">
+    <div className="grid grid-cols-6 auto-rows-[100px] gap-8 p-6 max-w-6xl mx-auto">
       {gridItems.map((item) => (
         <div
           key={item.id}

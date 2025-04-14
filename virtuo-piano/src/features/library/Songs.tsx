@@ -16,6 +16,10 @@ export default function Songs({ songs }: SongsProps) {
         ))}
       </ul>
       <BentoGrid />
+
+      <BentoGrid />
+
+      <BentoGrid />
     </div>
   );
 }
