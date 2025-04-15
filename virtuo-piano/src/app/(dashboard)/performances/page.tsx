@@ -1,3 +1,9 @@
+import { PerformanceBento } from '@/features/BentoGrid/PerformanceBento';
+
 export default function PerformancesPage() {
-  return <div>Performances</div>;
+  return (
+    <div>
+      <PerformanceBento />
+    </div>
+  );
 }
