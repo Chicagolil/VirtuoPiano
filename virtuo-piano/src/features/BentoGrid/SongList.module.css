@@ -1,0 +1,476 @@
+.container {
+  background-color: white;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  border-radius: 1rem;
+  overflow: hidden;
+  border: 1px solid rgb(226 232 240);
+}
+
+.containerDark {
+  background-color: rgb(30 41 59);
+  border-color: rgb(51 65 85);
+}
+
+.content {
+  padding: 1.25rem;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: rgb(15 23 42);
+  margin-bottom: 1rem;
+}
+
+.titleDark {
+  color: white;
+}
+
+.searchContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .searchContainer {
+    flex-direction: row;
+  }
+}
+
+.searchWrapper {
+  position: relative;
+  flex-grow: 1;
+}
+
+.searchIcon {
+  position: absolute;
+  top: 50%;
+  left: 0.75rem;
+  transform: translateY(-50%);
+  color: rgb(148 163 184);
+}
+
+.searchInput {
+  width: 100%;
+  padding: 0.5rem 1rem 0.5rem 2.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgb(226 232 240);
+  background-color: white;
+  color: rgb(15 23 42);
+}
+
+.searchInput:focus {
+  outline: none;
+  ring: 2px;
+  ring-color: rgb(99 102 241);
+}
+
+.searchInputDark {
+  background-color: rgb(51 65 85);
+  border-color: rgb(71 85 105);
+  color: white;
+}
+
+.searchInputDark:focus {
+  ring-color: rgb(129 140 248);
+}
+
+.filtersContainer {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.filterButton {
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgb(226 232 240);
+  background-color: white;
+  color: rgb(51 65 85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+
+.filterButton:hover {
+  background-color: rgb(248 250 252);
+}
+
+.filterButtonDark {
+  background-color: rgb(51 65 85);
+  border-color: rgb(71 85 105);
+  color: rgb(203 213 225);
+}
+
+.filterButtonDark:hover {
+  background-color: rgb(71 85 105);
+}
+
+.filterMenu {
+  position: absolute;
+  right: 0;
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  border: 1px solid rgb(226 232 240);
+  z-index: 10;
+  padding: 0.5rem;
+  min-width: 160px;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.filterMenuTop {
+  bottom: 100%;
+  margin-bottom: 0.5rem;
+}
+
+.filterMenuBottom {
+  top: 100%;
+  margin-top: 0.5rem;
+}
+
+.filterMenuDark {
+  background-color: rgb(30 41 59);
+  border-color: rgb(51 65 85);
+}
+
+.filterOption {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 1rem;
+  text-align: left;
+  font-size: 0.875rem;
+  border-radius: 0.5rem;
+  transition: background-color 0.2s;
+}
+
+.filterOption:hover {
+  background-color: rgb(248 250 252);
+}
+
+.filterOptionActive {
+  background-color: rgb(224 231 255);
+  color: rgb(67 56 202);
+}
+
+.filterOptionDark {
+  color: rgb(203 213 225);
+}
+
+.filterOptionDark:hover {
+  background-color: rgb(51 65 85);
+}
+
+.filterOptionActiveDark {
+  background-color: rgb(30 27 75);
+  color: rgb(165 180 252);
+}
+
+.activeFilters {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.activeFilter {
+  display: flex;
+  align-items: center;
+  background-color: rgb(224 231 255);
+  color: rgb(67 56 202);
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+}
+
+.activeFilterDark {
+  background-color: rgb(30 27 75);
+  color: rgb(165 180 252);
+}
+
+.removeFilter {
+  margin-left: 0.5rem;
+  color: rgb(99 102 241);
+}
+
+.removeFilter:hover {
+  color: rgb(79 70 229);
+}
+
+.removeFilterDark {
+  color: rgb(129 140 248);
+}
+
+.removeFilterDark:hover {
+  color: rgb(165 180 252);
+}
+
+.songCount {
+  font-size: 0.875rem;
+  color: rgb(100 116 139);
+}
+
+.songCountDark {
+  color: rgb(148 163 184);
+}
+
+.tableContainer {
+  overflow-x: auto;
+  margin: 0 -1.25rem;
+}
+
+.table {
+  min-width: 100%;
+}
+
+.tableHeader {
+  background-color: rgb(248 250 252);
+}
+
+.tableHeaderDark {
+  background-color: rgba(51 65 85, 0.5);
+}
+
+.tableHeaderCell {
+  padding: 0.75rem 1.5rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgb(100 116 139);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.tableHeaderCellDark {
+  color: rgb(148 163 184);
+}
+
+.sortButton {
+  display: flex;
+  align-items: center;
+  text-align: left;
+  font-weight: 500;
+  color: rgb(71 85 105);
+  transition: color 0.2s;
+}
+
+.sortButton:hover {
+  color: rgb(99 102 241);
+}
+
+.sortButtonDark {
+  color: rgb(203 213 225);
+}
+
+.sortButtonDark:hover {
+  color: rgb(129 140 248);
+}
+
+.tableBody {
+  background-color: white;
+}
+
+.tableBodyDark {
+  background-color: rgb(30 41 59);
+}
+
+.tableRow {
+  transition: background-color 0.2s;
+}
+
+.tableRow:hover {
+  background-color: rgb(248 250 252);
+}
+
+.tableRowDark:hover {
+  background-color: rgba(51 65 85, 0.5);
+}
+
+.tableCell {
+  padding: 1rem 1.5rem;
+  white-space: nowrap;
+}
+
+.favoriteButton {
+  color: rgb(148 163 184);
+}
+
+.favoriteButton:hover {
+  color: rgb(245 158 11);
+}
+
+.favoriteButtonActive {
+  color: rgb(245 158 11);
+}
+
+.songInfo {
+  display: flex;
+  align-items: center;
+}
+
+.songIcon {
+  height: 2.5rem;
+  width: 2.5rem;
+  flex-shrink: 0;
+  border-radius: 0.25rem;
+  background-color: rgb(224 231 255);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.75rem;
+}
+
+.songIconDark {
+  background-color: rgba(30 27 75, 0.3);
+}
+
+.songIconText {
+  color: rgb(67 56 202);
+}
+
+.songIconTextDark {
+  color: rgb(165 180 252);
+}
+
+.songDetails {
+  display: flex;
+  flex-direction: column;
+}
+
+.songTitle {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgb(15 23 42);
+}
+
+.songTitleDark {
+  color: white;
+}
+
+.songComposer {
+  font-size: 0.75rem;
+  color: rgb(100 116 139);
+}
+
+.songComposerDark {
+  color: rgb(148 163 184);
+}
+
+.songLastPlayed {
+  font-size: 0.75rem;
+  color: rgb(148 163 184);
+  margin-top: 0.25rem;
+}
+
+.songLastPlayedDark {
+  color: rgb(100 116 139);
+}
+
+.durationContainer {
+  display: flex;
+  align-items: center;
+  font-size: 0.875rem;
+  color: rgb(51 65 85);
+}
+
+.durationContainerDark {
+  color: rgb(203 213 225);
+}
+
+.durationIcon {
+  margin-right: 0.25rem;
+  color: rgb(148 163 184);
+}
+
+.playButton {
+  padding: 0.5rem;
+  border-radius: 9999px;
+  background-color: rgb(224 231 255);
+  color: rgb(67 56 202);
+  transition: background-color 0.2s;
+}
+
+.playButton:hover {
+  background-color: rgb(199 210 254);
+}
+
+.playButtonDark {
+  background-color: rgba(30 27 75, 0.3);
+  color: rgb(165 180 252);
+}
+
+.playButtonDark:hover {
+  background-color: rgba(30 27 75, 0.5);
+}
+
+.emptyState {
+  padding: 3rem 0;
+  text-align: center;
+}
+
+.emptyIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 4rem;
+  height: 4rem;
+  border-radius: 9999px;
+  background-color: rgb(248 250 252);
+  margin-bottom: 1rem;
+}
+
+.emptyIconDark {
+  background-color: rgb(51 65 85);
+}
+
+.emptyIconText {
+  color: rgb(148 163 184);
+}
+
+.emptyIconTextDark {
+  color: rgb(100 116 139);
+}
+
+.emptyTitle {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: rgb(15 23 42);
+  margin-bottom: 0.5rem;
+}
+
+.emptyTitleDark {
+  color: white;
+}
+
+.emptyDescription {
+  color: rgb(100 116 139);
+  max-width: 28rem;
+  margin: 0 auto;
+}
+
+.emptyDescriptionDark {
+  color: rgb(148 163 184);
+}
+
+.resetButton {
+  margin-top: 1rem;
+  background-color: rgb(99 102 241);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.resetButton:hover {
+  background-color: rgb(79 70 229);
+}
+
+@media (max-width: 768px) {
+  .hideOnMobile {
+    display: none;
+  }
+}

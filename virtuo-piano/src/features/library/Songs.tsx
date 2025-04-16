@@ -7,5 +7,5 @@ interface SongsProps {
   songs: Songs[];
 }
 export default function Songs({ songs }: SongsProps) {
-  return <SongsList />;
+  return;
 }

@@ -1,0 +1,26 @@
+.difficultyBadge {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-weight: 500;
+}
+
+.difficultyBeginner {
+  background-color: rgb(220 252 231);
+  color: rgb(21 128 61);
+}
+
+.difficultyIntermediate {
+  background-color: rgb(219 234 254);
+  color: rgb(29 78 216);
+}
+
+.difficultyAdvanced {
+  background-color: rgb(254 243 199);
+  color: rgb(161 98 7);
+}
+
+.difficultyExpert {
+  background-color: rgb(254 226 226);
+  color: rgb(185 28 28);
+}

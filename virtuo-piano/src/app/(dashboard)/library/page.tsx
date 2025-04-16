@@ -8,27 +8,23 @@ import FavoritesBento from '@/features/BentoGrid/FavoritesBento';
 import LeaderboardBento from '@/features/BentoGrid/LeaderboardBento';
 
 export default async function LibraryPage() {
+  const songs = await getSongs();
   return (
     <div>
       <Suspense
         fallback={
           <div className="flex justify-center items-center h-64">
-            <Spinner variant="bars" size={32} className="text-white" />
+            <div className="flex flex-col items-center">
+              <p className="text-white">Chargement des chansons...</p>
+              <Spinner variant="bars" size={32} className="text-white" />
+            </div>
           </div>
         }
       >
-        <SongsLoader />
-
+        <SongsList songs={songs} />
+        <Songs />;
         <BentoShadcnExample />
-        <FavoritesBento />
-        <LeaderboardBento />
       </Suspense>
     </div>
   );
-}
-
-// Ce composant n'est plus utilisé car nous affichons directement SongsList
-async function SongsLoader() {
-  const songs = await getSongs();
-  return <Songs songs={songs} />;
 }

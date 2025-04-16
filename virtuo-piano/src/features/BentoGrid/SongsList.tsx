@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   IconMusic,
   IconHeart,
@@ -12,8 +12,12 @@ import {
   IconAdjustments,
   IconStar,
 } from '@tabler/icons-react';
-import * as Progress from '@radix-ui/react-progress';
 
+import type { Songs } from '@prisma/client';
+
+import styles from './SongList.module.css';
+import ProgressBar from '@/components/ProgressBar';
+import DifficultyBadge from '@/components/DifficultyBadge';
 // Types pour les chansons
 interface Song {
   id: string;
@@ -30,7 +34,7 @@ interface Song {
 
 // Props pour le composant
 interface SongsListProps {
-  className?: string;
+  songs: Songs[];
 }
 
 // Données de démo
@@ -44,7 +48,6 @@ const demoSongs: Song[] = [
     category: 'Classique',
     isFavorite: true,
     progress: 85,
-    imageUrl: '/images/songs/nocturne.jpg',
     lastPlayed: "Aujourd'hui",
   },
   {
@@ -125,54 +128,63 @@ const demoSongs: Song[] = [
 ];
 
 // Composant pour les badges de difficulté
-function DifficultyBadge({ difficulty }: { difficulty: Song['difficulty'] }) {
-  const colorMap = {
-    Débutant:
-      'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
-    Intermédiaire:
-      'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-    Avancé:
-      'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
-    Expert: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
-  };
 
-  return (
-    <span
-      className={`text-xs px-2 py-1 rounded-full font-medium ${colorMap[difficulty]}`}
-    >
-      {difficulty}
-    </span>
-  );
-}
-
-// Composant de barre de progression
-function ProgressBar({ value }: { value: number }) {
-  return (
-    <Progress.Root
-      className="relative overflow-hidden bg-slate-200 dark:bg-slate-700 rounded-full w-full h-2"
-      value={value}
-    >
-      <Progress.Indicator
-        className={`h-full transition-transform duration-500 ease-in-out rounded-full ${
-          value === 100
-            ? 'bg-emerald-500'
-            : value > 50
-            ? 'bg-blue-500'
-            : 'bg-indigo-500'
-        }`}
-        style={{ transform: `translateX(-${100 - value}%)` }}
-      />
-    </Progress.Root>
-  );
-}
-
-export function SongsList({ className }: SongsListProps) {
+export function SongsList({ songs }: SongsListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [sortBy, setSortBy] = useState<
     'title' | 'composer' | 'duration' | 'difficulty'
   >('title');
+  const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
+
+  const filterMenuRef = useRef<HTMLDivElement>(null);
+
+  const [filterMenuPosition, setFilterMenuPosition] = useState<
+    'top' | 'bottom'
+  >('bottom');
+
+  // Fonction pour calculer la position du menu
+  const calculateMenuPosition = (
+    buttonRef: React.RefObject<HTMLDivElement | null>,
+    setPosition: (position: 'top' | 'bottom') => void
+  ) => {
+    if (buttonRef.current) {
+      const buttonRect = buttonRef.current.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+      const spaceBelow = windowHeight - buttonRect.bottom;
+      const spaceAbove = buttonRect.top;
+      const menuHeight = 150;
+
+      setPosition(
+        spaceBelow < menuHeight && spaceAbove > spaceBelow ? 'top' : 'bottom'
+      );
+    }
+  };
+
+  // Mise à jour des positions lors de l'ouverture des menus
+  useEffect(() => {
+    if (isFilterMenuOpen) {
+      calculateMenuPosition(filterMenuRef, setFilterMenuPosition);
+    }
+  }, [isFilterMenuOpen]);
+
+  // Gestion du clic en dehors des menus
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        filterMenuRef.current &&
+        !filterMenuRef.current.contains(event.target as Node)
+      ) {
+        setIsFilterMenuOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // Filtrer et trier les chansons
   const filteredSongs = demoSongs
@@ -247,154 +259,150 @@ export function SongsList({ className }: SongsListProps) {
     }
   };
 
-  // Rendu des entêtes de colonnes avec indicateurs de tri
-  const renderSortableHeader = (column: typeof sortBy, label: string) => (
-    <button
-      className="flex items-center text-left font-medium text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-      onClick={() => handleSort(column)}
-    >
-      {label}
-      {sortBy === column && (
-        <span className="ml-1">{sortOrder === 'asc' ? '↑' : '↓'}</span>
-      )}
-    </button>
-  );
-
   return (
-    <div
-      className={`bg-white dark:bg-slate-800 shadow-md rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 ${className}`}
-    >
-      <div className="p-5">
-        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
-          Bibliothèque de chansons
-        </h2>
+    <div className={`${styles.container} `}>
+      <div className={styles.content}>
+        <h2 className={styles.title}>Bibliothèque de chansons</h2>
 
         {/* Barre de recherche et filtres */}
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <div className="relative flex-grow">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <IconSearch size={18} className="text-slate-400" />
+        <div className={styles.searchContainer}>
+          <div className={styles.searchWrapper}>
+            <div className={styles.searchIcon}>
+              <IconSearch size={18} />
             </div>
             <input
               type="text"
               placeholder="Rechercher par titre ou compositeur..."
-              className="pl-10 pr-4 py-2 w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400"
+              className={styles.searchInput}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
 
-          <div className="flex space-x-2">
-            <div className="relative group">
-              <button className="p-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors">
+          <div className={styles.filtersContainer}>
+            <div className="relative" ref={filterMenuRef}>
+              <button
+                className={styles.filterButton}
+                onClick={() => setIsFilterMenuOpen(!isFilterMenuOpen)}
+              >
                 <IconFilter size={20} />
               </button>
-              <div className="absolute right-0 top-full mt-2 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 z-10 p-2 hidden group-hover:block min-w-[160px]">
-                {availableFilters.map((filter) => (
-                  <button
-                    key={filter.id}
-                    className={`block w-full px-4 py-2 text-left text-sm rounded-lg transition-colors ${
-                      (filter.id === 'all' && !activeFilter) ||
-                      activeFilter === filter.id
-                        ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300'
-                        : 'hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'
-                    }`}
-                    onClick={() =>
-                      setActiveFilter(filter.id === 'all' ? null : filter.id)
-                    }
-                  >
-                    {filter.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="relative group">
-              <button className="p-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors">
-                <IconArrowsSort size={20} />
-              </button>
-              <div className="absolute right-0 top-full mt-2 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 z-10 p-2 hidden group-hover:block min-w-[160px]">
-                {[
-                  { id: 'title', label: 'Titre' },
-                  { id: 'composer', label: 'Compositeur' },
-                  { id: 'duration', label: 'Durée' },
-                  { id: 'difficulty', label: 'Difficulté' },
-                ].map((column) => (
-                  <button
-                    key={column.id}
-                    className={`block w-full px-4 py-2 text-left text-sm rounded-lg transition-colors ${
-                      sortBy === column.id
-                        ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300'
-                        : 'hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'
-                    }`}
-                    onClick={() => handleSort(column.id as typeof sortBy)}
-                  >
-                    {column.label}{' '}
-                    {sortBy === column.id && (sortOrder === 'asc' ? '↑' : '↓')}
-                  </button>
-                ))}
-              </div>
+              {isFilterMenuOpen && (
+                <div
+                  className={`${styles.filterMenu} ${
+                    filterMenuPosition === 'top'
+                      ? styles.filterMenuTop
+                      : styles.filterMenuBottom
+                  }`}
+                >
+                  {availableFilters.map((filter) => (
+                    <button
+                      key={filter.id}
+                      className={`${styles.filterOption} ${
+                        (filter.id === 'all' && !activeFilter) ||
+                        activeFilter === filter.id
+                          ? styles.filterOptionActive
+                          : ''
+                      }`}
+                      onClick={() => {
+                        setActiveFilter(filter.id === 'all' ? null : filter.id);
+                        setIsFilterMenuOpen(false);
+                      }}
+                    >
+                      {filter.label}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
 
         {/* Filtres actifs et statistiques */}
-        <div className="flex justify-between items-center mb-4">
-          <div className="flex items-center">
-            {activeFilter && (
-              <div className="flex items-center bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 px-3 py-1 rounded-full text-sm">
-                <span>
-                  {availableFilters.find((f) => f.id === activeFilter)?.label}
-                </span>
-                <button
-                  className="ml-2 text-indigo-500 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300"
-                  onClick={() => setActiveFilter(null)}
-                >
-                  ×
-                </button>
-              </div>
-            )}
-          </div>
-          <div className="text-sm text-slate-500 dark:text-slate-400">
+        <div className={styles.activeFilters}>
+          {activeFilter && (
+            <div className={styles.activeFilter}>
+              <span>
+                {availableFilters.find((f) => f.id === activeFilter)?.label}
+              </span>
+              <button
+                className={styles.removeFilter}
+                onClick={() => setActiveFilter(null)}
+              >
+                ×
+              </button>
+            </div>
+          )}
+          <div className={styles.songCount}>
             {filteredSongs.length} morceau
             {filteredSongs.length !== 1 ? 'x' : ''}
           </div>
         </div>
 
         {/* Tableau des chansons */}
-        <div className="overflow-x-auto -mx-5">
-          <table className="min-w-full">
-            <thead className="bg-slate-50 dark:bg-slate-700/50">
+        <div className={styles.tableContainer}>
+          <table className={styles.table}>
+            <thead className={styles.tableHeader}>
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider w-12"></th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  {renderSortableHeader('title', 'Titre')}
+                <th className={styles.tableHeaderCell}></th>
+                <th className={styles.tableHeaderCell}>
+                  <button
+                    className={styles.sortButton}
+                    onClick={() => handleSort('title')}
+                  >
+                    Titre{' '}
+                    {sortBy === 'title' && (sortOrder === 'asc' ? '↑' : '↓')}
+                  </button>
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider hidden md:table-cell">
-                  {renderSortableHeader('composer', 'Compositeur')}
+                <th
+                  className={`${styles.tableHeaderCell} ${styles.hideOnMobile}`}
+                >
+                  <button
+                    className={styles.sortButton}
+                    onClick={() => handleSort('composer')}
+                  >
+                    Compositeur{' '}
+                    {sortBy === 'composer' && (sortOrder === 'asc' ? '↑' : '↓')}
+                  </button>
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider hidden md:table-cell">
-                  {renderSortableHeader('difficulty', 'Difficulté')}
+                <th
+                  className={`${styles.tableHeaderCell} ${styles.hideOnMobile}`}
+                >
+                  <button
+                    className={styles.sortButton}
+                    onClick={() => handleSort('difficulty')}
+                  >
+                    Difficulté{' '}
+                    {sortBy === 'difficulty' &&
+                      (sortOrder === 'asc' ? '↑' : '↓')}
+                  </button>
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider hidden md:table-cell">
-                  {renderSortableHeader('duration', 'Durée')}
+                <th
+                  className={`${styles.tableHeaderCell} ${styles.hideOnMobile}`}
+                >
+                  <button
+                    className={styles.sortButton}
+                    onClick={() => handleSort('duration')}
+                  >
+                    Durée{' '}
+                    {sortBy === 'duration' && (sortOrder === 'asc' ? '↑' : '↓')}
+                  </button>
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                <th
+                  className={`${styles.tableHeaderCell} ${styles.hideOnMobile}`}
+                >
                   Progression
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider w-12"></th>
+                <th className={styles.tableHeaderCell}></th>
               </tr>
             </thead>
-            <tbody className="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
+            <tbody className={styles.tableBody}>
               {filteredSongs.map((song) => (
-                <tr
-                  key={song.id}
-                  className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer"
-                >
-                  <td className="px-6 py-4 whitespace-nowrap">
+                <tr key={song.id} className={styles.tableRow}>
+                  <td className={styles.tableCell}>
                     <button
-                      className={`text-slate-400 hover:text-amber-500 ${
-                        song.isFavorite ? 'text-amber-500' : ''
+                      className={`${styles.favoriteButton} ${
+                        song.isFavorite ? styles.favoriteButtonActive : ''
                       }`}
                     >
                       <IconHeart
@@ -403,9 +411,9 @@ export function SongsList({ className }: SongsListProps) {
                       />
                     </button>
                   </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center">
-                      <div className="h-10 w-10 flex-shrink-0 rounded bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center mr-3">
+                  <td className={styles.tableCell}>
+                    <div className={styles.songInfo}>
+                      <div className={styles.songIcon}>
                         {song.imageUrl ? (
                           <img
                             src={song.imageUrl}
@@ -415,63 +423,45 @@ export function SongsList({ className }: SongsListProps) {
                         ) : (
                           <IconMusic
                             size={20}
-                            className="text-indigo-600 dark:text-indigo-400"
+                            className={styles.songIconText}
                           />
                         )}
                       </div>
-                      <div>
-                        <div className="text-sm font-medium text-slate-900 dark:text-white">
-                          {song.title}
-                        </div>
-                        <div className="text-xs text-slate-500 dark:text-slate-400 md:hidden">
+                      <div className={styles.songDetails}>
+                        <div className={styles.songTitle}>{song.title}</div>
+                        <div
+                          className={`${styles.songComposer} ${styles.hideOnMobile}`}
+                        >
                           {song.composer}
                         </div>
                         {song.lastPlayed && (
-                          <div className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                          <div className={styles.songLastPlayed}>
                             Joué {song.lastPlayed}
                           </div>
                         )}
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700 dark:text-slate-300 hidden md:table-cell">
+                  <td className={`${styles.tableCell} ${styles.hideOnMobile}`}>
                     {song.composer}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap hidden md:table-cell">
-                    <DifficultyBadge difficulty={song.difficulty} />
+                  <td className={`${styles.tableCell} ${styles.hideOnMobile}`}>
+                    <DifficultyBadge difficulty={1} />
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700 dark:text-slate-300 hidden md:table-cell">
-                    <div className="flex items-center">
+                  <td className={`${styles.tableCell} ${styles.hideOnMobile}`}>
+                    <div className={styles.durationContainer}>
                       <IconClockHour3
                         size={16}
-                        className="mr-1 text-slate-400"
+                        className={styles.durationIcon}
                       />
                       {song.duration}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="w-full max-w-xs">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs text-slate-500 dark:text-slate-400">
-                          {song.progress === 0
-                            ? 'Non commencé'
-                            : song.progress === 100
-                            ? 'Complété'
-                            : `${song.progress}%`}
-                        </span>
-                        {song.progress === 100 && (
-                          <div className="flex items-center text-amber-500">
-                            <IconStar size={14} fill="currentColor" />
-                            <IconStar size={14} fill="currentColor" />
-                            <IconStar size={14} fill="currentColor" />
-                          </div>
-                        )}
-                      </div>
-                      <ProgressBar value={song.progress} />
-                    </div>
+                  <td className={styles.tableCell}>
+                    <ProgressBar value={song.progress} />
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <button className="p-2 rounded-full bg-indigo-100 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:hover:bg-indigo-800/50 text-indigo-600 dark:text-indigo-400 transition-colors">
+                  <td className={styles.tableCell}>
+                    <button className={styles.playButton}>
                       <IconPlayerPlay size={16} />
                     </button>
                   </td>
@@ -481,24 +471,19 @@ export function SongsList({ className }: SongsListProps) {
           </table>
         </div>
 
-        {/* Aucun résultat */}
+        {/* État vide */}
         {filteredSongs.length === 0 && (
-          <div className="py-12 text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-700 mb-4">
-              <IconMusic
-                size={32}
-                className="text-slate-400 dark:text-slate-500"
-              />
+          <div className={styles.emptyState}>
+            <div className={styles.emptyIcon}>
+              <IconMusic size={32} className={styles.emptyIconText} />
             </div>
-            <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">
-              Aucun morceau trouvé
-            </h3>
-            <p className="text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+            <h3 className={styles.emptyTitle}>Aucun morceau trouvé</h3>
+            <p className={styles.emptyDescription}>
               Aucun morceau ne correspond à vos critères de recherche. Essayez
               de modifier vos filtres ou votre recherche.
             </p>
             <button
-              className="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors"
+              className={styles.resetButton}
               onClick={() => {
                 setSearchQuery('');
                 setActiveFilter(null);
