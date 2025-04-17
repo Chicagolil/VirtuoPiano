@@ -1,14 +1,20 @@
 import { Suspense } from 'react';
-import Songs from '@/features/library/Songs';
-import { getSongs } from '@/lib/services/songs';
+import { getListSongs } from '@/lib/services/songs';
 import { Spinner } from '@/components/ui/spinner';
-import SongsList from '@/features/BentoGrid/SongsList';
+import SongsList from '@/features/library/SongsList';
 import BentoShadcnExample from '@/features/BentoGrid/BentoShadcnExample';
-import FavoritesBento from '@/features/BentoGrid/FavoritesBento';
-import LeaderboardBento from '@/features/BentoGrid/LeaderboardBento';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/authoption';
+import { redirect } from 'next/navigation';
 
 export default async function LibraryPage() {
-  const songs = await getSongs();
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.id) {
+    redirect('/auth/login');
+  }
+
+  const songs = await getListSongs(session?.user?.id);
   return (
     <div>
       <Suspense
@@ -22,7 +28,6 @@ export default async function LibraryPage() {
         }
       >
         <SongsList songs={songs} />
-        <Songs />;
         <BentoShadcnExample />
       </Suspense>
     </div>

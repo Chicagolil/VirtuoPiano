@@ -1,5 +1,5 @@
 import { getDifficultyRange } from '../common/utils/function';
-import styles from './DifficultyBadge.module.css';
+import styles from './Badge.module.css';
 
 export default function DifficultyBadge({
   difficulty,

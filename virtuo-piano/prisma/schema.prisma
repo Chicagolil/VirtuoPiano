@@ -63,6 +63,7 @@ model GameMode {
 
 model Songs {
   id             String    @id @default(uuid())
+  imageUrl       String?
   title          String
   composer       String? 
   genre          String? 

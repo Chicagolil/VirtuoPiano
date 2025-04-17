@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { AuroraBackground } from '@/components/ui/aurora-background';
+import { Toaster } from 'react-hot-toast';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -23,6 +24,7 @@ export default function RootLayout({
             <div className="relative z-10">{children}</div>
           </div>
         </AuroraBackground>
+        <Toaster position="top-right" />
       </body>
     </html>
   );

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useTransition } from 'react';
 import {
   IconMusic,
   IconHeart,
@@ -8,135 +8,35 @@ import {
   IconPlayerPlay,
   IconSearch,
   IconFilter,
-  IconArrowsSort,
-  IconAdjustments,
-  IconStar,
+  IconChevronLeft,
+  IconChevronRight,
 } from '@tabler/icons-react';
 
-import type { Songs } from '@prisma/client';
-
 import styles from './SongList.module.css';
-import ProgressBar from '@/components/ProgressBar';
 import DifficultyBadge from '@/components/DifficultyBadge';
-// Types pour les chansons
-interface Song {
-  id: string;
-  title: string;
-  composer: string;
-  difficulty: 'Débutant' | 'Intermédiaire' | 'Avancé' | 'Expert';
-  duration: string; // Format "MM:SS"
-  category: string;
-  isFavorite: boolean;
-  progress: number; // Pourcentage de 0 à 100
-  imageUrl?: string;
-  lastPlayed?: string;
-}
+import SongTypeBadge from '@/components/SongTypeBadge';
+import { castMsToMin } from '@/common/utils/function';
+import { SongList } from '@/lib/services/songs';
+import { toggleFavorite } from '@/lib/actions/songs';
+import { toast } from 'react-hot-toast';
 
 // Props pour le composant
 interface SongsListProps {
-  songs: Songs[];
+  songs: SongList[];
 }
-
-// Données de démo
-const demoSongs: Song[] = [
-  {
-    id: '1',
-    title: 'Nocturne Op. 9 No. 2',
-    composer: 'Frédéric Chopin',
-    difficulty: 'Intermédiaire',
-    duration: '4:33',
-    category: 'Classique',
-    isFavorite: true,
-    progress: 85,
-    lastPlayed: "Aujourd'hui",
-  },
-  {
-    id: '2',
-    title: 'Clair de Lune',
-    composer: 'Claude Debussy',
-    difficulty: 'Intermédiaire',
-    duration: '5:12',
-    category: 'Classique',
-    isFavorite: true,
-    progress: 62,
-    lastPlayed: 'Hier',
-  },
-  {
-    id: '3',
-    title: 'Sonate au Clair de Lune',
-    composer: 'Ludwig van Beethoven',
-    difficulty: 'Avancé',
-    duration: '6:24',
-    category: 'Classique',
-    isFavorite: false,
-    progress: 24,
-    lastPlayed: 'Il y a 3 jours',
-  },
-  {
-    id: '4',
-    title: 'Prélude en C Majeur',
-    composer: 'Johann Sebastian Bach',
-    difficulty: 'Débutant',
-    duration: '2:45',
-    category: 'Baroque',
-    isFavorite: false,
-    progress: 100,
-    lastPlayed: 'Il y a 1 semaine',
-  },
-  {
-    id: '5',
-    title: 'Gymnopédie No. 1',
-    composer: 'Erik Satie',
-    difficulty: 'Débutant',
-    duration: '3:05',
-    category: 'Classique',
-    isFavorite: true,
-    progress: 78,
-    lastPlayed: 'Il y a 2 jours',
-  },
-  {
-    id: '6',
-    title: 'Rêverie',
-    composer: 'Claude Debussy',
-    difficulty: 'Intermédiaire',
-    duration: '4:16',
-    category: 'Impressionniste',
-    isFavorite: false,
-    progress: 0,
-  },
-  {
-    id: '7',
-    title: 'La Campanella',
-    composer: 'Franz Liszt',
-    difficulty: 'Expert',
-    duration: '5:50',
-    category: 'Classique',
-    isFavorite: true,
-    progress: 12,
-    lastPlayed: 'Il y a 5 jours',
-  },
-  {
-    id: '8',
-    title: 'Fantaisie-Impromptu',
-    composer: 'Frédéric Chopin',
-    difficulty: 'Avancé',
-    duration: '5:05',
-    category: 'Romantique',
-    isFavorite: false,
-    progress: 0,
-  },
-];
-
-// Composant pour les badges de difficulté
 
 export function SongsList({ songs }: SongsListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [sortBy, setSortBy] = useState<
-    'title' | 'composer' | 'duration' | 'difficulty'
+    'title' | 'composer' | 'duration' | 'difficulty' | 'SongType'
   >('title');
   const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const songsPerPage = 20;
+  const [isPending, startTransition] = useTransition();
+  const [localSongs, setLocalSongs] = useState<SongList[]>(songs);
 
   const filterMenuRef = useRef<HTMLDivElement>(null);
 
@@ -186,22 +86,77 @@ export function SongsList({ songs }: SongsListProps) {
     };
   }, []);
 
+  // Réinitialiser la page courante lorsque les filtres changent
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, activeFilter, sortBy, sortOrder]);
+
+  // Mettre à jour les chansons locales lorsque les props changent
+  useEffect(() => {
+    setLocalSongs(songs);
+  }, [songs]);
+
+  // Fonction pour gérer le clic sur le bouton favori
+  const handleFavoriteClick = (
+    songId: string,
+    currentFavoriteState: boolean
+  ) => {
+    setLocalSongs((prevSongs) =>
+      prevSongs.map((song) =>
+        song.id === songId
+          ? { ...song, isFavorite: !currentFavoriteState }
+          : song
+      )
+    );
+
+    // Appeler l'action serveur
+    startTransition(async () => {
+      try {
+        const result = await toggleFavorite(songId);
+
+        if (result.success) {
+          toast.success(result.message);
+        } else {
+          // En cas d'échec, revenir à l'état précédent
+          setLocalSongs((prevSongs) =>
+            prevSongs.map((song) =>
+              song.id === songId
+                ? { ...song, isFavorite: currentFavoriteState }
+                : song
+            )
+          );
+          toast.error(result.message);
+        }
+      } catch (error) {
+        console.error('Erreur lors de la modification des favoris:', error);
+        // En cas d'erreur, revenir à l'état précédent
+        setLocalSongs((prevSongs) =>
+          prevSongs.map((song) =>
+            song.id === songId
+              ? { ...song, isFavorite: currentFavoriteState }
+              : song
+          )
+        );
+        toast.error(
+          'Une erreur est survenue lors de la modification des favoris'
+        );
+      }
+    });
+  };
+
   // Filtrer et trier les chansons
-  const filteredSongs = demoSongs
+  const filteredSongs = localSongs
     .filter((song) => {
       const matchesSearch =
         song.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        song.composer.toLowerCase().includes(searchQuery.toLowerCase());
+        (song.composer?.toLowerCase() || '').includes(
+          searchQuery.toLowerCase()
+        );
 
       const matchesFilter =
         !activeFilter ||
-        song.category === activeFilter ||
-        (activeFilter === 'Favoris' && song.isFavorite) ||
-        (activeFilter === 'Complétés' && song.progress === 100) ||
-        (activeFilter === 'En cours' &&
-          song.progress > 0 &&
-          song.progress < 100) ||
-        (activeFilter === 'Non commencés' && song.progress === 0);
+        song.genre === activeFilter ||
+        (activeFilter === 'Favoris' && song.isFavorite);
 
       return matchesSearch && matchesFilter;
     })
@@ -211,42 +166,51 @@ export function SongsList({ songs }: SongsListProps) {
           ? a.title.localeCompare(b.title)
           : b.title.localeCompare(a.title);
       } else if (sortBy === 'composer') {
+        const composerA = a.composer || '';
+        const composerB = b.composer || '';
         return sortOrder === 'asc'
-          ? a.composer.localeCompare(b.composer)
-          : b.composer.localeCompare(a.composer);
+          ? composerA.localeCompare(composerB)
+          : composerB.localeCompare(composerA);
       } else if (sortBy === 'duration') {
-        const timeA =
-          parseInt(a.duration.split(':')[0]) * 60 +
-          parseInt(a.duration.split(':')[1]);
-        const timeB =
-          parseInt(b.duration.split(':')[0]) * 60 +
-          parseInt(b.duration.split(':')[1]);
-        return sortOrder === 'asc' ? timeA - timeB : timeB - timeA;
-      } else if (sortBy === 'difficulty') {
-        const difficultyMap = {
-          Débutant: 1,
-          Intermédiaire: 2,
-          Avancé: 3,
-          Expert: 4,
-        };
         return sortOrder === 'asc'
-          ? difficultyMap[a.difficulty] - difficultyMap[b.difficulty]
-          : difficultyMap[b.difficulty] - difficultyMap[a.difficulty];
+          ? a.duration_ms - b.duration_ms
+          : b.duration_ms - a.duration_ms;
+      } else if (sortBy === 'difficulty') {
+        return sortOrder === 'asc' ? a.Level - b.Level : b.Level - a.Level;
       }
       return 0;
     });
 
+  // Calculer les indices de début et de fin pour la pagination
+  const indexOfLastSong = currentPage * songsPerPage;
+  const indexOfFirstSong = indexOfLastSong - songsPerPage;
+  const currentSongs = filteredSongs.slice(indexOfFirstSong, indexOfLastSong);
+  const totalPages = Math.ceil(filteredSongs.length / songsPerPage);
+
+  // Fonctions de navigation
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
   // Création des filtres disponibles
+  // Extraire les genres uniques des chansons
+  const uniqueGenres = Array.from(
+    new Set(localSongs.filter((song) => song.genre).map((song) => song.genre))
+  ).sort();
+
+  // Créer les filtres de base + les filtres de genre dynamiques
   const availableFilters = [
     { id: 'all', label: 'Tous' },
     { id: 'Favoris', label: 'Favoris' },
-    { id: 'Complétés', label: 'Complétés' },
-    { id: 'En cours', label: 'En cours' },
-    { id: 'Non commencés', label: 'Non commencés' },
-    { id: 'Classique', label: 'Classique' },
-    { id: 'Baroque', label: 'Baroque' },
-    { id: 'Romantique', label: 'Romantique' },
-    { id: 'Impressionniste', label: 'Impressionniste' },
+    ...uniqueGenres.map((genre) => ({ id: genre, label: genre })),
   ];
 
   // Gestion du tri
@@ -260,7 +224,7 @@ export function SongsList({ songs }: SongsListProps) {
   };
 
   return (
-    <div className={`${styles.container} `}>
+    <div className={`${styles.container} ${styles.pageWidth}`}>
       <div className={styles.content}>
         <h2 className={styles.title}>Bibliothèque de chansons</h2>
 
@@ -318,9 +282,9 @@ export function SongsList({ songs }: SongsListProps) {
           </div>
         </div>
 
-        {/* Filtres actifs et statistiques */}
-        <div className={styles.activeFilters}>
-          {activeFilter && (
+        {/* Filtres actifs */}
+        {activeFilter && (
+          <div className={styles.activeFilters}>
             <div className={styles.activeFilter}>
               <span>
                 {availableFilters.find((f) => f.id === activeFilter)?.label}
@@ -332,11 +296,13 @@ export function SongsList({ songs }: SongsListProps) {
                 ×
               </button>
             </div>
-          )}
-          <div className={styles.songCount}>
-            {filteredSongs.length} morceau
-            {filteredSongs.length !== 1 ? 'x' : ''}
           </div>
+        )}
+
+        {/* Nombre de morceaux */}
+        <div className={`${styles.songCount} `}>
+          {filteredSongs.length} morceau
+          {filteredSongs.length !== 1 ? 'x' : ''}
         </div>
 
         {/* Tableau des chansons */}
@@ -368,14 +334,12 @@ export function SongsList({ songs }: SongsListProps) {
                 <th
                   className={`${styles.tableHeaderCell} ${styles.hideOnMobile}`}
                 >
-                  <button
-                    className={styles.sortButton}
-                    onClick={() => handleSort('difficulty')}
-                  >
-                    Difficulté{' '}
-                    {sortBy === 'difficulty' &&
-                      (sortOrder === 'asc' ? '↑' : '↓')}
-                  </button>
+                  <button className={styles.sortButton}>Type </button>
+                </th>
+                <th
+                  className={`${styles.tableHeaderCell} ${styles.hideOnMobile}`}
+                >
+                  <button className={styles.sortButton}>Difficulté</button>
                 </th>
                 <th
                   className={`${styles.tableHeaderCell} ${styles.hideOnMobile}`}
@@ -384,26 +348,26 @@ export function SongsList({ songs }: SongsListProps) {
                     className={styles.sortButton}
                     onClick={() => handleSort('duration')}
                   >
-                    Durée{' '}
+                    Durée
                     {sortBy === 'duration' && (sortOrder === 'asc' ? '↑' : '↓')}
                   </button>
                 </th>
-                <th
-                  className={`${styles.tableHeaderCell} ${styles.hideOnMobile}`}
-                >
-                  Progression
-                </th>
+
                 <th className={styles.tableHeaderCell}></th>
               </tr>
             </thead>
             <tbody className={styles.tableBody}>
-              {filteredSongs.map((song) => (
+              {currentSongs.map((song) => (
                 <tr key={song.id} className={styles.tableRow}>
                   <td className={styles.tableCell}>
                     <button
                       className={`${styles.favoriteButton} ${
                         song.isFavorite ? styles.favoriteButtonActive : ''
                       }`}
+                      onClick={() =>
+                        handleFavoriteClick(song.id, song.isFavorite)
+                      }
+                      disabled={isPending}
                     >
                       <IconHeart
                         size={20}
@@ -429,24 +393,23 @@ export function SongsList({ songs }: SongsListProps) {
                       </div>
                       <div className={styles.songDetails}>
                         <div className={styles.songTitle}>{song.title}</div>
-                        <div
-                          className={`${styles.songComposer} ${styles.hideOnMobile}`}
-                        >
-                          {song.composer}
-                        </div>
+
                         {song.lastPlayed && (
-                          <div className={styles.songLastPlayed}>
-                            Joué {song.lastPlayed}
-                          </div>
+                          <div className={styles.songLastPlayed}>Joué le</div>
                         )}
                       </div>
                     </div>
                   </td>
-                  <td className={`${styles.tableCell} ${styles.hideOnMobile}`}>
+                  <td
+                    className={`${styles.tableCell} ${styles.hideOnMobile} ${styles.songComposer}`}
+                  >
                     {song.composer}
                   </td>
                   <td className={`${styles.tableCell} ${styles.hideOnMobile}`}>
-                    <DifficultyBadge difficulty={1} />
+                    <SongTypeBadge songType={song.SongType} />
+                  </td>
+                  <td className={styles.tableCell}>
+                    <DifficultyBadge difficulty={song.Level} />
                   </td>
                   <td className={`${styles.tableCell} ${styles.hideOnMobile}`}>
                     <div className={styles.durationContainer}>
@@ -454,11 +417,8 @@ export function SongsList({ songs }: SongsListProps) {
                         size={16}
                         className={styles.durationIcon}
                       />
-                      {song.duration}
+                      {castMsToMin(song.duration_ms)}
                     </div>
-                  </td>
-                  <td className={styles.tableCell}>
-                    <ProgressBar value={song.progress} />
                   </td>
                   <td className={styles.tableCell}>
                     <button className={styles.playButton}>
@@ -470,6 +430,37 @@ export function SongsList({ songs }: SongsListProps) {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        {filteredSongs.length > 0 && (
+          <div className={styles.paginationContainer}>
+            <div className={styles.paginationControls}>
+              <button
+                className={`${styles.paginationButton} ${
+                  currentPage === 1 ? styles.paginationButtonDisabled : ''
+                }`}
+                onClick={goToPreviousPage}
+                disabled={currentPage === 1}
+              >
+                <IconChevronLeft size={20} />
+              </button>
+              <div className={styles.paginationPageInfo}>
+                Page {currentPage} sur {totalPages}
+              </div>
+              <button
+                className={`${styles.paginationButton} ${
+                  currentPage === totalPages
+                    ? styles.paginationButtonDisabled
+                    : ''
+                }`}
+                onClick={goToNextPage}
+                disabled={currentPage === totalPages}
+              >
+                <IconChevronRight size={20} />
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* État vide */}
         {filteredSongs.length === 0 && (

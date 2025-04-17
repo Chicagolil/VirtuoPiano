@@ -4,6 +4,14 @@
   border-radius: 9999px;
   font-weight: 500;
 }
+.songTypeBadge {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-weight: 500;
+  background-color: rgb(224, 224, 224);
+  color: rgb(51, 65, 85);
+}
 
 .difficultyBeginner {
   background-color: rgb(220 252 231);

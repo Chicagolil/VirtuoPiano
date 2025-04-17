@@ -4,3 +4,8 @@ export type DifficultyRange = {
   label: string;
   className: string;
 };
+
+export type SongTypeRange = {
+  type: string;
+  label: string;
+};
