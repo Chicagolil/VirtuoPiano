@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import prisma from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../authoption';
+import { Songs } from '@prisma/client';
 
 /**
  * Action serveur pour ajouter ou supprimer une chanson des favoris
@@ -12,10 +13,8 @@ import { authOptions } from '../authoption';
  */
 export async function toggleFavorite(songId: string) {
   try {
-    // Récupérer la session de l'utilisateur
     const session = await getServerSession(authOptions);
 
-    // Vérifier si l'utilisateur est connecté
     if (!session?.user?.id) {
       return {
         success: false,
@@ -72,4 +71,21 @@ export async function toggleFavorite(songId: string) {
     // Revalider le chemin pour mettre à jour l'interface utilisateur
     revalidatePath('/library');
   }
+}
+
+export type SongById = Songs & {
+  key: {
+    id: string;
+    name: string;
+  };
+};
+
+export async function getSongById(songId: string) {
+  const song = await prisma.songs.findUnique({
+    where: { id: songId },
+    include: {
+      key: true,
+    },
+  });
+  return song;
 }

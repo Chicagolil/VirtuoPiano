@@ -19,7 +19,7 @@ import { castMsToMin } from '@/common/utils/function';
 import { SongList } from '@/lib/services/songs';
 import { toggleFavorite } from '@/lib/actions/songs';
 import { toast } from 'react-hot-toast';
-
+import { useRouter } from 'next/navigation';
 // Props pour le composant
 interface SongsListProps {
   songs: SongList[];
@@ -39,7 +39,7 @@ export function SongsList({ songs }: SongsListProps) {
   const [localSongs, setLocalSongs] = useState<SongList[]>(songs);
 
   const filterMenuRef = useRef<HTMLDivElement>(null);
-
+  const router = useRouter();
   const [filterMenuPosition, setFilterMenuPosition] = useState<
     'top' | 'bottom'
   >('bottom');
@@ -142,6 +142,10 @@ export function SongsList({ songs }: SongsListProps) {
         );
       }
     });
+  };
+
+  const handleSongClick = (songId: string) => {
+    router.push(`/library/${songId}`);
   };
 
   // Filtrer et trier les chansons
@@ -375,7 +379,11 @@ export function SongsList({ songs }: SongsListProps) {
                       />
                     </button>
                   </td>
-                  <td className={styles.tableCell}>
+                  <td
+                    className={styles.tableCell}
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => handleSongClick(song.id)}
+                  >
                     <div className={styles.songInfo}>
                       <div className={styles.songIcon}>
                         {song.imageUrl ? (
@@ -395,7 +403,17 @@ export function SongsList({ songs }: SongsListProps) {
                         <div className={styles.songTitle}>{song.title}</div>
 
                         {song.lastPlayed && (
-                          <div className={styles.songLastPlayed}>Joué le</div>
+                          <div className={styles.songLastPlayed}>
+                            Joué le{' '}
+                            {new Date(song.lastPlayed).toLocaleDateString(
+                              'fr-FR',
+                              {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                              }
+                            )}
+                          </div>
                         )}
                       </div>
                     </div>

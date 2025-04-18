@@ -23,6 +23,14 @@
   z-index: 2;
 }
 
+.composer {
+  font-size: 0.875rem;
+  font-weight: 400;
+  opacity: 0.6;
+  margin-left: 0.5rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
 /* Variables pour les couleurs */
 :root {
   --border-color: rgb(226, 232, 240);
