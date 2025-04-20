@@ -19,7 +19,7 @@ export const seedScores = async (prisma: PrismaClient) => {
     throw new Error('Aucun mode de jeu trouvé');
   }
 
-  for (let i = 0; i < 40; i++) {
+  for (let i = 0; i < 1000; i++) {
     const user = faker.helpers.arrayElement(users);
     const song = faker.helpers.arrayElement(songs);
     const gameMode = faker.helpers.arrayElement(gameModes);

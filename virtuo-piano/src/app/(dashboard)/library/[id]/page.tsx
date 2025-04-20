@@ -1,9 +1,21 @@
 import Song from '@/features/library/Song';
-import { getSongById } from '@/lib/actions/songs';
+import { getSongById, SongById } from '@/lib/actions/songs';
+import { authOptions } from '@/lib/authoption';
+import { getServerSession } from 'next-auth';
 
 export default async function SongPage({ params }: { params: { id: string } }) {
   const { id } = await params;
   const song = await getSongById(id);
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id;
+
+  if (!userId) {
+    return (
+      <div>
+        <h1>Vous devez être connecté pour accéder à cette page</h1>
+      </div>
+    );
+  }
 
   if (!song) {
     return (
@@ -16,7 +28,7 @@ export default async function SongPage({ params }: { params: { id: string } }) {
 
   return (
     <div>
-      <Song song={song} />
+      <Song song={song as SongById} userId={userId} />
     </div>
   );
 }

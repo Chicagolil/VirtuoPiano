@@ -5,6 +5,20 @@ import { faker } from '@faker-js/faker';
 export const seedUsers = async (prisma: PrismaClient) => {
   const users = [];
 
+  // Ajouter l'utilisateur spécifique
+  users.push({
+    userName: 'Chicagolil',
+    email: 'ldevoye1@gmail.com',
+    password: await bcrypt.hash('Lilian123', 10),
+    level: 1,
+    preferences: JSON.stringify({
+      theme: 'auto',
+      notifications: true,
+      soundEffects: true,
+    }),
+  });
+
+  // Générer les autres utilisateurs aléatoires
   for (let i = 0; i < 10; i++) {
     users.push({
       userName: faker.internet.username(),

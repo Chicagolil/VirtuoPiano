@@ -1,7 +1,7 @@
 'use client';
 
-import { castMsToMin } from '@/common/utils/function';
-import { useEffect, useState } from 'react';
+import { castMsToMin, getLearnScores } from '@/common/utils/function';
+import { useEffect, useState, useTransition } from 'react';
 import { useSong } from '@/contexts/SongContext';
 import {
   IconMusic,
@@ -12,18 +12,46 @@ import {
   IconUsers,
   IconStars,
   IconPiano,
+  IconGauge,
+  IconCategory,
 } from '@tabler/icons-react';
-import * as Progress from '@radix-ui/react-progress';
-import * as Avatar from '@radix-ui/react-avatar';
+
 import React from 'react';
 import styles from './Song.module.css';
-import { SongById } from '@/lib/actions/songs';
+import { SongById, toggleFavorite } from '@/lib/actions/songs';
 import DifficultyBadge from '@/components/DifficultyBadge';
+import SongTypeBadge from '@/components/SongTypeBadge';
+import { useRouter } from 'next/navigation';
+import { toast } from 'react-hot-toast';
 
-export default function Song({ song }: { song: SongById }) {
-  console.log(song);
+export default function Song({
+  song,
+  userId,
+}: {
+  song: SongById;
+  userId: string;
+}) {
+  const router = useRouter();
   const { setCurrentSong } = useSong();
-  const [isFavorite, setIsFavorite] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(song.isFavorite || false);
+  const [isPending, startTransition] = useTransition();
+
+  console.log(song);
+
+  const userMaxScore =
+    song.globalMaxScore.filter((user) => user.user.id === userId)[0]
+      ?.totalPoints || 0;
+
+  console.log(userMaxScore);
+  const wrongNotes = song.learnSessions?.[0]?.wrongNotes || 0;
+  const correctNotes = song.learnSessions?.[0]?.correctNotes || 0;
+  const missedNotes = song.learnSessions?.[0]?.missedNotes || 0;
+
+  const { performance, accuracy } = getLearnScores(
+    wrongNotes,
+    correctNotes,
+    missedNotes
+  );
 
   useEffect(() => {
     // Mettre à jour le contexte avec la chanson actuelle
@@ -35,30 +63,37 @@ export default function Song({ song }: { song: SongById }) {
     };
   }, [song, setCurrentSong]);
 
-  // Simulation de données pour les composants
-  const difficultyLevel =
-    song.tempo > 120
-      ? 'avancé'
-      : song.tempo > 90
-      ? 'intermédiaire'
-      : 'débutant';
-  const popularity = Math.floor(Math.random() * 100);
-  const userProgress = Math.floor(Math.random() * 100);
+  const handleSimilarSongClick = (songId: string) => {
+    router.push(`/library/${songId}`);
+  };
 
-  // Badges de difficulté
+  // Fonction pour gérer le clic sur le bouton favori
+  const handleFavoriteClick = () => {
+    // Mettre à jour l'état local immédiatement pour une meilleure expérience utilisateur
+    setIsFavorite(!isFavorite);
 
-  // Composant de barre de progression
-  const ProgressBar = ({ value }: { value: number }) => (
-    <Progress.Root
-      className="relative overflow-hidden bg-slate-200 dark:bg-slate-700 rounded-full w-full h-2.5"
-      value={value}
-    >
-      <Progress.Indicator
-        className="bg-indigo-500 w-full h-full transition-transform duration-500 ease-in-out rounded-full"
-        style={{ transform: `translateX(-${100 - value}%)` }}
-      />
-    </Progress.Root>
-  );
+    // Appeler l'action serveur
+    startTransition(async () => {
+      try {
+        const result = await toggleFavorite(song.id);
+
+        if (result.success) {
+          toast.success(result.message);
+        } else {
+          // En cas d'échec, revenir à l'état précédent
+          setIsFavorite(isFavorite);
+          toast.error(result.message);
+        }
+      } catch (error) {
+        console.error('Erreur lors de la modification des favoris:', error);
+        // En cas d'erreur, revenir à l'état précédent
+        setIsFavorite(isFavorite);
+        toast.error(
+          'Une erreur est survenue lors de la modification des favoris'
+        );
+      }
+    });
+  };
 
   // Fonction pour générer un clavier de piano
   const PianoKeyboard = () => {
@@ -252,6 +287,8 @@ export default function Song({ song }: { song: SongById }) {
     );
   };
 
+  console.log(song);
+
   return (
     <div className={styles.container}>
       {/* En-tête du morceau */}
@@ -271,7 +308,7 @@ export default function Song({ song }: { song: SongById }) {
             </div>
 
             <div className={styles.songInfo}>
-              <div className="flex justify-between items-start">
+              <div className="flex items-start">
                 <div>
                   <h1 className={styles.songTitle}>{song.title}</h1>
                   <p className={styles.songComposer}>
@@ -280,13 +317,14 @@ export default function Song({ song }: { song: SongById }) {
                 </div>
 
                 <button
-                  onClick={() => setIsFavorite(!isFavorite)}
-                  className={`${styles.favoriteButton} ${
+                  onClick={handleFavoriteClick}
+                  className={`${styles.favoriteButton} ml-3 ${
                     isFavorite ? styles.favoriteActive : ''
                   }`}
+                  disabled={isPending}
                 >
                   <IconHeart
-                    size={24}
+                    size={41}
                     fill={isFavorite ? 'currentColor' : 'none'}
                   />
                 </button>
@@ -318,114 +356,89 @@ export default function Song({ song }: { song: SongById }) {
       {/* Onglets */}
 
       <div className={styles.tabContent}>
-        <div className={`${styles.grid} ${styles.grid2Cols}`}>
-          {/* Détails du morceau */}
-          <div className={styles.card}>
+        <div>
+          {/* Détails du morceau transformés en info-tuiles */}
+          <div>
             <h3 className={styles.sectionTitle}>
               <IconMusic size={18} className={styles.sectionIcon} />
               Détails du morceau
             </h3>
 
-            <div className={styles.detailsList}>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Compositeur:</span>
-                <span className={styles.detailValue}>
+            <div className={styles.infoTilesGrid}>
+              <div className={styles.infoTile}>
+                <div className={styles.infoTileIcon}>
+                  <IconMusic size={20} />
+                </div>
+                <div className={styles.infoTileLabel}>Compositeur</div>
+                <div className={styles.infoTileValue}>
                   {song.composer || 'Inconnu'}
-                </span>
+                </div>
               </div>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Genre:</span>
-                <span className={styles.detailValue}>
-                  {song.genre || 'Non spécifié'}
-                </span>
+
+              <div className={styles.infoTile}>
+                <div className={styles.infoTileIcon}>
+                  <IconChartBar size={20} />
+                </div>
+                <div className={styles.infoTileLabel}>Tempo</div>
+                <div className={styles.infoTileValue}>{song.tempo} BPM</div>
               </div>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Tempo:</span>
-                <span className={styles.detailValue}>{song.tempo} BPM</span>
-              </div>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Durée:</span>
-                <span className={styles.detailValue}>
+
+              <div className={styles.infoTile}>
+                <div className={styles.infoTileIcon}>
+                  <IconClock size={20} />
+                </div>
+                <div className={styles.infoTileLabel}>Durée</div>
+                <div className={styles.infoTileValue}>
                   {castMsToMin(song.duration_ms)}
-                </span>
+                </div>
               </div>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Tonalité:</span>
-                <span className={styles.detailValue}>
+
+              <div className={styles.infoTile}>
+                <div className={styles.infoTileIcon}>
+                  <IconPiano size={20} />
+                </div>
+                <div className={styles.infoTileLabel}>Tonalité</div>
+                <div className={styles.infoTileValue}>
                   {song.key.name || 'C Majeur'}
-                </span>
+                </div>
               </div>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Mesure:</span>
-                <span className={styles.detailValue}>
+
+              <div className={styles.infoTile}>
+                <div className={styles.infoTileIcon}>
+                  <IconMusic size={20} />
+                </div>
+                <div className={styles.infoTileLabel}>Genre</div>
+                <div className={styles.infoTileValue}>
+                  {song.genre || 'Non spécifié'}
+                </div>
+              </div>
+
+              <div className={styles.infoTile}>
+                <div className={styles.infoTileIcon}>
+                  <IconCalendar size={20} />
+                </div>
+                <div className={styles.infoTileLabel}>Mesure</div>
+                <div className={styles.infoTileValue}>
                   {song.timeSignature || '4/4'}
-                </span>
+                </div>
               </div>
-              <div className={styles.detailItem}>
-                <span className={styles.detailLabel}>Difficulté:</span>
+              <div className={styles.infoTile}>
+                <div className={styles.infoTileIcon}>
+                  <IconGauge size={20} />
+                </div>
+                <div className={styles.infoTileLabel}>Difficulté</div>
                 <DifficultyBadge difficulty={song.Level} />
               </div>
-            </div>
-          </div>
-
-          {/* Popularité et progression */}
-          <div className={styles.card}>
-            <h3 className={styles.sectionTitle}>
-              <IconChartBar size={18} className={styles.sectionIcon} />
-              Votre progression
-            </h3>
-
-            <div className={styles.progressContainer}>
-              <div className={styles.progressLabel}>
-                <span>Progression totale</span>
-                <span>{userProgress}%</span>
-              </div>
-              <div className={styles.progressTrack}>
-                <div
-                  className={styles.progressIndicator}
-                  style={{ width: `${userProgress}%` }}
-                ></div>
-              </div>
-            </div>
-
-            <div className={styles.progressContainer}>
-              <div className={styles.progressLabel}>
-                <span>Popularité</span>
-                <span>{popularity}%</span>
-              </div>
-              <div className={styles.progressTrack}>
-                <div
-                  className={styles.progressIndicator}
-                  style={{ width: `${popularity}%` }}
-                ></div>
-              </div>
-            </div>
-
-            <div className="mt-4 grid grid-cols-2 gap-3">
-              <div className={styles.card}>
-                <span className={styles.detailLabel}>Sessions</span>
-                <p
-                  className="text-xl font-bold mt-1"
-                  style={{ color: 'var(--text-light)' }}
-                >
-                  {Math.floor(Math.random() * 10) + 1}
-                </p>
-              </div>
-              <div className={styles.card}>
-                <span className={styles.detailLabel}>Meilleur score</span>
-                <p
-                  className="text-xl font-bold mt-1"
-                  style={{ color: 'var(--text-light)' }}
-                >
-                  {Math.floor(Math.random() * 5000) + 1000}
-                </p>
+              <div className={styles.infoTile}>
+                <div className={styles.infoTileIcon}>
+                  <IconCategory size={20} />
+                </div>
+                <div className={styles.infoTileLabel}>Type</div>
+                <SongTypeBadge songType={song.SongType} />
               </div>
             </div>
           </div>
         </div>
-
-        {/* Ajout du clavier de piano */}
-        <PianoKeyboard />
 
         {/* Recommandations similaires */}
         <div className={styles.similarSongs}>
@@ -434,29 +447,49 @@ export default function Song({ song }: { song: SongById }) {
             Morceaux similaires
           </h3>
 
-          <div className={`${styles.grid} ${styles.grid3Cols}`}>
-            {[1, 2, 3].map((i) => (
-              <div key={i} className={styles.similarSongCard}>
-                <div className={styles.similarSongInfo}>
-                  <div className={styles.similarSongIcon}>
-                    <IconMusic
-                      size={20}
-                      className={styles.similarSongIconText}
-                    />
-                  </div>
-                  <div>
-                    <h4 className={styles.similarSongTitle}>
-                      Titre similaire {i}
-                    </h4>
-                    <p className={styles.similarSongComposer}>
-                      Compositeur {i}
-                    </p>
+          {song.similarSongs && song.similarSongs.length > 0 ? (
+            <div className={`${styles.grid} ${styles.grid3Cols}`}>
+              {song.similarSongs.map((similarSong) => (
+                <div
+                  key={similarSong.id}
+                  className={styles.similarSongCard}
+                  onClick={() => {
+                    handleSimilarSongClick(similarSong.id);
+                  }}
+                >
+                  <div className={styles.similarSongInfo}>
+                    <div className={styles.similarSongIcon}>
+                      <IconMusic
+                        size={20}
+                        className={styles.similarSongIconText}
+                      />
+                    </div>
+                    <div>
+                      <h4 className={styles.similarSongTitle}>
+                        {similarSong.title}
+                      </h4>
+                      <p className={styles.similarSongComposer}>
+                        {similarSong.composer || 'Compositeur inconnu'}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className={styles.emptyState}>
+              <p>Aucun morceau similaire trouvé pour le moment.</p>
+            </div>
+          )}
         </div>
+
+        {/* Votre progression */}
+        <h3 className={styles.sectionTitleStandalone}>
+          <IconChartBar size={18} className={styles.sectionIcon} />
+          Votre progression
+        </h3>
+
+        {/* Tuiles de statistiques ajoutées ici */}
         <div
           className={`${styles.grid} ${styles.grid3Cols}`}
           style={{ marginBottom: '1.5rem' }}
@@ -473,26 +506,11 @@ export default function Song({ song }: { song: SongById }) {
                 marginBottom: '0.5rem',
               }}
             >
-              {Math.floor(Math.random() * 10) + 5}
-            </div>
-            <p className={styles.detailLabel}>Sessions d'apprentissage</p>
-          </div>
-          <div
-            className={styles.card}
-            style={{ textAlign: 'center', padding: '1.5rem' }}
-          >
-            <div
-              style={{
-                fontSize: '1.5rem',
-                fontWeight: 'bold',
-                color: 'var(--text-light)',
-                marginBottom: '0.5rem',
-              }}
-            >
-              {Math.floor(Math.random() * 10) + 5}
+              {song.playSessions?.length}
             </div>
             <p className={styles.detailLabel}>Sessions de jeu</p>
           </div>
+
           <div
             className={styles.card}
             style={{ textAlign: 'center', padding: '1.5rem' }}
@@ -505,39 +523,135 @@ export default function Song({ song }: { song: SongById }) {
                 marginBottom: '0.5rem',
               }}
             >
-              {Math.floor(Math.random() * 1000) + 2000}
+              {song.learnSessions?.length}
+            </div>
+            <p className={styles.detailLabel}>Sessions d'apprentissage</p>
+          </div>
+
+          <div
+            className={styles.card}
+            style={{ textAlign: 'center', padding: '1.5rem' }}
+          >
+            <div
+              style={{
+                fontSize: '1.5rem',
+                fontWeight: 'bold',
+                color: 'var(--text-light)',
+                marginBottom: '0.5rem',
+              }}
+            >
+              {userMaxScore}
             </div>
             <p className={styles.detailLabel}>Meilleur score</p>
           </div>
         </div>
 
+        {/* Barres de progression déplacées ici */}
         <div className={styles.card} style={{ marginBottom: '1.5rem' }}>
-          <h3 className={styles.sectionTitle}>Historique des sessions</h3>
+          <div className={styles.progressContainer}>
+            <div className={styles.progressLabel}>
+              <span>Progression totale</span>
+              <span>{performance}%</span>
+            </div>
+            <div className={styles.progressTrack}>
+              <div
+                className={styles.progressIndicator}
+                style={{ width: `${performance}%` }}
+              ></div>
+            </div>
+          </div>
+        </div>
 
-          <div className="space-y-3">
-            {[1, 2, 3].map((session) => (
-              <div key={session} className={styles.exerciseCard}>
-                <div className={styles.exerciseHeader}>
-                  <div className={styles.similarSongInfo}>
-                    <div className={styles.similarSongIcon}>
-                      <IconCalendar
-                        size={18}
-                        className={styles.similarSongIconText}
-                      />
-                    </div>
-                    <div>
-                      <h4 className={styles.similarSongTitle}>
-                        Session du {new Date().toLocaleDateString()}
-                      </h4>
-                      <p className={styles.similarSongComposer}>
-                        {Math.floor(Math.random() * 10) + 1} min · Score:{' '}
-                        {Math.floor(Math.random() * 1000) + 1000}
-                      </p>
+        <div
+          className={`${styles.grid} ${styles.grid2Cols}`}
+          style={{ marginBottom: '1.5rem' }}
+        >
+          {/* Historique des sessions de jeu */}
+          <div className={styles.card}>
+            <h3 className={styles.sectionTitle}>
+              <IconCalendar size={18} className={styles.sectionIcon} />
+              Historique des sessions de jeu
+              <div className={styles.titleButtonSpacer}></div>
+              <button className={styles.titleButton}>Voir plus</button>
+            </h3>
+
+            <div className="space-y-3">
+              {song.playSessions?.slice(0, 3).map((session) => (
+                <div key={session.id} className={styles.exerciseCard}>
+                  <div className={styles.exerciseHeader}>
+                    <div className={styles.similarSongInfo}>
+                      <div className={styles.similarSongIcon}>
+                        <IconCalendar
+                          size={18}
+                          className={styles.similarSongIconText}
+                        />
+                      </div>
+                      <div>
+                        <h4 className={styles.similarSongTitle}>
+                          Session du{' '}
+                          {session.played_at.toLocaleDateString('fr-FR', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                          })}
+                        </h4>
+                        <p className={styles.similarSongComposer}>
+                          Score: {session.totalPoints}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+          </div>
+
+          {/* Historique des sessions d'apprentissage */}
+          <div className={styles.card}>
+            <h3 className={styles.sectionTitle}>
+              <IconCalendar size={18} className={styles.sectionIcon} />
+              Historique des sessions d'apprentissage
+              <div className={styles.titleButtonSpacer}></div>
+              <button className={styles.titleButton}>Voir plus</button>
+            </h3>
+
+            <div className="space-y-3">
+              {song.learnSessions?.slice(0, 3).map((session) => (
+                <div key={session.id} className={styles.exerciseCard}>
+                  <div className={styles.exerciseHeader}>
+                    <div className={styles.similarSongInfo}>
+                      <div className={styles.similarSongIcon}>
+                        <IconCalendar
+                          size={18}
+                          className={styles.similarSongIconText}
+                        />
+                      </div>
+                      <div>
+                        <h4 className={styles.similarSongTitle}>
+                          Session du{' '}
+                          {session.played_at.toLocaleDateString('fr-FR', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                          })}
+                        </h4>
+                        <p className={styles.similarSongComposer}>
+                          Progression:{' '}
+                          {
+                            getLearnScores(
+                              session.wrongNotes || 0,
+                              session.correctNotes || 0,
+                              session.missedNotes || 0
+                            ).performance
+                          }
+                          %
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -545,72 +659,136 @@ export default function Song({ song }: { song: SongById }) {
           <h3 className={styles.sectionTitle}>
             <IconUsers size={18} className={styles.sectionIcon} />
             Classement des joueurs
+            <div className={styles.titleButtonSpacer}></div>
+            <button className={styles.titleButton}>Voir plus</button>
           </h3>
 
           <div className="space-y-2">
-            {[1, 2, 3, 4, 5].map((rank) => (
-              <div
-                key={rank}
-                className={`${styles.exerciseCard} ${
-                  rank === 3 ? styles.keyWhiteHighlighted : ''
-                }`}
-                style={{
-                  background:
-                    rank === 3
+            {/* Affichage des 5 premiers joueurs */}
+            {song.globalMaxScore?.slice(0, 5).map((rank, index) => {
+              const isCurrentUser = rank.user.id === userId || false;
+
+              return (
+                <div
+                  key={rank.user.id}
+                  className={`${styles.exerciseCard} ${
+                    isCurrentUser ? styles.keyWhiteHighlighted : ''
+                  }`}
+                  style={{
+                    background: isCurrentUser
                       ? 'var(--primary-color-faded, rgba(99, 102, 241, 0.1))'
                       : '',
-                  border:
-                    rank === 3
+                    border: isCurrentUser
                       ? '1px solid var(--primary-color-border, rgba(99, 102, 241, 0.2))'
                       : '',
-                  padding: '0.5rem',
-                  borderRadius: '0.5rem',
-                  marginBottom: '0.5rem',
-                }}
-              >
-                <div className={styles.similarSongInfo}>
-                  <div
-                    style={{
-                      width: '1.5rem',
-                      height: '1.5rem',
-                      borderRadius: '9999px',
-                      backgroundColor:
-                        'var(--bg-card, rgba(255, 255, 255, 0.1))',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      marginRight: '0.75rem',
-                      fontSize: '0.75rem',
-                      fontWeight: '500',
-                      color: 'var(--text-light, rgba(255, 255, 255, 0.9))',
-                    }}
-                  >
-                    {rank}
-                  </div>
-                  <Avatar.Root className="h-8 w-8 rounded-full mr-2">
-                    <Avatar.Fallback
-                      className={styles.similarSongIcon}
-                      style={{ borderRadius: '9999px' }}
+                    padding: '0.5rem',
+                    borderRadius: '0.5rem',
+                    marginBottom: '0.5rem',
+                  }}
+                >
+                  <div className={styles.similarSongInfo}>
+                    <div
+                      style={{
+                        width: '1.5rem',
+                        height: '1.5rem',
+                        borderRadius: '9999px',
+                        backgroundColor:
+                          'var(--bg-card, rgba(255, 255, 255, 0.1))',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginRight: '0.75rem',
+                        fontSize: '0.75rem',
+                        fontWeight: '500',
+                        color: 'var(--text-light, rgba(255, 255, 255, 0.9))',
+                      }}
                     >
-                      U{rank}
-                    </Avatar.Fallback>
-                  </Avatar.Root>
-                  <div className="flex-1">
-                    <div className={styles.similarSongTitle}>
-                      {rank === 3 ? 'Vous' : `Utilisateur ${rank}`}
+                      {index + 1}
+                    </div>
+
+                    <div className="flex-1">
+                      <div className={styles.similarSongTitle}>
+                        {isCurrentUser ? 'Vous' : rank.user.userName}
+                      </div>
+                    </div>
+                    <div
+                      className={styles.detailValue}
+                      style={{ fontWeight: 'bold' }}
+                    >
+                      {rank.totalPoints}
                     </div>
                   </div>
-                  <div
-                    className={styles.detailValue}
-                    style={{ fontWeight: 'bold' }}
-                  >
-                    {Math.floor(Math.random() * 2000) + 3000}
-                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
+
+            {/* Affichage de la position de l'utilisateur actuel s'il n'est pas dans les 5 premiers */}
+            {song.globalMaxScore &&
+              song.globalMaxScore.length > 5 &&
+              (() => {
+                // Recherche de la position de l'utilisateur actuel dans le classement complet
+                const userRankIndex = song.globalMaxScore.findIndex(
+                  (rank) => rank.user.id === userId
+                );
+
+                // Si l'utilisateur est trouvé et qu'il n'est pas dans les 5 premiers
+                if (userRankIndex !== -1 && userRankIndex >= 5) {
+                  const userRank = song.globalMaxScore[userRankIndex];
+
+                  return (
+                    <div
+                      key={userRank.user.id}
+                      className={`${styles.exerciseCard} ${styles.keyWhiteHighlighted}`}
+                      style={{
+                        background:
+                          'var(--primary-color-faded, rgba(99, 102, 241, 0.1))',
+                        border:
+                          '1px solid var(--primary-color-border, rgba(99, 102, 241, 0.2))',
+                        padding: '0.5rem',
+                        borderRadius: '0.5rem',
+                        marginTop: '0.5rem',
+                        marginBottom: '0.5rem',
+                      }}
+                    >
+                      <div className={styles.similarSongInfo}>
+                        <div
+                          style={{
+                            width: '1.5rem',
+                            height: '1.5rem',
+                            borderRadius: '9999px',
+                            backgroundColor:
+                              'var(--bg-card, rgba(255, 255, 255, 0.1))',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            marginRight: '0.75rem',
+                            fontSize: '0.75rem',
+                            fontWeight: '500',
+                            color:
+                              'var(--text-light, rgba(255, 255, 255, 0.9))',
+                          }}
+                        >
+                          {userRankIndex + 1}
+                        </div>
+
+                        <div className="flex-1">
+                          <div className={styles.similarSongTitle}>Vous</div>
+                        </div>
+                        <div
+                          className={styles.detailValue}
+                          style={{ fontWeight: 'bold' }}
+                        >
+                          {userRank.totalPoints}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
           </div>
         </div>
+        <PianoKeyboard />
       </div>
     </div>
   );

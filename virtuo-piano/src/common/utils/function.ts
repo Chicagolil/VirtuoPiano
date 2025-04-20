@@ -1,8 +1,9 @@
-import { Songs } from '@prisma/client';
 import { difficultyRanges } from '../constants/Difficulties';
 import { DifficultyRange } from '../types/songs';
 import { songTypeRange } from '../constants/SongTypes';
 import { SongTypeRange } from '../types/songs';
+import { NextRouter } from 'next/router';
+
 export function getDifficultyRange(difficulty: number) {
   const range = difficultyRanges.find(
     (r: DifficultyRange) => difficulty >= r.min && difficulty <= r.max
@@ -33,4 +34,16 @@ export const getPageName = (pathname: string) => {
   // Formatage du nom de la page (première lettre en majuscule, reste en minuscule)
   const pageName = segments[segments.length - 1];
   return pageName.charAt(0).toUpperCase() + pageName.slice(1);
+};
+
+export const getLearnScores = (
+  wrongNotes: number,
+  correctNotes: number,
+  missedNotes: number
+) => {
+  const totalNotes = wrongNotes + correctNotes + missedNotes;
+  const performance = Math.floor((correctNotes / totalNotes) * 100) || 0;
+  const accuracy =
+    Math.floor((correctNotes / correctNotes + wrongNotes) * 100) || 0;
+  return { performance, accuracy };
 };

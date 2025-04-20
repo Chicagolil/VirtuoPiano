@@ -32,14 +32,99 @@ export const seedSongs = async (prisma: PrismaClient) => {
   };
 
   const songs = [];
+  const genres = [
+    'Classique',
+    'Jazz',
+    'Blues',
+    'Rock',
+    'Pop',
+    'Folk',
+    'Country',
+    'R&B',
+    'Soul',
+    'Funk',
+  ];
 
-  for (let i = 0; i < 100; i++) {
+  const myNotes = [
+    {
+      note: 'C4',
+      duration: 1000,
+      start: 0,
+      finger: 1,
+      hand: 'right',
+    },
+    {
+      note: 'D4',
+      duration: 1000,
+      start: 1000,
+      finger: 2,
+      hand: 'right',
+    },
+    {
+      note: 'E4',
+      duration: 1000,
+      start: 2000,
+      finger: 3,
+      hand: 'right',
+    },
+    {
+      note: 'F4',
+      duration: 1000,
+      start: 3000,
+      finger: 1,
+      hand: 'right',
+    },
+    {
+      note: 'G4',
+      duration: 1000,
+      start: 4000,
+      finger: 2,
+      hand: 'right',
+    },
+    {
+      note: 'A4',
+      duration: 1000,
+      start: 5000,
+      finger: 3,
+      hand: 'right',
+    },
+    {
+      note: 'B4',
+      duration: 1000,
+      start: 6000,
+      finger: 4,
+      hand: 'right',
+    },
+    {
+      note: 'C5',
+      duration: 1000,
+      start: 7000,
+      finger: 5,
+      hand: 'right',
+    },
+  ];
+
+  const mySong = {
+    title: 'La seule Vraie Chanson',
+    composer: 'Chicagolil',
+    genre: 'C majeur',
+    tempo: 120,
+    duration_ms: myNotes.reduce((acc, note) => acc + note.duration, 0),
+    SongType: SongType.scaleEx,
+    SourceType: SourceType.library,
+    timeSignature: '4/4',
+    Level: 1,
+    key_id: keys[0].id,
+    notes: myNotes,
+  };
+
+  for (let i = 0; i < 5; i++) {
     const key = faker.helpers.arrayElement(keys);
 
     songs.push({
       title: faker.lorem.word(),
       composer: faker.person.fullName(),
-      genre: faker.music.genre(),
+      genre: faker.helpers.arrayElement(genres),
       tempo: faker.number.int({ min: 40, max: 200 }),
       duration_ms: faker.number.int({ min: 30000, max: 280000 }),
       SongType: faker.helpers.arrayElement(Object.values(SongType)),
@@ -50,6 +135,7 @@ export const seedSongs = async (prisma: PrismaClient) => {
       notes: generateNotes(faker.number.int({ min: 10, max: 30 })),
     });
   }
+  songs.push(mySong);
 
   for (const song of songs) {
     await prisma.songs.create({
