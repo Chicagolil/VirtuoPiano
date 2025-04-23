@@ -1,0 +1,862 @@
+/* Variables CSS globales pour les couleurs */
+/* :root { ... Variables supprimées ... } */
+
+.container {
+  background-color: var(--bg-container);
+  backdrop-filter: var(--blur-effect);
+  border-radius: 1rem;
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  margin-top: 1.5rem;
+  width: 97%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.darkContainer {
+  background-color: rgba(15, 23, 42, 0.3);
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+/* En-tête */
+.header {
+  position: relative;
+}
+
+.headerGradient {
+  background: var(--gradient-primary);
+  padding: 1.5rem;
+}
+
+.headerContent {
+  display: flex;
+  align-items: flex-start;
+}
+
+.songImage {
+  height: 6rem;
+  width: 6rem;
+  flex-shrink: 0;
+  border-radius: 0.5rem;
+  background-color: rgba(99, 102, 241, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  margin-right: 1.25rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+}
+
+.darkSongImage {
+  background-color: rgba(99, 102, 241, 0.3);
+}
+
+.songInfo {
+  flex-grow: 1;
+}
+
+.songTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: white;
+  margin: 0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.darkSongTitle {
+  color: #fff;
+}
+
+.songComposer {
+  color: var(--text-medium);
+  margin-top: 0.25rem;
+}
+
+.darkSongComposer {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.favoriteButton {
+  padding: 0.5rem;
+  border-radius: 9999px;
+  color: var(--text-extra-dim);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.favoriteButton:hover {
+  color: var(--text-light);
+  transform: scale(1.1);
+}
+
+.favoriteActive {
+  color: var(--accent-color);
+}
+
+.songMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 0.75rem;
+  gap: 0.5rem;
+}
+
+.metaBadge {
+  display: flex;
+  align-items: center;
+  background-color: var(--bg-card);
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--text-light);
+  backdrop-filter: var(--blur-effect-light);
+}
+
+.metaIcon {
+  margin-right: 0.25rem;
+  color: var(--primary-light);
+}
+
+/* Actions */
+.actions {
+  display: flex;
+  border-top: 1px solid var(--border-color-transparent);
+  background-color: rgba(255, 255, 255, 0.02);
+  backdrop-filter: var(--blur-effect);
+}
+
+.actionButton {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: var(--text-medium);
+}
+
+.actionButton:hover {
+  background-color: var(--bg-card);
+  color: var(--text-light);
+}
+
+.actionDivider {
+  width: 1px;
+  background-color: var(--border-color-transparent);
+}
+
+.actionIcon {
+  margin-right: 0.5rem;
+  color: var(--primary-light);
+}
+
+.actionText {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-light);
+}
+
+/* Onglets */
+.tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border-color-transparent);
+  background-color: var(--bg-input);
+  backdrop-filter: var(--blur-effect);
+}
+
+.tabTrigger {
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-dim);
+  border-bottom: 2px solid transparent;
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+.tabTrigger:hover {
+  color: var(--text-light);
+}
+
+.tabTriggerActive {
+  color: var(--text-active);
+  border-color: var(--text-active);
+}
+
+.tabContent {
+  padding: 1.25rem;
+  outline: none;
+}
+
+/* Cartes et sections */
+.card {
+  background-color: var(--bg-card);
+  backdrop-filter: var(--blur-effect);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  border: 1px solid var(--border-color-transparent);
+  box-shadow: var(--shadow-sm);
+}
+
+.sectionTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-light);
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.titleButtonSpacer {
+  flex-grow: 1;
+}
+
+.titleButton {
+  font-size: 0.75rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.375rem;
+  background-color: var(--bg-card-hover);
+  color: var(--text-active);
+  border: 1px solid var(--border-color-active);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.titleButton:hover {
+  background-color: rgba(99, 102, 241, 0.1);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.sectionIcon {
+  margin-right: 0.5rem;
+  color: var(--text-active);
+}
+
+/* Titre de section standalone */
+.sectionTitleStandalone {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-light);
+  margin: 2rem 0 1.25rem 0;
+  display: flex;
+  align-items: center;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  padding-left: 0.5rem;
+}
+
+/* Liste des détails */
+.detailsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.detailItem {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.875rem;
+}
+
+.detailLabel {
+  color: var(--text-dim);
+}
+
+.detailValue {
+  color: var(--text-light);
+  font-weight: 500;
+}
+
+/* Info-tuiles */
+.infoTilesGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 1024px) {
+  .infoTilesGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.infoTile {
+  background-color: var(--bg-card);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  text-align: center;
+  border: 1px solid var(--border-color-transparent);
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.infoTile:hover {
+  background-color: var(--bg-card-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.infoTileIcon {
+  color: var(--text-active);
+  margin-bottom: 0.5rem;
+  background-color: rgba(99, 102, 241, 0.1);
+  border-radius: 50%;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.infoTileLabel {
+  color: var(--text-dim);
+  font-size: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.infoTileValue {
+  color: var(--text-light);
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.difficultyInfoTile {
+  background-color: var(--bg-card);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  text-align: center;
+  border: 1px solid var(--border-color-transparent);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+/* Barres de progression */
+.progressContainer {
+  margin-bottom: 0.5rem;
+}
+
+.progressLabel {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+  color: var(--text-medium);
+}
+
+.progressTrack {
+  position: relative;
+  height: 0.625rem;
+  background-color: var(--bg-header);
+  border-radius: 9999px;
+  overflow: hidden;
+  backdrop-filter: var(--blur-effect-light);
+  border: 1px solid var(--border-color-transparent);
+}
+
+.progressBar {
+  position: relative;
+  height: 0.75rem;
+  background-color: var(--bg-header);
+  border-radius: 9999px;
+  width: 100%;
+  cursor: pointer;
+  margin-bottom: 1rem;
+  overflow: hidden;
+  backdrop-filter: var(--blur-effect-light);
+  border: 1px solid var(--border-color-transparent);
+}
+
+.progressIndicator {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: linear-gradient(
+    to right,
+    var(--primary-color),
+    var(--primary-light)
+  );
+  border-radius: 9999px;
+  transition: width 0.3s ease;
+}
+
+/* Badges */
+.badge {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  backdrop-filter: var(--blur-effect-light);
+}
+
+.badgeDebutant {
+  background-color: rgba(6, 95, 70, 0.2);
+  color: rgb(110, 231, 183);
+  border: 1px solid rgba(110, 231, 183, 0.3);
+}
+
+.badgeIntermediaire {
+  background-color: rgba(30, 64, 175, 0.2);
+  color: rgb(147, 197, 253);
+  border: 1px solid rgba(147, 197, 253, 0.3);
+}
+
+.badgeAvance {
+  background-color: rgba(107, 33, 168, 0.2);
+  color: rgb(216, 180, 254);
+  border: 1px solid rgba(216, 180, 254, 0.3);
+}
+
+.badgeExpert {
+  background-color: rgba(159, 18, 57, 0.2);
+  color: rgb(253, 164, 175);
+  border: 1px solid rgba(253, 164, 175, 0.3);
+}
+
+/* Grille */
+.grid {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.grid1Col {
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 768px) {
+  .grid2Cols {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .grid3Cols {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Clavier de piano */
+.keyboardContainer {
+  margin-top: 1.25rem;
+  background-color: var(--bg-container);
+  backdrop-filter: var(--blur-effect);
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+}
+
+.keyboardSection {
+  display: flex;
+  justify-content: center;
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.keyboardSection h3.sectionTitle {
+  text-align: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.keyboardSection .card {
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.keyboard {
+  position: relative;
+  display: flex;
+  height: 28rem;
+  width: 100%;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
+.keyWhite {
+  flex: 1;
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  background-color: rgba(255, 255, 255, 0.9);
+  position: relative;
+}
+
+.keyWhiteRounded {
+  border-top-left-radius: 0.25rem;
+  border-bottom-left-radius: 0.25rem;
+}
+
+.keyWhiteRoundedRight {
+  border-top-right-radius: 0.25rem;
+  border-bottom-right-radius: 0.25rem;
+}
+
+.keyWhiteHighlighted {
+  background: linear-gradient(
+    rgba(238, 242, 255, 0.9),
+    rgba(129, 156, 241, 0.9)
+  );
+}
+
+.keyLabel {
+  position: absolute;
+  bottom: 0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgba(30, 41, 59, 0.9);
+}
+
+.keyBlack {
+  position: absolute;
+  top: 0;
+  height: 19rem;
+  width: 6%;
+  background: linear-gradient(#7c8696, #0f172a);
+  z-index: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.keyBlackHighlighted {
+  background: var(--gradient-active);
+}
+
+.keyLabelWhite {
+  color: rgba(30, 41, 59, 0.9);
+}
+
+.keyLabelBlack {
+  color: var(--text-light);
+  font-size: 0.75rem;
+}
+
+.audioInfo {
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--text-medium);
+  margin-top: 0.75rem;
+}
+
+.songTitleHighlight {
+  font-weight: 500;
+  color: var(--text-light);
+}
+
+/* Exercices suggérés */
+.exerciseCard {
+  padding: 1rem;
+  transition: all 0.3s ease;
+  background-color: rgba(255, 255, 255, 0.02);
+  border-radius: 1.25rem;
+}
+
+.exerciseCard:hover {
+  background-color: var(--bg-card);
+  transform: translateY(-2px);
+}
+
+.exerciseHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.exerciseTitle {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-light);
+}
+
+.exerciseDescription {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  margin-top: 0.25rem;
+}
+
+.exerciseDuration {
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  background-color: var(--bg-header);
+  color: var(--text-light);
+  backdrop-filter: var(--blur-effect-light);
+}
+
+.exerciseFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.75rem;
+}
+
+.exerciseLevel {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+.startButton {
+  font-size: 0.75rem;
+  color: var(--text-active);
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.startButton:hover {
+  color: rgb(147, 197, 253);
+  transform: translateX(2px);
+}
+
+.startButtonIcon {
+  margin-left: 0.25rem;
+}
+
+/* Bouton "Voir plus" */
+.viewMoreContainer {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.viewMoreButton {
+  background-color: var(--bg-card-hover);
+  color: var(--text-active);
+  border: 1px solid var(--border-color-active);
+  border-radius: 0.5rem;
+  padding: 0.5rem 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.viewMoreButton:hover {
+  background-color: rgba(99, 102, 241, 0.1);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Morceaux similaires */
+.similarSongs {
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.similarSongCard {
+  background-color: var(--bg-card);
+  backdrop-filter: var(--blur-effect);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  transition: all 0.3s ease;
+  border: 1px solid var(--border-color-transparent);
+  cursor: pointer;
+}
+
+.similarSongCard:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+  background-color: var(--bg-card-hover);
+}
+
+.similarSongInfo {
+  display: flex;
+  align-items: center;
+}
+
+.similarSongIcon {
+  width: 2.5rem;
+  height: 2.5rem;
+  background-color: rgba(99, 102, 241, 0.1);
+  border-radius: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.75rem;
+  backdrop-filter: var(--blur-effect-light);
+  border: 1px solid var(--border-color-transparent);
+}
+
+.similarSongIconText {
+  color: var(--text-active);
+}
+
+.similarSongTitle {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-light);
+}
+
+.similarSongComposer {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+.emptyState {
+  color: var(--text-dim);
+  margin-top: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+/* Actions flottantes */
+.floatingActions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 1rem;
+  border-top: 1px solid var(--border-color-transparent);
+  background-color: var(--bg-input);
+  backdrop-filter: var(--blur-effect);
+}
+
+.actionButtonFloat {
+  padding: 0.5rem;
+  border-radius: 9999px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-dim);
+  transition: all 0.3s ease;
+}
+
+.actionButtonFloat:hover {
+  color: var(--text-light);
+  transform: scale(1.1);
+  background-color: var(--bg-card);
+}
+
+/* Analyse harmonique */
+.harmonyCard {
+  background-color: var(--bg-card);
+  backdrop-filter: var(--blur-effect);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  border: 1px solid var(--border-color-transparent);
+}
+
+.chordProgression {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.chordBadge {
+  padding: 0.375rem 0.75rem;
+  background-color: rgba(99, 102, 241, 0.2);
+  color: rgb(165, 180, 252);
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  backdrop-filter: var(--blur-effect-light);
+  border: 1px solid rgba(165, 180, 252, 0.1);
+  transition: all 0.3s ease;
+}
+
+.chordBadge:hover {
+  transform: translateY(-2px);
+  background-color: rgba(99, 102, 241, 0.3);
+}
+
+/* Score preview */
+.scorePreview {
+  position: relative;
+  width: 100%;
+  height: 8rem;
+  background-color: var(--bg-header);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: var(--blur-effect-light);
+  border: 1px solid var(--border-color-transparent);
+}
+
+.scoreOverlay {
+  position: absolute;
+  inset: 0;
+  background-color: var(--bg-dark);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.scoreOverlay:hover {
+  opacity: 1;
+}
+
+.scoreButton {
+  padding: 0.5rem 0.75rem;
+  background-color: var(--bg-card);
+  color: var(--text-active);
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: 1px solid var(--border-color);
+  backdrop-filter: var(--blur-effect-light);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.scoreButton:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  transform: scale(1.05);
+}
+
+/* Notes de gamme */
+.scaleNotesContainer {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.scaleNoteItem {
+  padding: 0.5rem 0.7rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  background-color: var(--bg-dark);
+  color: var(--text-dim);
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.scaleNoteHighlighted {
+  background: var(--gradient-scale-note);
+  color: var(--text-active);
+  border: 1px solid var(--border-color-active);
+  font-weight: bold;
+  box-shadow: var(--shadow-sm);
+}
+
+.scaleNoteItem:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}

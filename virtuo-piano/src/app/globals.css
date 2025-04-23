@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 @import 'tailwindcss';
-@import "tw-animate-css";
+@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -11,7 +11,6 @@ body {
   gap: 2rem;
   min-height: 100vh;
   position: relative;
-  overflow: hidden;
 }
 
 /* Effet de notes de musique flottantes */
@@ -132,12 +131,90 @@ body {
   --blue-500: #3b82f6;
   --indigo-300: #a5b4fc;
   --violet-200: #ddd6fe;
-  --orange-300: #D95B5B;
-  --orange-400: #D9420B;
-  --orange-500: #D97904;
-  --amber-300: #D9910D;
-  --amber-400: #D98494;
-  --amber-500: #D9420B;
+  --orange-300: #d95b5b;
+  --orange-400: #d9420b;
+  --orange-500: #d97904;
+  --amber-300: #d9910d;
+  --amber-400: #d98494;
+  --amber-500: #d9420b;
+  --amber-500: #d9420b;
+  /* Variables from Footer.module.css */
+  --border-color: rgb(
+    226,
+    232,
+    240
+  ); /* Note: Overwrites Header's identical value */
+  --text-color: rgb(
+    15,
+    23,
+    42
+  ); /* Note: Will be overwritten by Header's value below */
+  --text-muted: rgb(100, 116, 139);
+
+  /* Variables from Header.module.css */
+  /* --border-color: rgb(226, 232, 240); /* Already defined above */
+  --text-color: rgb(255, 255, 255); /* Note: Overwrites Footer's value */
+
+  /* Variables from Song.module.css */
+  /* Couleurs de base */
+  --primary-color: rgb(99, 102, 241);
+  --primary-light: rgb(125, 211, 252);
+  --primary-dark: rgb(79, 70, 229);
+  --accent-color: rgb(245, 158, 11);
+  --primary-color-faded: rgba(99, 102, 241, 0.1);
+  --primary-color-border: rgba(99, 102, 241, 0.2);
+
+  /* Arrière-plans avec transparence */
+  --bg-container: rgba(255, 255, 255, 0);
+  --bg-card: rgba(255, 255, 255, 0.02);
+  --bg-card-hover: rgba(255, 255, 255, 0.08);
+  --bg-dark: rgba(15, 23, 42, 0.3);
+  --bg-input: rgba(0, 0, 0, 0.1);
+  --bg-header: rgba(0, 0, 0, 0.2);
+
+  /* Dégradés */
+  --gradient-primary: linear-gradient(
+    to right,
+    rgba(99, 102, 241, 0.1),
+    rgba(168, 85, 247, 0.1)
+  );
+  --gradient-primary-dark: linear-gradient(
+    to right,
+    rgba(99, 102, 241, 0.2),
+    rgba(168, 85, 247, 0.2)
+  );
+  --gradient-active: linear-gradient(rgb(99, 102, 241), rgb(79, 70, 229));
+  --gradient-scale-note: linear-gradient(
+    rgba(99, 102, 241, 0.2),
+    rgba(79, 70, 229, 0.2)
+  );
+
+  /* Bordures */
+  --border-color: rgba(
+    255,
+    255,
+    255,
+    0.1
+  ); /* Note: Overwrites Footer/Header's value */
+  --border-color-hover: rgba(255, 255, 255, 0.3);
+  --border-color-active: rgba(125, 211, 252, 0.3);
+  --border-color-transparent: rgba(255, 255, 255, 0.05);
+
+  /* Textes */
+  --text-light: rgba(255, 255, 255, 0.9);
+  --text-medium: rgba(255, 255, 255, 0.7);
+  --text-dim: rgba(255, 255, 255, 0.6);
+  --text-extra-dim: rgba(255, 255, 255, 0.5);
+  --text-active: rgb(125, 211, 252);
+
+  /* Ombres */
+  --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --shadow-active: 0 4px 15px rgba(99, 102, 241, 0.4);
+
+  /* Filtres */
+  --blur-effect: blur(8px);
+  --blur-effect-light: blur(4px);
 }
 
 .dark {
@@ -172,6 +249,7 @@ body {
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+  --amber-500: #d9420b;
 }
 
 @layer base {
