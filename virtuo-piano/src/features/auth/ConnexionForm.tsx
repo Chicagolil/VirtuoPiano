@@ -186,7 +186,23 @@ export default function ConnexionForm({
                 disabled={loading}
                 className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 transition-colors"
               >
-                {loading ? 'Création en cours...' : 'Créer un compte'}
+                {loading ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <Spinner
+                      variant="bars"
+                      size={20}
+                      className="text-orange-300 [animation-duration:1.2s]"
+                    />
+                    <TextShimmer
+                      duration={0.75}
+                      className="font-medium [--base-color:theme(colors.orange.500)] [--base-gradient-color:theme(colors.orange.300)] dark:[--base-color:theme(colors.orange.600)] dark:[--base-gradient-color:theme(colors.orange.400)]"
+                    >
+                      Création en cours...
+                    </TextShimmer>
+                  </div>
+                ) : (
+                  'Créer un compte'
+                )}
               </button>
             </div>
           </form>

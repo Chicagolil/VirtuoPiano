@@ -21,6 +21,9 @@ export type SongList = {
 
 export async function getListSongs(userId?: string): Promise<SongList[]> {
   const songs = await prisma.songs.findMany({
+    where: {
+      SourceType: 'library',
+    },
     include: {
       key: true,
       userFavorites: userId

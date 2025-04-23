@@ -10,9 +10,5 @@ export default async function PerformancesPage() {
     redirect('/auth/login');
   }
 
-  return (
-    <div>
-      <PerformanceBento />
-    </div>
-  );
+  return <div>{/* <PerformanceBento /> */}</div>;
 }

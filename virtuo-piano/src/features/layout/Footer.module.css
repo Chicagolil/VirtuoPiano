@@ -77,10 +77,3 @@
 :global(.dark) .link:hover {
   color: white;
 }
-
-/* Variables pour les couleurs */
-:root {
-  --border-color: rgb(226, 232, 240);
-  --text-color: rgb(15, 23, 42);
-  --text-muted: rgb(100, 116, 139);
-}

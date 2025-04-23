@@ -11,9 +11,5 @@ export default async function LeaderboardPage() {
     redirect('/auth/login');
   }
 
-  return (
-    <div className="container mx-auto">
-      <LeaderboardBento />
-    </div>
-  );
+  return <div className="container mx-auto">{/* <LeaderboardBento /> */}</div>;
 }

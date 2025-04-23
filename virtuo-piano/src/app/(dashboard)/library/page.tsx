@@ -13,7 +13,7 @@ export default async function LibraryPage() {
   if (!session?.user?.id) {
     redirect('/auth/login');
   }
-
+  console.log(session?.user?.id);
   const songs = await getListSongs(session?.user?.id);
   return (
     <div>
@@ -28,7 +28,7 @@ export default async function LibraryPage() {
         }
       >
         <SongsList songs={songs} />
-        <BentoShadcnExample />
+        {/* <BentoShadcnExample /> */}
       </Suspense>
     </div>
   );

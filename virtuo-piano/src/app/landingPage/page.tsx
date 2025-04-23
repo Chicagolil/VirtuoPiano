@@ -70,6 +70,7 @@ export default function LandingPage() {
             speed: 25,
           }}
         />
+
         <SignOutButton />
       </div>
     </div>
