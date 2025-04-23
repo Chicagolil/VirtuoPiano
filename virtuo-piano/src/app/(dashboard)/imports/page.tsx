@@ -9,9 +9,5 @@ export default async function ImportsPage() {
   if (!session?.user?.id) {
     redirect('/auth/login');
   }
-  return (
-    <div className="container mx-auto px-4">
-      <ImportsBento />
-    </div>
-  );
+  return <div className="container mx-auto px-4">{/* <ImportsBento /> */}</div>;
 }

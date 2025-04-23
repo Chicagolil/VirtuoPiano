@@ -118,7 +118,7 @@ export const seedSongs = async (prisma: PrismaClient) => {
     notes: myNotes,
   };
 
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 100; i++) {
     const key = faker.helpers.arrayElement(keys);
 
     songs.push({

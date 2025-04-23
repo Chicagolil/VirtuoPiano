@@ -1,6 +1,12 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useTransition } from 'react';
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useTransition,
+  Suspense,
+} from 'react';
 import {
   IconMusic,
   IconHeart,
@@ -20,6 +26,7 @@ import { SongList } from '@/lib/services/songs';
 import { toggleFavorite } from '@/lib/actions/songs';
 import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
+import { Spinner } from '@/components/ui/spinner';
 // Props pour le composant
 interface SongsListProps {
   songs: SongList[];
@@ -228,282 +235,301 @@ export function SongsList({ songs }: SongsListProps) {
   };
 
   return (
-    <div className={`${styles.container} ${styles.pageWidth}`}>
-      <div className={styles.content}>
-        <h2 className={styles.title}>Bibliothèque de chansons</h2>
-
-        {/* Barre de recherche et filtres */}
-        <div className={styles.searchContainer}>
-          <div className={styles.searchWrapper}>
-            <div className={styles.searchIcon}>
-              <IconSearch size={18} />
-            </div>
-            <input
-              type="text"
-              placeholder="Rechercher par titre ou compositeur..."
-              className={styles.searchInput}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-
-          <div className={styles.filtersContainer}>
-            <div className="relative" ref={filterMenuRef}>
-              <button
-                className={styles.filterButton}
-                onClick={() => setIsFilterMenuOpen(!isFilterMenuOpen)}
-              >
-                <IconFilter size={20} />
-              </button>
-              {isFilterMenuOpen && (
-                <div
-                  className={`${styles.filterMenu} ${
-                    filterMenuPosition === 'top'
-                      ? styles.filterMenuTop
-                      : styles.filterMenuBottom
-                  }`}
-                >
-                  {availableFilters.map((filter) => (
-                    <button
-                      key={filter.id}
-                      className={`${styles.filterOption} ${
-                        (filter.id === 'all' && !activeFilter) ||
-                        activeFilter === filter.id
-                          ? styles.filterOptionActive
-                          : ''
-                      }`}
-                      onClick={() => {
-                        setActiveFilter(filter.id === 'all' ? null : filter.id);
-                        setIsFilterMenuOpen(false);
-                      }}
-                    >
-                      {filter.label}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+    <Suspense
+      fallback={
+        <div className="flex justify-center items-center h-64">
+          <div className="flex flex-col items-center">
+            <p className="text-white">Chargement des chansons...</p>
+            <Spinner variant="bars" size={32} className="text-white" />
           </div>
         </div>
+      }
+    >
+      <div className={`${styles.container} ${styles.pageWidth}`}>
+        <div className={styles.content}>
+          <h2 className={styles.title}>Bibliothèque de chansons</h2>
 
-        {/* Filtres actifs */}
-        {activeFilter && (
-          <div className={styles.activeFilters}>
-            <div className={styles.activeFilter}>
-              <span>
-                {availableFilters.find((f) => f.id === activeFilter)?.label}
-              </span>
-              <button
-                className={styles.removeFilter}
-                onClick={() => setActiveFilter(null)}
-              >
-                ×
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Nombre de morceaux */}
-        <div className={`${styles.songCount} `}>
-          {filteredSongs.length} morceau
-          {filteredSongs.length !== 1 ? 'x' : ''}
-        </div>
-
-        {/* Tableau des chansons */}
-        <div className={styles.tableContainer}>
-          <table className={styles.table}>
-            <thead className={styles.tableHeader}>
-              <tr>
-                <th className={styles.tableHeaderCell}></th>
-                <th className={styles.tableHeaderCell}>
-                  <button
-                    className={styles.sortButton}
-                    onClick={() => handleSort('title')}
-                  >
-                    Titre{' '}
-                    {sortBy === 'title' && (sortOrder === 'asc' ? '↑' : '↓')}
-                  </button>
-                </th>
-                <th
-                  className={`${styles.tableHeaderCell} ${styles.hideOnMobile}`}
-                >
-                  <button
-                    className={styles.sortButton}
-                    onClick={() => handleSort('composer')}
-                  >
-                    Compositeur{' '}
-                    {sortBy === 'composer' && (sortOrder === 'asc' ? '↑' : '↓')}
-                  </button>
-                </th>
-                <th
-                  className={`${styles.tableHeaderCell} ${styles.hideOnMobile}`}
-                >
-                  <button className={styles.sortButton}>Type </button>
-                </th>
-                <th
-                  className={`${styles.tableHeaderCell} ${styles.hideOnMobile}`}
-                >
-                  <button className={styles.sortButton}>Difficulté</button>
-                </th>
-                <th
-                  className={`${styles.tableHeaderCell} ${styles.hideOnMobile}`}
-                >
-                  <button
-                    className={styles.sortButton}
-                    onClick={() => handleSort('duration')}
-                  >
-                    Durée
-                    {sortBy === 'duration' && (sortOrder === 'asc' ? '↑' : '↓')}
-                  </button>
-                </th>
-
-                <th className={styles.tableHeaderCell}></th>
-              </tr>
-            </thead>
-            <tbody className={styles.tableBody}>
-              {currentSongs.map((song) => (
-                <tr key={song.id} className={styles.tableRow}>
-                  <td className={styles.tableCell}>
-                    <button
-                      className={`${styles.favoriteButton} ${
-                        song.isFavorite ? styles.favoriteButtonActive : ''
-                      }`}
-                      onClick={() =>
-                        handleFavoriteClick(song.id, song.isFavorite)
-                      }
-                      disabled={isPending}
-                    >
-                      <IconHeart
-                        size={20}
-                        fill={song.isFavorite ? 'currentColor' : 'none'}
-                      />
-                    </button>
-                  </td>
-                  <td
-                    className={styles.tableCell}
-                    style={{ cursor: 'pointer' }}
-                    onClick={() => handleSongClick(song.id)}
-                  >
-                    <div className={styles.songInfo}>
-                      <div className={styles.songIcon}>
-                        {song.imageUrl ? (
-                          <img
-                            src={song.imageUrl}
-                            alt={song.title}
-                            className="h-10 w-10 rounded object-cover"
-                          />
-                        ) : (
-                          <IconMusic
-                            size={20}
-                            className={styles.songIconText}
-                          />
-                        )}
-                      </div>
-                      <div className={styles.songDetails}>
-                        <div className={styles.songTitle}>{song.title}</div>
-
-                        {song.lastPlayed && (
-                          <div className={styles.songLastPlayed}>
-                            Joué le{' '}
-                            {new Date(song.lastPlayed).toLocaleDateString(
-                              'fr-FR',
-                              {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric',
-                              }
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </td>
-                  <td
-                    className={`${styles.tableCell} ${styles.hideOnMobile} ${styles.songComposer}`}
-                  >
-                    {song.composer}
-                  </td>
-                  <td className={`${styles.tableCell} ${styles.hideOnMobile}`}>
-                    <SongTypeBadge songType={song.SongType} />
-                  </td>
-                  <td className={styles.tableCell}>
-                    <DifficultyBadge difficulty={song.Level} />
-                  </td>
-                  <td className={`${styles.tableCell} ${styles.hideOnMobile}`}>
-                    <div className={styles.durationContainer}>
-                      <IconClockHour3
-                        size={16}
-                        className={styles.durationIcon}
-                      />
-                      {castMsToMin(song.duration_ms)}
-                    </div>
-                  </td>
-                  <td className={styles.tableCell}>
-                    <button className={styles.playButton}>
-                      <IconPlayerPlay size={16} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        {filteredSongs.length > 0 && (
-          <div className={styles.paginationContainer}>
-            <div className={styles.paginationControls}>
-              <button
-                className={`${styles.paginationButton} ${
-                  currentPage === 1 ? styles.paginationButtonDisabled : ''
-                }`}
-                onClick={goToPreviousPage}
-                disabled={currentPage === 1}
-              >
-                <IconChevronLeft size={20} />
-              </button>
-              <div className={styles.paginationPageInfo}>
-                Page {currentPage} sur {totalPages}
+          {/* Barre de recherche et filtres */}
+          <div className={styles.searchContainer}>
+            <div className={styles.searchWrapper}>
+              <div className={styles.searchIcon}>
+                <IconSearch size={18} />
               </div>
+              <input
+                type="text"
+                placeholder="Rechercher par titre ou compositeur..."
+                className={styles.searchInput}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+
+            <div className={styles.filtersContainer}>
+              <div className="relative" ref={filterMenuRef}>
+                <button
+                  className={styles.filterButton}
+                  onClick={() => setIsFilterMenuOpen(!isFilterMenuOpen)}
+                >
+                  <IconFilter size={20} />
+                </button>
+                {isFilterMenuOpen && (
+                  <div
+                    className={`${styles.filterMenu} ${
+                      filterMenuPosition === 'top'
+                        ? styles.filterMenuTop
+                        : styles.filterMenuBottom
+                    }`}
+                  >
+                    {availableFilters.map((filter) => (
+                      <button
+                        key={filter.id}
+                        className={`${styles.filterOption} ${
+                          (filter.id === 'all' && !activeFilter) ||
+                          activeFilter === filter.id
+                            ? styles.filterOptionActive
+                            : ''
+                        }`}
+                        onClick={() => {
+                          setActiveFilter(
+                            filter.id === 'all' ? null : filter.id
+                          );
+                          setIsFilterMenuOpen(false);
+                        }}
+                      >
+                        {filter.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Filtres actifs */}
+          {activeFilter && (
+            <div className={styles.activeFilters}>
+              <div className={styles.activeFilter}>
+                <span>
+                  {availableFilters.find((f) => f.id === activeFilter)?.label}
+                </span>
+                <button
+                  className={styles.removeFilter}
+                  onClick={() => setActiveFilter(null)}
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Nombre de morceaux */}
+          <div className={`${styles.songCount} `}>
+            {filteredSongs.length} morceau
+            {filteredSongs.length !== 1 ? 'x' : ''}
+          </div>
+
+          {/* Tableau des chansons */}
+          <div className={styles.tableContainer}>
+            <table className={styles.table}>
+              <thead className={styles.tableHeader}>
+                <tr>
+                  <th className={styles.tableHeaderCell}></th>
+                  <th className={styles.tableHeaderCell}>
+                    <button
+                      className={styles.sortButton}
+                      onClick={() => handleSort('title')}
+                    >
+                      Titre{' '}
+                      {sortBy === 'title' && (sortOrder === 'asc' ? '↑' : '↓')}
+                    </button>
+                  </th>
+                  <th
+                    className={`${styles.tableHeaderCell} ${styles.hideOnMobile}`}
+                  >
+                    <button
+                      className={styles.sortButton}
+                      onClick={() => handleSort('composer')}
+                    >
+                      Compositeur{' '}
+                      {sortBy === 'composer' &&
+                        (sortOrder === 'asc' ? '↑' : '↓')}
+                    </button>
+                  </th>
+                  <th
+                    className={`${styles.tableHeaderCell} ${styles.hideOnMobile}`}
+                  >
+                    <button className={styles.sortButton}>Type </button>
+                  </th>
+                  <th
+                    className={`${styles.tableHeaderCell} ${styles.hideOnMobile}`}
+                  >
+                    <button className={styles.sortButton}>Difficulté</button>
+                  </th>
+                  <th
+                    className={`${styles.tableHeaderCell} ${styles.hideOnMobile}`}
+                  >
+                    <button
+                      className={styles.sortButton}
+                      onClick={() => handleSort('duration')}
+                    >
+                      Durée
+                      {sortBy === 'duration' &&
+                        (sortOrder === 'asc' ? '↑' : '↓')}
+                    </button>
+                  </th>
+
+                  <th className={styles.tableHeaderCell}></th>
+                </tr>
+              </thead>
+              <tbody className={styles.tableBody}>
+                {currentSongs.map((song) => (
+                  <tr key={song.id} className={styles.tableRow}>
+                    <td className={styles.tableCell}>
+                      <button
+                        className={`${styles.favoriteButton} ${
+                          song.isFavorite ? styles.favoriteButtonActive : ''
+                        }`}
+                        onClick={() =>
+                          handleFavoriteClick(song.id, song.isFavorite)
+                        }
+                        disabled={isPending}
+                      >
+                        <IconHeart
+                          size={20}
+                          fill={song.isFavorite ? 'currentColor' : 'none'}
+                        />
+                      </button>
+                    </td>
+                    <td
+                      className={styles.tableCell}
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => handleSongClick(song.id)}
+                    >
+                      <div className={styles.songInfo}>
+                        <div className={styles.songIcon}>
+                          {song.imageUrl ? (
+                            <img
+                              src={song.imageUrl}
+                              alt={song.title}
+                              className="h-10 w-10 rounded object-cover"
+                            />
+                          ) : (
+                            <IconMusic
+                              size={20}
+                              className={styles.songIconText}
+                            />
+                          )}
+                        </div>
+                        <div className={styles.songDetails}>
+                          <div className={styles.songTitle}>{song.title}</div>
+
+                          {song.lastPlayed && (
+                            <div className={styles.songLastPlayed}>
+                              Joué le{' '}
+                              {new Date(song.lastPlayed).toLocaleDateString(
+                                'fr-FR',
+                                {
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric',
+                                }
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td
+                      className={`${styles.tableCell} ${styles.hideOnMobile} ${styles.songComposer}`}
+                    >
+                      {song.composer}
+                    </td>
+                    <td
+                      className={`${styles.tableCell} ${styles.hideOnMobile}`}
+                    >
+                      <SongTypeBadge songType={song.SongType} />
+                    </td>
+                    <td className={styles.tableCell}>
+                      <DifficultyBadge difficulty={song.Level} />
+                    </td>
+                    <td
+                      className={`${styles.tableCell} ${styles.hideOnMobile}`}
+                    >
+                      <div className={styles.durationContainer}>
+                        <IconClockHour3
+                          size={16}
+                          className={styles.durationIcon}
+                        />
+                        {castMsToMin(song.duration_ms)}
+                      </div>
+                    </td>
+                    <td className={styles.tableCell}>
+                      <button className={styles.playButton}>
+                        <IconPlayerPlay size={16} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          {filteredSongs.length > 0 && (
+            <div className={styles.paginationContainer}>
+              <div className={styles.paginationControls}>
+                <button
+                  className={`${styles.paginationButton} ${
+                    currentPage === 1 ? styles.paginationButtonDisabled : ''
+                  }`}
+                  onClick={goToPreviousPage}
+                  disabled={currentPage === 1}
+                >
+                  <IconChevronLeft size={20} />
+                </button>
+                <div className={styles.paginationPageInfo}>
+                  Page {currentPage} sur {totalPages}
+                </div>
+                <button
+                  className={`${styles.paginationButton} ${
+                    currentPage === totalPages
+                      ? styles.paginationButtonDisabled
+                      : ''
+                  }`}
+                  onClick={goToNextPage}
+                  disabled={currentPage === totalPages}
+                >
+                  <IconChevronRight size={20} />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* État vide */}
+          {filteredSongs.length === 0 && (
+            <div className={styles.emptyState}>
+              <div className={styles.emptyIcon}>
+                <IconMusic size={32} className={styles.emptyIconText} />
+              </div>
+              <h3 className={styles.emptyTitle}>Aucun morceau trouvé</h3>
+              <p className={styles.emptyDescription}>
+                Aucun morceau ne correspond à vos critères de recherche. Essayez
+                de modifier vos filtres ou votre recherche.
+              </p>
               <button
-                className={`${styles.paginationButton} ${
-                  currentPage === totalPages
-                    ? styles.paginationButtonDisabled
-                    : ''
-                }`}
-                onClick={goToNextPage}
-                disabled={currentPage === totalPages}
+                className={styles.resetButton}
+                onClick={() => {
+                  setSearchQuery('');
+                  setActiveFilter(null);
+                }}
               >
-                <IconChevronRight size={20} />
+                Réinitialiser les filtres
               </button>
             </div>
-          </div>
-        )}
-
-        {/* État vide */}
-        {filteredSongs.length === 0 && (
-          <div className={styles.emptyState}>
-            <div className={styles.emptyIcon}>
-              <IconMusic size={32} className={styles.emptyIconText} />
-            </div>
-            <h3 className={styles.emptyTitle}>Aucun morceau trouvé</h3>
-            <p className={styles.emptyDescription}>
-              Aucun morceau ne correspond à vos critères de recherche. Essayez
-              de modifier vos filtres ou votre recherche.
-            </p>
-            <button
-              className={styles.resetButton}
-              onClick={() => {
-                setSearchQuery('');
-                setActiveFilter(null);
-              }}
-            >
-              Réinitialiser les filtres
-            </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
-    </div>
+    </Suspense>
   );
 }
 

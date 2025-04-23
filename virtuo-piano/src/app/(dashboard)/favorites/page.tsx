@@ -10,9 +10,5 @@ export default async function FavoritesPage() {
   if (!session?.user?.id) {
     redirect('/auth/login');
   }
-  return (
-    <div className="container mx-auto">
-      <FavoritesBento />
-    </div>
-  );
+  return <div className="container mx-auto">{/* <FavoritesBento /> */}</div>;
 }

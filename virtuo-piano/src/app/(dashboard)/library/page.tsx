@@ -28,7 +28,7 @@ export default async function LibraryPage() {
         }
       >
         <SongsList songs={songs} />
-        <BentoShadcnExample />
+        {/* <BentoShadcnExample /> */}
       </Suspense>
     </div>
   );
