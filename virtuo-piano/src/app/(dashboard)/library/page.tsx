@@ -7,14 +7,20 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authoption';
 import { redirect } from 'next/navigation';
 
+// Nouveau composant pour charger les chansons de manière asynchrone
+async function LoadSongs({ userId }: { userId: string }) {
+  const songs = await getListSongs(userId);
+  return <SongsList songs={songs} />;
+}
+
 export default async function LibraryPage() {
   const session = await getServerSession(authOptions);
+  const userId = session?.user?.id;
 
-  if (!session?.user?.id) {
+  if (!userId) {
     redirect('/auth/login');
   }
-  console.log(session?.user?.id);
-  const songs = await getListSongs(session?.user?.id);
+
   return (
     <div>
       <Suspense
@@ -27,7 +33,8 @@ export default async function LibraryPage() {
           </div>
         }
       >
-        <SongsList songs={songs} />
+        {/* Utilisation du nouveau composant à l'intérieur de Suspense */}
+        <LoadSongs userId={userId} />
         {/* <BentoShadcnExample /> */}
       </Suspense>
     </div>
