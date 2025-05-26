@@ -5,7 +5,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:; frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self';"
+          "value": "default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; font-src 'self' data: https:; connect-src 'self' https:; frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self';"
         },
         {
           "key": "X-Frame-Options",
@@ -17,22 +17,13 @@
         },
         {
           "key": "Referrer-Policy",
-          "value": "strict-origin-when-cross-origin"
+          "value": "no-referrer-when-downgrade"
         },
         {
           "key": "Permissions-Policy",
-          "value": "interest-cohort=(), geolocation=(), microphone=(), camera=(), payment=(), usb=(), fullscreen=(self)"
+          "value": "interest-cohort=(), fullscreen=(self)"
         }
       ]
     }
-  ],
-  "security": {
-    "challengeStatuses": [403, 404],
-    "challengeExcludeUserAgents": ["Probely"],
-    "challengeExcludePaths": [
-      "/cd945b47-9788-47e4-88b8-1c97f1dd94d9.txt",
-      "/api/**",
-      "/auth/**"
-    ]
-  }
+  ]
 }
