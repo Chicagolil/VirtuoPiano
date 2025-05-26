@@ -82,6 +82,7 @@ export default function ConnexionForm({
             Connexion
           </h2>
           <input
+            id="email"
             type="email"
             placeholder="Email"
             value={email}
@@ -89,6 +90,7 @@ export default function ConnexionForm({
             className="w-full p-3 border border-gray-600 rounded bg-black/50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
           />
           <input
+            id="password"
             type="password"
             placeholder="Mot de passe"
             value={password}
