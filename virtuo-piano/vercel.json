@@ -25,5 +25,14 @@
         }
       ]
     }
-  ]
+  ],
+  "security": {
+    "challengeStatuses": [403, 404],
+    "challengeExcludeUserAgents": ["Probely"],
+    "challengeExcludePaths": [
+      "/cd945b47-9788-47e4-88b8-1c97f1dd94d9.txt",
+      "/api/**",
+      "/auth/**"
+    ]
+  }
 }
