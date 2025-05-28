@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
+import argon2 from 'argon2';
 import prisma from '@/lib/prisma';
 
 export async function POST(request: Request) {
@@ -26,8 +26,13 @@ export async function POST(request: Request) {
       );
     }
 
-    // Hasher le mot de passe
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Hasher le mot de passe avec Argon2id
+    const hashedPassword = await argon2.hash(password, {
+      type: argon2.argon2id,
+      memoryCost: 65536, // 64MB en KiB
+      timeCost: 3, // Nombre d'itérations
+      parallelism: 4, // Degré de parallélisme
+    });
 
     // Créer l'utilisateur
     const user = await prisma.user.create({
