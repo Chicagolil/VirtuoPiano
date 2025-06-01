@@ -5,6 +5,7 @@ import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { TextShimmer } from '@/components/ui/text-shimmer';
 import { Spinner } from '@/components/ui/spinner';
+import { toast } from 'react-hot-toast';
 
 export default function ConnexionForm({
   isRegistered,
@@ -16,6 +17,7 @@ export default function ConnexionForm({
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isRegisteredState, setIsRegistered] = useState(isRegistered);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,7 +66,8 @@ export default function ConnexionForm({
         throw new Error(data.message || 'Une erreur est survenue');
       }
 
-      router.push('/auth/login?registered=true');
+      setIsRegistered(true);
+      toast.success('Compte créé avec succès');
     } catch (error) {
       setError(
         error instanceof Error ? error.message : 'Une erreur est survenue'
@@ -76,7 +79,29 @@ export default function ConnexionForm({
 
   return (
     <div className="bg-black/30 backdrop-blur-sm p-8 rounded-lg shadow-xl max-w-md mx-auto">
-      {isRegistered ? (
+      <div className="flex justify-center gap-4 mb-6">
+        <button
+          onClick={() => setIsRegistered(true)}
+          className={`px-4 py-2 rounded-md transition-all duration-300 cursor-pointer ${
+            isRegisteredState
+              ? 'bg-orange-600 hover:bg-orange-700 transform -translate-y-1 shadow-[-1px_1px_rgb(206,115,23)] shadow-lg'
+              : 'bg-black/50 hover:bg-black/70'
+          } text-white`}
+        >
+          Connexion
+        </button>
+        <button
+          onClick={() => setIsRegistered(false)}
+          className={`px-4 py-2 rounded-md transition-all duration-300 cursor-pointer ${
+            !isRegisteredState
+              ? 'bg-orange-600 hover:bg-orange-700 transform -translate-y-1 shadow-[-1px_1px_rgb(206,115,23)] shadow-lg'
+              : 'bg-black/50 hover:bg-black/70'
+          } text-white`}
+        >
+          Inscription
+        </button>
+      </div>
+      {isRegisteredState ? (
         <form onSubmit={handleLogin} className="space-y-4">
           <h2 className="text-2xl font-bold text-white mb-6 text-center">
             Connexion
@@ -133,80 +158,65 @@ export default function ConnexionForm({
               Créer un compte
             </h2>
           </div>
-          <form className="space-y-6" onSubmit={handleRegister}>
-            <div className="rounded-md shadow-sm space-y-4">
-              <div>
-                <label htmlFor="userName" className="sr-only">
-                  Nom Utilisateur
-                </label>
-                <input
-                  id="userName"
-                  name="userName"
-                  type="text"
-                  required
-                  className="appearance-none relative block w-full px-3 py-3 border border-gray-600 placeholder-gray-400 text-white bg-black/50 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent sm:text-sm"
-                  placeholder="Nom d'utilisateur"
-                />
-              </div>
-              <div>
-                <label htmlFor="email" className="sr-only">
-                  Adresse email
-                </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  className="appearance-none relative block w-full px-3 py-3 border border-gray-600 placeholder-gray-400 text-white bg-black/50 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent sm:text-sm"
-                  placeholder="Adresse email"
-                />
-              </div>
-              <div>
-                <label htmlFor="password" className="sr-only">
-                  Mot de passe
-                </label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="new-password"
-                  required
-                  className="appearance-none relative block w-full px-3 py-3 border border-gray-600 placeholder-gray-400 text-white bg-black/50 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent sm:text-sm"
-                  placeholder="Mot de passe"
-                />
-              </div>
+          <form className="space-y-4" onSubmit={handleRegister}>
+            <div className="space-y-4">
+              <input
+                id="userName"
+                name="userName"
+                type="text"
+                required
+                className="w-full p-3 border border-gray-600 rounded bg-black/50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                placeholder="Nom d'utilisateur"
+              />
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                className="w-full p-3 border border-gray-600 rounded bg-black/50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                placeholder="Adresse email"
+              />
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="new-password"
+                required
+                className="w-full p-3 border border-gray-600 rounded bg-black/50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                placeholder="Mot de passe"
+              />
             </div>
 
-            {error && (
-              <div className="text-red-400 text-sm text-center">{error}</div>
-            )}
+            {error && <p className="text-red-400 text-sm">{error}</p>}
 
-            <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 transition-colors"
-              >
-                {loading ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <Spinner
-                      variant="bars"
-                      size={20}
-                      className="text-orange-300 [animation-duration:1.2s]"
-                    />
-                    <TextShimmer
-                      duration={0.75}
-                      className="font-medium [--base-color:theme(colors.orange.500)] [--base-gradient-color:theme(colors.orange.300)] dark:[--base-color:theme(colors.orange.600)] dark:[--base-gradient-color:theme(colors.orange.400)]"
-                    >
-                      Création en cours...
-                    </TextShimmer>
-                  </div>
-                ) : (
-                  'Créer un compte'
-                )}
-              </button>
-            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className={`w-full p-3 rounded font-medium transition-colors ${
+                loading
+                  ? 'bg-orange-700 cursor-not-allowed'
+                  : 'bg-orange-600 hover:bg-orange-700'
+              } text-white`}
+            >
+              {loading ? (
+                <div className="flex items-center justify-center gap-2">
+                  <Spinner
+                    variant="bars"
+                    size={20}
+                    className="text-orange-300 [animation-duration:1.2s]"
+                  />
+                  <TextShimmer
+                    duration={0.75}
+                    className="font-medium [--base-color:theme(colors.orange.500)] [--base-gradient-color:theme(colors.orange.300)] dark:[--base-color:theme(colors.orange.600)] dark:[--base-gradient-color:theme(colors.orange.400)]"
+                  >
+                    Création en cours...
+                  </TextShimmer>
+                </div>
+              ) : (
+                'Créer un compte'
+              )}
+            </button>
           </form>
         </>
       )}
