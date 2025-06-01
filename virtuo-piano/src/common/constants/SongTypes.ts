@@ -16,15 +16,7 @@ export const songTypeRange = [
     label: 'Rythme',
   },
   {
-    type: 'sightReading',
-    label: 'Lecture',
-  },
-  {
     type: 'arpeggioEx',
     label: 'Arpèges',
-  },
-  {
-    type: 'earTraining',
-    label: 'Écoute',
   },
 ];

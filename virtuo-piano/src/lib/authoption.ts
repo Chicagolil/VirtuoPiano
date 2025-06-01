@@ -2,7 +2,7 @@ import { PrismaAdapter } from '@auth/prisma-adapter';
 import { NextAuthOptions, DefaultSession } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import prisma from './prisma';
-import bcrypt from 'bcryptjs';
+import argon2 from 'argon2';
 
 // Étendre le type Session pour inclure l'id
 declare module 'next-auth' {
@@ -43,9 +43,9 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Utilisateur non trouvé');
         }
 
-        const isPasswordValid = await bcrypt.compare(
-          credentials.password,
-          user.password
+        const isPasswordValid = await argon2.verify(
+          user.password,
+          credentials.password
         );
 
         if (!isPasswordValid) {
