@@ -37,6 +37,10 @@ export async function POST(request: Request) {
       );
     }
 
+    if (!process.env.JWT_SECRET) {
+      throw new Error('JWT_SECRET is not defined');
+    }
+
     // Créer le token JWT
     const token = jwt.sign(
       {
@@ -44,7 +48,7 @@ export async function POST(request: Request) {
         email: user.email,
         userName: user.userName,
       },
-      process.env.JWT_SECRET || 'votre-secret-jwt',
+      process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
 
