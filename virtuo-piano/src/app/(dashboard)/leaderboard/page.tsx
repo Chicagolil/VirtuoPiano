@@ -3,6 +3,7 @@ import LeaderboardBento from '@/features/BentoGrid/LeaderboardBento';
 import { authOptions } from '@/lib/authoption';
 import { redirect } from 'next/navigation';
 import { getServerSession } from 'next-auth';
+import { UserList } from './UserList';
 
 export default async function LeaderboardPage() {
   const session = await getServerSession(authOptions);
@@ -10,6 +11,10 @@ export default async function LeaderboardPage() {
   if (!session?.user?.id) {
     redirect('/auth/login');
   }
-
-  return <div className="container mx-auto">{/* <LeaderboardBento /> */}</div>;
+  return (
+    <div className="container mx-auto">
+      {/* <LeaderboardBento /> */}
+      <UserList />
+    </div>
+  );
 }
