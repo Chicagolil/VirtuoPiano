@@ -1,9 +1,29 @@
 import { PrismaClient, SourceType, SongType } from '@prisma/client';
 import { faker } from '@faker-js/faker';
+import { uploadImage } from '../../../src/lib/cloudinary';
+import path from 'path';
+
 export const seedSongs = async (prisma: PrismaClient) => {
   const keys = await prisma.key.findMany();
   if (!keys) {
     throw new Error('Aucune gamme trouvée');
+  }
+
+  // Upload de l'image par défaut vers Cloudinary
+  const defaultImagePath = path.join(
+    process.cwd(),
+    'public',
+    'songDefault',
+    'generated-9258201_1280.png'
+  );
+  let defaultImageUrl: string;
+
+  try {
+    defaultImageUrl = await uploadImage(defaultImagePath);
+    console.log('✅ Image par défaut uploadée avec succès vers Cloudinary');
+  } catch (error) {
+    console.error("❌ Erreur lors de l'upload de l'image par défaut:", error);
+    throw error;
   }
 
   const hands = ['left', 'right'];
@@ -116,6 +136,7 @@ export const seedSongs = async (prisma: PrismaClient) => {
     Level: 1,
     key_id: keys[0].id,
     notes: myNotes,
+    imageUrl: defaultImageUrl,
   };
 
   for (let i = 0; i < 100; i++) {
@@ -133,6 +154,7 @@ export const seedSongs = async (prisma: PrismaClient) => {
       Level: faker.number.int({ min: 1, max: 10 }),
       key_id: key.id,
       notes: generateNotes(faker.number.int({ min: 10, max: 30 })),
+      imageUrl: defaultImageUrl,
     });
   }
   songs.push(mySong);

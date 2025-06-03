@@ -1,5 +1,3 @@
-'use client';
-
 import ConnexionForm from '@/features/auth/ConnexionForm';
 
 export default function SignUp() {
