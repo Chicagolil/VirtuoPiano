@@ -19,7 +19,7 @@ jobs:
           node-version: "18"
 
       - name: Install dependencies
-        run: npm install
+        run: cd virtuo-piano && npm install
 
       - name: Build
-        run: npm run vercel-build
+        run: cd virtuo-piano && npm run vercel-build
