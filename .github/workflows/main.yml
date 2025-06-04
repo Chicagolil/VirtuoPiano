@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: Testing
 
 on:
   workflow_dispatch:
@@ -12,9 +12,3 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: "18"
-
-  Secrets_and_variables:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Test DATABASE_URL
-        run: echo "DATABASE_URL: ${{ secrets.DATABASE_URL }}"
