@@ -11,7 +11,18 @@
     "seed": "tsx prisma/seed/seed.ts",
     "studio": "prisma studio",
     "cleanDb": "tsx prisma/scripts/cleanDb.ts",
-    "vercel-build": "prisma generate && prisma migrate deploy && next build"
+    "vercel-build": "prisma generate && prisma migrate deploy && next build",
+    "test": "vitest",
+    "test:watch": "vitest watch",
+    "test:coverage": "vitest run --coverage",
+    "test:unit": "vitest run tests/unit",
+    "test:unit:watch": "vitest watch tests/unit",
+    "test:components": "vitest run tests/components",
+    "test:components:watch": "vitest watch tests/components",
+    "test:integration": "vitest run tests/integration",
+    "test:integration:watch": "vitest watch tests/integration",
+    "test:e2e": "vitest run tests/e2e",
+    "test:e2e:watch": "vitest watch tests/e2e"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.8.0",
@@ -27,6 +38,8 @@
     "@radix-ui/react-slot": "^1.2.0",
     "@radix-ui/react-tabs": "^1.1.4",
     "@tabler/icons-react": "^3.31.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.9",
     "argon2": "^0.43.0",
@@ -37,6 +50,7 @@
     "clsx": "^2.1.1",
     "framer-motion": "^12.6.5",
     "gsap": "^3.12.7",
+    "jsdom": "^26.1.0",
     "jsonwebtoken": "^9.0.2",
     "lottie-react": "^2.4.1",
     "lucide-react": "^0.487.0",
@@ -61,12 +75,14 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^4.5.1",
     "eslint": "^9",
     "eslint-config-next": "15.2.4",
     "prisma": "^6.8.2",
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",
     "tsx": "^4.19.3",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.1"
   }
 }
