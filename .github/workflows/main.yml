@@ -18,6 +18,17 @@ jobs:
         with:
           node-version: "18"
 
+      - name: Test DATABASE_URL
+        run: |
+          if [ -z "${{ secrets.DATABASE_URL }}" ]; then
+            echo "❌ DATABASE_URL n'est pas défini"
+            exit 1
+          else
+            echo "✅ DATABASE_URL est correctement configuré"
+          fi
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
       - name: Install dependencies
         run: cd virtuo-piano && npm install
 
