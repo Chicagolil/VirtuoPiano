@@ -1,12 +1,11 @@
-name: manu
+name: manualTrigger
 
 on:
   workflow_dispatch:
 
 jobs:
-  jvaisCanner:
+  Build:
     runs-on: ubuntu-latest
     steps:
       - name: Hello
         run: echo "Hello, world!"
-
