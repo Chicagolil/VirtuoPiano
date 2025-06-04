@@ -1,11 +1,7 @@
 name: Testing2
 
 on:
-  push:
-    branches: [dev]
-  pull_request:
-    branches: [dev]
-
+  workflow_dispatch:
 jobs:
   build:
     runs-on: ubuntu-latest
