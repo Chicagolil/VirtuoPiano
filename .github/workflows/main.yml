@@ -4,8 +4,25 @@ on:
   workflow_dispatch:
 
 jobs:
-  Build:
+  Secrets:
     runs-on: ubuntu-latest
     steps:
       - name: Hello
         run: echo "My Database URL is ${{ secrets.DATABASE_URL }}"
+
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: Install dependencies
+        run: cd virtuo-piano && npm install
+
+      - name: Build
+        run: cd virtuo-piano && npm run vercel-build
