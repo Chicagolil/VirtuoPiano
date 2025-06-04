@@ -1,0 +1,12 @@
+name: manu
+
+on:
+  workflow_dispatch:
+
+jobs:
+  jvaisCanner:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hello
+        run: echo "Hello, world!"
+
