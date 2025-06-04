@@ -26,3 +26,5 @@ jobs:
 
       - name: Build
         run: cd virtuo-piano && npm run vercel-build
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
