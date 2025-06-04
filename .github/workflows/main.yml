@@ -8,4 +8,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Hello
-        run: echo "Hello, world!"
+        run: echo "My Database URL is ${{ secrets.DATABASE_URL }}"
