@@ -20,7 +20,7 @@ jobs:
 
       - name: Test DATABASE_URL
         run: |
-          if [ -z "${{ secrets.DATABASE_URL }}" ]; then
+          if [ -z "$DATABASE_URL" ]; then
             echo "❌ DATABASE_URL n'est pas défini"
             exit 1
           else
