@@ -44,6 +44,6 @@ export const getLearnScores = (
   const totalNotes = wrongNotes + correctNotes + missedNotes;
   const performance = Math.floor((correctNotes / totalNotes) * 100) || 0;
   const accuracy =
-    Math.floor((correctNotes / correctNotes + wrongNotes) * 100) || 0;
+    Math.floor((correctNotes / (correctNotes + wrongNotes)) * 100) || 0;
   return { performance, accuracy };
 };

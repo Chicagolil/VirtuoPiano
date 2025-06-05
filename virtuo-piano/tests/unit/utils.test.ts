@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { castMsToMin, getLearnScores } from '@/common/utils/function';
+import {
+  castMsToMin,
+  getLearnScores,
+  getDifficultyRange,
+  getSongType,
+  getPageName,
+} from '@/common/utils/function';
 
 describe('Fonctions utilitaires', () => {
   describe('castMsToMin', () => {
@@ -39,6 +45,97 @@ describe('Fonctions utilitaires', () => {
       const result = getLearnScores(10, 0, 0);
       expect(result.performance).toBe(0);
       expect(result.accuracy).toBe(0);
+    });
+  });
+
+  describe('getDifficultyRange', () => {
+    it('devrait retourner la bonne difficulté pour chaque niveau', () => {
+      expect(getDifficultyRange(1)).toEqual({
+        label: 'Débutant',
+        className: 'difficultyBeginner',
+        min: 1,
+        max: 3,
+      });
+      expect(getDifficultyRange(5)).toEqual({
+        label: 'Intermédiaire',
+        className: 'difficultyIntermediate',
+        min: 4,
+        max: 6,
+      });
+      expect(getDifficultyRange(8)).toEqual({
+        label: 'Avancé',
+        className: 'difficultyAdvanced',
+        min: 7,
+        max: 8,
+      });
+      expect(getDifficultyRange(10)).toEqual({
+        label: 'Expert',
+        className: 'difficultyExpert',
+        min: 9,
+        max: 10,
+      });
+    });
+
+    it('devrait retourner "Inconnu" pour les niveaux invalides', () => {
+      expect(getDifficultyRange(0)).toEqual({
+        label: 'Inconnu',
+        className: '',
+      });
+      expect(getDifficultyRange(11)).toEqual({
+        label: 'Inconnu',
+        className: '',
+      });
+      expect(getDifficultyRange(-1)).toEqual({
+        label: 'Inconnu',
+        className: '',
+      });
+    });
+  });
+
+  describe('getSongType', () => {
+    it('devrait retourner le bon type pour chaque catégorie', () => {
+      expect(getSongType('song')).toEqual({ label: 'Chanson', type: 'song' });
+      expect(getSongType('scaleEx')).toEqual({
+        label: 'Gammes',
+        type: 'scaleEx',
+      });
+      expect(getSongType('chordEx')).toEqual({
+        label: 'Accords',
+        type: 'chordEx',
+      });
+      expect(getSongType('rythmEx')).toEqual({
+        label: 'Rythme',
+        type: 'rythmEx',
+      });
+      expect(getSongType('arpeggioEx')).toEqual({
+        label: 'Arpèges',
+        type: 'arpeggioEx',
+      });
+    });
+
+    it('devrait retourner "Inconnu" pour les types invalides', () => {
+      expect(getSongType('brrbrrPatatim')).toEqual({
+        label: 'Inconnu',
+        className: '',
+      });
+      expect(getSongType('')).toEqual({ label: 'Inconnu', className: '' });
+    });
+  });
+
+  describe('getPageName', () => {
+    it('devrait retourner "Accueil" pour la page d\'accueil', () => {
+      expect(getPageName('/')).toBe('Accueil');
+    });
+
+    it('devrait extraire et formater correctement le nom de la page', () => {
+      expect(getPageName('/library')).toBe('Library');
+      expect(getPageName('/profile/settings')).toBe('Settings');
+      expect(getPageName('/songs/123')).toBe('123');
+    });
+
+    it('devrait gérer les chemins vides ou invalides', () => {
+      expect(getPageName('')).toBe('Accueil');
+      expect(getPageName('///')).toBe('Accueil');
     });
   });
 });
