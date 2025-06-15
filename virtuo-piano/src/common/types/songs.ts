@@ -9,3 +9,11 @@ export type SongTypeRange = {
   type: string;
   label: string;
 };
+
+export type Note = {
+  note: string;
+  durationInBeats: number;
+  startBeat: number;
+  finger: number;
+  hand: string;
+};
