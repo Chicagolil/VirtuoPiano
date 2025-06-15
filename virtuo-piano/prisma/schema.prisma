@@ -27,8 +27,15 @@ enum SongType {
   rythmEx
   arpeggioEx
 }
-
 //  earTraining,  sightReading
+
+enum Hands {
+  right
+  left
+  both
+}
+
+
 
 model User {
   id            String    @id @default(uuid())
@@ -83,13 +90,11 @@ model Songs {
 
 model Scores {
   id             String    @id @default(uuid())
-  correctNotesR   Int?
-  missedNotesR    Int?
-  wrongNotesR     Int?
-  correctNotesL   Int?
-  missedNotesL    Int?
-  wrongNotesL     Int?
-  selectedTempo Int? 
+  correctNotes   Int?
+  missedNotes    Int?
+  wrongNotes     Int?
+  hands          Hands?
+  selectedTempo  Int? 
   totalPoints    Int? 
   maxMultiplier  Int? 
   maxCombo       Int? 
