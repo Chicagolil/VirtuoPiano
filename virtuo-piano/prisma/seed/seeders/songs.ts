@@ -160,6 +160,7 @@ export const seedSongs = async (prisma: PrismaClient) => {
     key_id: keys[0].id,
     notes: myNotes,
     imageUrl: defaultImageUrl,
+    releaseDate: faker.date.past({ years: 50 }),
   };
 
   for (let i = 0; i < 100; i++) {
@@ -184,6 +185,7 @@ export const seedSongs = async (prisma: PrismaClient) => {
       key_id: key.id,
       notes: generatedNotes,
       imageUrl: defaultImageUrl,
+      releaseDate: faker.date.past({ years: 50 }),
     });
   }
   songs.push(mySong);

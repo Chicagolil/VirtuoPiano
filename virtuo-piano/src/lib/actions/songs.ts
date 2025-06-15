@@ -112,6 +112,7 @@ export type SongById = Songs & {
     };
   }[];
   isFavorite?: boolean;
+  createdAt: Date;
 };
 
 export async function getSongById(songId: string) {

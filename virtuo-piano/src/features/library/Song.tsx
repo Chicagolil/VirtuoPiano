@@ -419,6 +419,7 @@ export default function Song({
                   {song.timeSignature || '4/4'}
                 </div>
               </div>
+
               <div className={styles.infoTile}>
                 <div className={styles.infoTileIcon}>
                   <IconGauge size={20} />
@@ -426,12 +427,29 @@ export default function Song({
                 <div className={styles.infoTileLabel}>Difficulté</div>
                 <DifficultyBadge difficulty={song.Level} />
               </div>
+
               <div className={styles.infoTile}>
                 <div className={styles.infoTileIcon}>
                   <IconCategory size={20} />
                 </div>
                 <div className={styles.infoTileLabel}>Type</div>
                 <SongTypeBadge songType={song.SongType} />
+              </div>
+
+              <div className={styles.infoTile}>
+                <div className={styles.infoTileIcon}>
+                  <IconCalendar size={20} />
+                </div>
+                <div className={styles.infoTileLabel}>Date de création</div>
+                <div className={styles.infoTileValue}>
+                  {song.releaseDate
+                    ? new Date(song.releaseDate).toLocaleDateString('fr-FR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                      })
+                    : 'Non spécifiée'}
+                </div>
               </div>
             </div>
           </div>
