@@ -40,6 +40,7 @@
     "@tabler/icons-react": "^3.31.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
+    "@tippyjs/react": "^4.2.6",
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.9",
     "argon2": "^0.43.0",
