@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Hands } from '@prisma/client';
 import { faker } from '@faker-js/faker';
 
 export const seedScores = async (prisma: PrismaClient) => {
@@ -32,6 +32,8 @@ export const seedScores = async (prisma: PrismaClient) => {
       correctNotes: faker.number.int({ min: 0, max: notesArray.length }),
       wrongNotes: faker.number.int({ min: 0, max: notesArray.length }),
       missedNotes: faker.number.int({ min: 0, max: notesArray.length }),
+      hands: faker.helpers.arrayElement(Object.values(Hands)),
+      selectedTempo: faker.number.int({ min: 40, max: 200 }),
       totalPoints: faker.number.int({ min: 0, max: 10000 }),
       maxMultiplier: faker.number.int({ min: 1, max: 10 }),
       maxCombo: faker.number.int({ min: 1, max: notesArray.length }),
