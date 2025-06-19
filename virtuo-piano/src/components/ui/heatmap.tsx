@@ -1,8 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
+import { getHeatmapData } from '@/lib/actions/heatmap-actions';
+import { ScoreDurationData } from '@/lib/services/performances-services';
 
 // Définition des couleurs bleues
 const GREEN_COLORS = [
@@ -40,8 +42,11 @@ const monthNames = [
   'Déc',
 ];
 
-// Fonction pour générer les données d'une année complète
-function generateYearData(year: number): Week[] {
+// Fonction pour générer les données d'une année complète avec les vraies données
+function generateYearData(
+  year: number,
+  performanceData: ScoreDurationData[]
+): Week[] {
   const startDate = new Date(year, 0, 1); // 1er janvier
   const endDate = new Date(year, 11, 31); // 31 décembre
 
@@ -60,6 +65,13 @@ function generateYearData(year: number): Week[] {
   const totalCells = mondayStartDay + totalDays;
   const weeksNeeded = Math.ceil(totalCells / 7);
 
+  // Créer un Map pour accéder rapidement aux données par date
+  const dataMap = new Map<string, number>();
+  performanceData.forEach((item) => {
+    const dateKey = item.date.toISOString().split('T')[0]; // Format YYYY-MM-DD
+    dataMap.set(dateKey, item.durationInMinutes);
+  });
+
   const weeks: Week[] = [];
 
   for (let weekIndex = 0; weekIndex < weeksNeeded; weekIndex++) {
@@ -75,8 +87,12 @@ function generateYearData(year: number): Week[] {
         // Jours après le 31 décembre
         week.push(null);
       } else {
-        // Jours de l'année - générer des contributions aléatoirement
-        week.push(Math.floor(Math.random() * 20));
+        // Jours de l'année
+        const daysSinceStart = cellIndex - mondayStartDay;
+        const currentDate = new Date(year, 0, 1 + daysSinceStart);
+        const dateKey = currentDate.toISOString().split('T')[0];
+        const duration = dataMap.get(dateKey) || 0;
+        week.push(duration);
       }
     }
 
@@ -122,9 +138,36 @@ export const Heatmap: React.FC = () => {
   const years = [2023, 2024, 2025];
   const [selectedYear, setSelectedYear] = useState<number>(2025);
   const [colorTheme, setColorTheme] = useState<'green' | 'orange'>('green');
+  const [performanceData, setPerformanceData] = useState<ScoreDurationData[]>(
+    []
+  );
+  const [loading, setLoading] = useState<boolean>(true);
+
+  // Récupérer les données quand l'année change
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const result = await getHeatmapData(selectedYear);
+        if (result.success) {
+          setPerformanceData(result.data);
+        } else {
+          console.error('Erreur lors de la récupération des données');
+          setPerformanceData([]);
+        }
+      } catch (error) {
+        console.error('Erreur lors de la récupération des données:', error);
+        setPerformanceData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [selectedYear]);
 
   // Générer les données pour l'année sélectionnée
-  const data = generateYearData(selectedYear);
+  const data = generateYearData(selectedYear, performanceData);
   const monthLabels = generateMonthLabels(selectedYear, data);
 
   // Calcul du nombre total de contributions (en excluant les valeurs null)
@@ -137,13 +180,29 @@ export const Heatmap: React.FC = () => {
     if (count === null) return 'transparent';
     const colors = colorTheme === 'green' ? GREEN_COLORS : ORANGE_COLORS;
     if (count === 0) return colors[0];
-    if (count < 4) return colors[1];
-    if (count < 8) return colors[2];
-    if (count < 16) return colors[3];
-    return colors[4];
+    if (count < 15) return colors[1]; // 0-14 minutes
+    if (count < 30) return colors[2]; // 15-29 minutes
+    if (count < 60) return colors[3]; // 30-59 minutes
+    return colors[4]; // 60+ minutes
   }
 
   const currentColors = colorTheme === 'green' ? GREEN_COLORS : ORANGE_COLORS;
+
+  if (loading) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '200px',
+          color: 'white',
+        }}
+      >
+        Chargement de l'année en cours...
+      </div>
+    );
+  }
 
   return (
     <div
@@ -200,7 +259,7 @@ export const Heatmap: React.FC = () => {
             marginBottom: '1rem',
           }}
         >
-          {totalContributions} contributions en {selectedYear}
+          {totalContributions} minutes de pratique en {selectedYear}
         </h2>
       </div>
 
@@ -282,9 +341,7 @@ export const Heatmap: React.FC = () => {
                       month: '2-digit',
                       year: 'numeric',
                     });
-                    tooltip = `${count} contribution${
-                      count > 1 ? 's' : ''
-                    } le ${dayName} ${dateStr}`;
+                    tooltip = `${count} minutes de pratique le ${dayName} ${dateStr}`;
                   }
 
                   return count !== null ? (
@@ -368,6 +425,19 @@ export const Heatmap: React.FC = () => {
             >
               Plus
             </span>
+          </div>
+          <div
+            style={{
+              marginTop: 10,
+              fontSize: 10,
+              color: 'rgba(255, 255, 255, 0.6)',
+              textAlign: 'center',
+            }}
+          >
+            <div>0 min</div>
+            <div>15 min</div>
+            <div>30 min</div>
+            <div>60+ min</div>
           </div>
           <div
             style={{

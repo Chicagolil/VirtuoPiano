@@ -1,9 +1,23 @@
 'use server';
 
-import { PerformancesServices } from '@/lib/services/performances-services';
+import {
+  PerformancesServices,
+  ScoreDurationData,
+} from '@/lib/services/performances-services';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/authoption';
 
-export async function getHeatmapData(userId: string, year: number) {
+export async function getHeatmapData(
+  year: number
+): Promise<{ success: boolean; error?: string; data: ScoreDurationData[] }> {
   try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.id) {
+      throw new Error('Utilisateur non connecté');
+    }
+
+    const userId = session.user.id;
     const data = await PerformancesServices.getPracticeDataForHeatmap(
       userId,
       year
@@ -14,6 +28,10 @@ export async function getHeatmapData(userId: string, year: number) {
       'Erreur lors de la récupération des données pour le heatmap',
       error
     );
-    return { success: false, error: 'Failed to get heatmap data' };
+    return {
+      success: false,
+      error: 'Failed to get heatmap data',
+      data: [],
+    };
   }
 }

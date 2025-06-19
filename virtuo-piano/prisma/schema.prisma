@@ -100,7 +100,8 @@ model Scores {
   totalPoints    Int? 
   maxMultiplier  Int? 
   maxCombo       Int? 
-  played_at      DateTime  @default(now())
+  sessionStartTime     DateTime  
+  sessionEndTime       DateTime
   user_id        String
   song_id        String
   mode_id        String

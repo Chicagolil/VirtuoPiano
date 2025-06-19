@@ -24,7 +24,11 @@ export const seedScores = async (prisma: PrismaClient) => {
     const song = faker.helpers.arrayElement(songs);
     const gameMode = faker.helpers.arrayElement(gameModes);
     const notesArray = song.notes as any[];
-
+    const sessionStartTime = faker.date.recent({ days: 730 });
+    const sessionDuration = faker.number.int({ min: 15, max: 45 }) * 60 * 1000;
+    const sessionEndTime = new Date(
+      sessionStartTime.getTime() + sessionDuration
+    );
     scores.push({
       user_id: user.id,
       song_id: song.id,
@@ -37,7 +41,8 @@ export const seedScores = async (prisma: PrismaClient) => {
       totalPoints: faker.number.int({ min: 0, max: 10000 }),
       maxMultiplier: faker.number.int({ min: 1, max: 10 }),
       maxCombo: faker.number.int({ min: 1, max: notesArray.length }),
-      played_at: faker.date.recent(),
+      sessionStartTime: sessionStartTime,
+      sessionEndTime: sessionEndTime,
     });
   }
 
