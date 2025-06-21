@@ -13,11 +13,8 @@ export default async function PerformancesPage() {
   if (!session?.user?.id) {
     redirect('/auth/login');
   }
-  const { data, error } = await getHeatmapData(session.user.id, 2025);
-  console.log(data);
-  console.log(error);
+
   async function LoadPerformances({ userId }: { userId: string }) {
-    // const performances = await getListPerformances(userId);
     return (
       <div>
         <Heatmap />

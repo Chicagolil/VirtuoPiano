@@ -5,6 +5,7 @@ import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
 import { getHeatmapData } from '@/lib/actions/heatmap-actions';
 import { ScoreDurationData } from '@/lib/services/performances-services';
+import { Spinner } from './spinner';
 
 // Définition des couleurs bleues
 const GREEN_COLORS = [
@@ -188,22 +189,6 @@ export const Heatmap: React.FC = () => {
 
   const currentColors = colorTheme === 'green' ? GREEN_COLORS : ORANGE_COLORS;
 
-  if (loading) {
-    return (
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: '200px',
-          color: 'white',
-        }}
-      >
-        Chargement de l'année en cours...
-      </div>
-    );
-  }
-
   return (
     <div
       style={{
@@ -279,6 +264,7 @@ export const Heatmap: React.FC = () => {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'flex-start',
+            position: 'relative',
           }}
         >
           {/* Labels des mois */}
@@ -309,8 +295,37 @@ export const Heatmap: React.FC = () => {
             ))}
           </div>
 
-          {/* Grille */}
-          <div style={{ display: 'flex', flexDirection: 'row', gap: 5 }}>
+          {/* Grille avec spinner de chargement */}
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'row',
+              gap: 5,
+              position: 'relative',
+            }}
+          >
+            {loading ? (
+              // Spinner centré sur la grille pendant le chargement
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  zIndex: 10,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: `${data.length * 23}px`,
+                  height: '126px', // 7 * 18px + 6 * 5px (gap)
+                }}
+                className="flex flex-col items-center justify-center"
+              >
+                <p className="text-white">Chargement de l'année en cours...</p>
+                <Spinner variant="bars" size={32} className="text-white" />
+              </div>
+            ) : null}
+
             {data.map((week, wi) => (
               <div
                 key={wi}
@@ -358,6 +373,8 @@ export const Heatmap: React.FC = () => {
                           background: getColor(count),
                           borderRadius: 5,
                           marginBottom: di === 6 ? 0 : 0,
+                          opacity: loading ? 0.3 : 1, // Réduire l'opacité pendant le chargement
+                          transition: 'opacity 0.3s ease',
                         }}
                       />
                     </Tippy>
@@ -426,19 +443,7 @@ export const Heatmap: React.FC = () => {
               Plus
             </span>
           </div>
-          <div
-            style={{
-              marginTop: 10,
-              fontSize: 10,
-              color: 'rgba(255, 255, 255, 0.6)',
-              textAlign: 'center',
-            }}
-          >
-            <div>0 min</div>
-            <div>15 min</div>
-            <div>30 min</div>
-            <div>60+ min</div>
-          </div>
+
           <div
             style={{
               marginTop: 25,
