@@ -2,7 +2,6 @@ import { difficultyRanges } from '../constants/Difficulties';
 import { DifficultyRange } from '../types/songs';
 import { songTypeRange } from '../constants/SongTypes';
 import { SongTypeRange } from '../types/songs';
-import { NextRouter } from 'next/router';
 
 export function getDifficultyRange(difficulty: number) {
   const range = difficultyRanges.find(
