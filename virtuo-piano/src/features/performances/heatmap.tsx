@@ -3,8 +3,8 @@
 import React, { useEffect } from 'react';
 import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
-import { Spinner } from './spinner';
-import { SessionCard } from './SessionCard';
+import { Spinner } from '@/components/ui/spinner';
+import { SessionCard } from '@/features/performances/SessionCard';
 import { useHeatmap } from '@/customHooks/useHeatmap';
 import {
   formatDuration,

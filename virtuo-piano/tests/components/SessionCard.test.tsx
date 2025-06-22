@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { SessionCard } from '@/components/ui/SessionCard';
+import { SessionCard } from '@/features/performances/SessionCard';
 import { SessionDetail } from '@/lib/services/performances-services';
 
 describe('SessionCard Component', () => {

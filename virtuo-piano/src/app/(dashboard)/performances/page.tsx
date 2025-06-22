@@ -2,10 +2,10 @@ import { PerformanceBento } from '@/features/BentoGrid/PerformanceBento';
 import { authOptions } from '@/lib/authoption';
 import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
-import Heatmap from '@/components/ui/heatmap';
+import { Heatmap } from '@/features/performances/heatmap';
 import { Suspense } from 'react';
 import { Spinner } from '@/components/ui/spinner';
-import { getHeatmapData } from '@/lib/actions/heatmap-actions';
+import { BentoShadcnExample } from '@/features/BentoGrid/BentoShadcnExample';
 
 export default async function PerformancesPage() {
   const session = await getServerSession(authOptions);
@@ -35,6 +35,8 @@ export default async function PerformancesPage() {
           }
         >
           <LoadPerformances />
+          <PerformanceBento />
+          <BentoShadcnExample />
         </Suspense>
       </div>
     </div>

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { Heatmap } from '@/components/ui/heatmap';
+import { Heatmap } from '@/features/performances/heatmap';
 import { useHeatmap } from '@/customHooks/useHeatmap';
 import {
   getHeatmapData,
