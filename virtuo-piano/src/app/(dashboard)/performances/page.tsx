@@ -14,7 +14,7 @@ export default async function PerformancesPage() {
     redirect('/auth/login');
   }
 
-  async function LoadPerformances({ userId }: { userId: string }) {
+  async function LoadPerformances() {
     return (
       <div>
         <Heatmap />
@@ -34,7 +34,7 @@ export default async function PerformancesPage() {
             </div>
           }
         >
-          <LoadPerformances userId={session.user.id} />
+          <LoadPerformances />
         </Suspense>
       </div>
     </div>
