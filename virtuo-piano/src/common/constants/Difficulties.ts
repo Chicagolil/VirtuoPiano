@@ -1,7 +1,7 @@
 // difficultyUtils.ts
 import { DifficultyRange } from '../types/songs';
 
-export const difficultyRanges: DifficultyRange[] = [
+export const DIFFICULTY_RANGES: DifficultyRange[] = [
   {
     min: 1,
     max: 3,

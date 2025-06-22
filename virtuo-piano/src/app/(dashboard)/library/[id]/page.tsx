@@ -43,7 +43,7 @@ export default async function SongPage({
         fallback={
           <div className="flex justify-center items-center h-64">
             <div className="flex flex-col items-center">
-              <p className="text-white">Chargement des chansons...</p>
+              <p className="text-white">Chargement de la chanson...</p>
               <Spinner variant="bars" size={32} className="text-white" />
             </div>
           </div>

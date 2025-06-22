@@ -86,7 +86,7 @@ export type SongById = Songs & {
   playSessions?: {
     id: string;
     totalPoints: number;
-    played_at: Date;
+    sessionStartTime: Date;
     mode: {
       id: string;
       name: string;
@@ -97,7 +97,7 @@ export type SongById = Songs & {
     correctNotes: number | null;
     wrongNotes: number | null;
     missedNotes: number | null;
-    played_at: Date;
+    sessionStartTime: Date;
     mode: {
       id: string;
       name: string;
@@ -105,13 +105,14 @@ export type SongById = Songs & {
   }[];
   globalMaxScore: {
     totalPoints: number;
-    played_at: Date;
+    sessionStartTime: Date;
     user: {
       id: string;
       userName: string;
     };
   }[];
   isFavorite?: boolean;
+  createdAt: Date;
 };
 
 export async function getSongById(songId: string) {
@@ -172,7 +173,7 @@ export async function getSongById(songId: string) {
       select: {
         id: true,
         totalPoints: true,
-        played_at: true,
+        sessionStartTime: true,
         mode: {
           select: {
             id: true,
@@ -181,7 +182,7 @@ export async function getSongById(songId: string) {
         },
       },
       orderBy: {
-        played_at: 'desc',
+        sessionStartTime: 'desc',
       },
     });
 
@@ -199,7 +200,7 @@ export async function getSongById(songId: string) {
         correctNotes: true,
         wrongNotes: true,
         missedNotes: true,
-        played_at: true,
+        sessionStartTime: true,
         mode: {
           select: {
             id: true,
@@ -208,7 +209,7 @@ export async function getSongById(songId: string) {
         },
       },
       orderBy: {
-        played_at: 'desc',
+        sessionStartTime: 'desc',
       },
     });
 
@@ -221,7 +222,7 @@ export async function getSongById(songId: string) {
       },
       select: {
         totalPoints: true,
-        played_at: true,
+        sessionStartTime: true,
         user: {
           select: {
             id: true,
