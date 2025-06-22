@@ -135,7 +135,9 @@ describe('Heatmap Integration Tests', () => {
     ).toBeInTheDocument();
 
     // Vérifier que la grille est rendue
-    expect(screen.getByRole('grid', { hidden: true })).toBeInTheDocument();
+    const cells = screen.getAllByTestId('tippy');
+    expect(cells.length).toBeGreaterThan(0);
+    expect(cells.length).toBeGreaterThan(50); // Au moins 50 cellules
 
     // Vérifier que les contrôles sont présents
     expect(screen.getByRole('combobox')).toBeInTheDocument();
@@ -278,10 +280,14 @@ describe('Heatmap Integration Tests', () => {
 
     const cells = screen.getAllByTestId('tippy');
     if (cells.length > 0) {
-      fireEvent.click(cells[0]);
-      await waitFor(() => {
-        expect(mockHandleCellClick).toHaveBeenCalled();
-      });
+      // Cliquer sur le div à l'intérieur du Tippy (qui a le onClick)
+      const cellDiv = cells[0].querySelector('div');
+      if (cellDiv) {
+        fireEvent.click(cellDiv);
+        await waitFor(() => {
+          expect(mockHandleCellClick).toHaveBeenCalled();
+        });
+      }
     }
   });
 
@@ -297,8 +303,12 @@ describe('Heatmap Integration Tests', () => {
 
     const cells = screen.getAllByTestId('tippy');
     if (cells.length > 0) {
-      fireEvent.click(cells[0]);
-      expect(mockHandleCellClick).not.toHaveBeenCalled();
+      // Cliquer sur le div à l'intérieur du Tippy
+      const cellDiv = cells[0].querySelector('div');
+      if (cellDiv) {
+        fireEvent.click(cellDiv);
+        expect(mockHandleCellClick).not.toHaveBeenCalled();
+      }
     }
   });
 

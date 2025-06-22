@@ -1,7 +1,5 @@
 ### Composants Heatmap
 
-La heatmap a été restructurée pour une meilleure maintenabilité et réutilisabilité :
-
 #### Fichiers de constantes
 
 - `src/common/constants/heatmaps.ts` - Constantes pour les couleurs, animations, années et dimensions
@@ -21,14 +19,6 @@ La heatmap a été restructurée pour une meilleure maintenabilité et réutilis
 
 - `src/customHooks/useHeatmap.ts` - Hook personnalisé pour toute la logique de la heatmap
 
-#### Avantages de cette structure
-
-- **Séparation des responsabilités** : UI, logique, styles et constantes sont séparés
-- **Réutilisabilité** : Les composants et hooks peuvent être réutilisés ailleurs
-- **Maintenabilité** : Code plus facile à maintenir et à tester
-- **Performance** : Optimisations possibles grâce à la séparation des préoccupations
-- **Lisibilité** : Code plus clair et organisé
-
 ### Fonctionnalités de la Heatmap
 
 - Grille 7x52 (semaines x jours) style GitHub contributions
@@ -42,7 +32,7 @@ La heatmap a été restructurée pour une meilleure maintenabilité et réutilis
 
 ## Tests
 
-Le projet inclut une suite de tests complète pour la heatmap :
+Suite de tests complète pour la heatmap :
 
 ### Tests Unitaires
 
@@ -58,61 +48,161 @@ Le projet inclut une suite de tests complète pour la heatmap :
 
 - `tests/integration/heatmap-integration.test.tsx` - Tests d'intégration complète
 
-### Couverture des Tests
+### Détail des Tests
 
-#### Fonctions Utilitaires
+#### Tests des Fonctions Utilitaires (`heatmap-functions.test.ts`)
 
-- ✅ Génération des données d'année
-- ✅ Génération de grille vide
-- ✅ Génération des labels de mois
-- ✅ Formatage de durée
-- ✅ Gestion des années bissextiles
-- ✅ Agrégation des sessions multiples
+**generateYearData :**
 
-#### Hook useHeatmap
+- `should generate correct grid structure for a leap year`
+- `should handle empty data correctly`
+- `should aggregate multiple sessions on the same day`
+- `should handle null cells for days outside the year`
 
-- ✅ Initialisation avec valeurs par défaut
-- ✅ Chargement des données au montage
-- ✅ Changement d'année
-- ✅ Changement de thème de couleur
-- ✅ Clic sur cellule et chargement des sessions
-- ✅ Fermeture des sessions avec animation
-- ✅ Gestion des erreurs (API et réseau)
-- ✅ Validation des années
-- ✅ Cohérence de l'état
+**generateEmptyGrid :**
 
-#### Composant Heatmap
+- `should generate grid with correct dimensions`
+- `should fill all valid days with 0`
+- `should handle different years correctly`
 
-- ✅ Rendu avec titre correct
-- ✅ États de chargement
-- ✅ Sélecteur d'année
-- ✅ Boutons de thème de couleur
-- ✅ Labels des mois
-- ✅ Grille de cellules
-- ✅ Clics sur cellules (avec/sans chargement)
-- ✅ Section des sessions
-- ✅ Bouton de fermeture
-- ✅ Messages d'erreur
-- ✅ Injection des styles d'animation
+**generateMonthLabels :**
 
-#### Composant SessionCard
+- `should generate correct month labels`
+- `should handle empty weeks array`
+- `should calculate correct positions for month labels`
 
-- ✅ Rendu du titre et compositeur
-- ✅ Badge de mode (Apprentissage/Pratique)
-- ✅ Informations temporelles
-- ✅ Points totaux
-- ✅ Statistiques (combo, multiplicateur, précision, performance)
-- ✅ Gestion des valeurs nulles
-- ✅ Formatage de durée
-- ✅ Sessions avec données minimales
+**formatDuration :**
 
-#### Tests d'Intégration
+- `should format minutes correctly`
+- `should format hours correctly`
+- `should handle edge cases`
+- `should handle plural forms correctly`
 
-- ✅ Chargement et affichage des données
-- ✅ Changement d'année et rechargement
-- ✅ Changement de thème de couleur
-- ✅ Affichage des sessions au clic
-- ✅ Fermeture des sessions
-- ✅ États de chargement
-- ✅ Gestion des erreurs
-- ✅ Cohérence de l'état
+#### Tests du Hook useHeatmap (`useHeatmap.test.ts`)
+
+**Initialisation et chargement :**
+
+- `should initialize with default values`
+- `should load heatmap data on mount`
+- `should handle year change`
+- `should handle color theme change`
+
+**Interactions utilisateur :**
+
+- `should handle cell click and load sessions`
+- `should not handle cell click when count is 0`
+- `should handle close sessions`
+
+**Gestion d'erreurs :**
+
+- `should handle heatmap data loading error`
+- `should handle sessions loading error`
+- `should handle network error during heatmap data loading`
+- `should handle network error during sessions loading`
+
+**Validation et cohérence :**
+
+- `should calculate total contributions correctly`
+- `should handle empty heatmap data`
+- `should validate year selection`
+- `should handle multiple rapid year changes`
+- `should maintain state consistency during interactions`
+
+#### Tests du Composant Heatmap (`Heatmap.test.tsx`)
+
+**Rendu et affichage :**
+
+- `should render heatmap with correct title`
+- `should show loading state correctly`
+- `should render year selector with correct options`
+- `should render color theme buttons`
+- `should render month labels correctly`
+- `should render grid cells`
+
+**Interactions :**
+
+- `should handle year selection`
+- `should handle color theme change`
+- `should handle cell click when not loading`
+- `should not handle cell click when loading`
+
+**Sessions :**
+
+- `should render sessions section when date is selected`
+- `should handle close sessions button`
+- `should show no sessions message when no sessions found`
+- `should show sessions loading spinner`
+
+**Styles et animations :**
+
+- `should inject animation styles on mount`
+
+#### Tests du Composant SessionCard (`SessionCard.test.tsx`)
+
+**Informations de base :**
+
+- `should render session title and composer`
+- `should handle session without composer`
+
+**Badges et modes :**
+
+- `should render mode badge with correct styling for learning mode`
+- `should render mode badge with correct styling for practice mode`
+
+**Informations temporelles :**
+
+- `should render time information correctly`
+- `should format duration correctly for different values`
+- `should format duration correctly for hours`
+- `should handle edge case with zero duration`
+
+**Points et statistiques :**
+
+- `should render total points when available`
+- `should not render total points when null`
+- `should render max combo when available`
+- `should not render max combo when null`
+- `should render max multiplier when available`
+- `should not render max multiplier when null`
+- `should render accuracy when available`
+- `should not render accuracy when null`
+- `should render performance when available`
+- `should not render performance when null`
+
+**Cas complets :**
+
+- `should render all stats when all values are available`
+- `should handle session with minimal data`
+
+#### Tests d'Intégration (`heatmap-integration.test.tsx`)
+
+**Chargement et affichage :**
+
+- `should load and display heatmap data correctly`
+- `should display month labels correctly`
+- `should render legend with correct colors`
+
+**Interactions utilisateur :**
+
+- `should handle year change and reload data`
+- `should handle color theme change`
+- `should display sessions when a cell is clicked`
+- `should handle close sessions functionality`
+- `should handle cell clicks when not loading`
+- `should prevent cell clicks during loading`
+
+**États de chargement :**
+
+- `should show loading state during data fetch`
+- `should show sessions loading state`
+
+**Gestion des données :**
+
+- `should handle empty sessions gracefully`
+- `should display correct total contributions`
+- `should handle zero contributions`
+
+**Styles et cohérence :**
+
+- `should handle animation styles injection`
+- `should maintain state consistency across interactions`
