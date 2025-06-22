@@ -604,11 +604,14 @@ export default function Song({
                       <div>
                         <h4 className={styles.similarSongTitle}>
                           Session du{' '}
-                          {session.played_at.toLocaleDateString('fr-FR', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: 'numeric',
-                          })}
+                          {session.sessionStartTime.toLocaleDateString(
+                            'fr-FR',
+                            {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric',
+                            }
+                          )}
                         </h4>
                         <p className={styles.similarSongComposer}>
                           Score: {session.totalPoints}
@@ -644,11 +647,14 @@ export default function Song({
                       <div>
                         <h4 className={styles.similarSongTitle}>
                           Session du{' '}
-                          {session.played_at.toLocaleDateString('fr-FR', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: 'numeric',
-                          })}
+                          {session.sessionStartTime.toLocaleDateString(
+                            'fr-FR',
+                            {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric',
+                            }
+                          )}
                         </h4>
                         <p className={styles.similarSongComposer}>
                           Progression:{' '}

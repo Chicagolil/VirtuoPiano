@@ -1,4 +1,4 @@
-export const songTypeRange = [
+export const SONG_TYPE_RANGE = [
   {
     type: 'song',
     label: 'Chanson',

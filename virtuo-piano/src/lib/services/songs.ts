@@ -39,7 +39,7 @@ export async function getListSongs(userId?: string): Promise<SongList[]> {
               user_id: userId,
             },
             orderBy: {
-              played_at: 'desc',
+              sessionStartTime: 'desc',
             },
             take: 1,
           }
@@ -52,7 +52,7 @@ export async function getListSongs(userId?: string): Promise<SongList[]> {
     isFavorite: userId ? song.userFavorites.length > 0 : false,
     lastPlayed:
       userId && song.scores.length > 0
-        ? song.scores[0].played_at.toISOString()
+        ? song.scores[0].sessionStartTime.toISOString()
         : '',
   }));
 
