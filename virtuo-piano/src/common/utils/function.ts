@@ -52,15 +52,15 @@ export const getLearnScores = (
 // Fonction pour formater la durée (utilisée dans le titre et les cartes)
 export const formatDuration = (minutes: number) => {
   if (minutes < 60) {
-    return `${minutes} minutes`;
+    return `${minutes} minute${minutes !== 1 ? 's' : ''}`;
   }
   const hours = Math.floor(minutes / 60);
   const remainingMinutes = minutes % 60;
   if (remainingMinutes === 0) {
-    return `${hours} heure${hours > 1 ? 's' : ''}`;
+    return `${hours} heure${hours !== 1 ? 's' : ''}`;
   }
-  return `${hours} heure${hours > 1 ? 's' : ''} ${remainingMinutes} minute${
-    remainingMinutes > 1 ? 's' : ''
+  return `${hours} heure${hours !== 1 ? 's' : ''} ${remainingMinutes} minute${
+    remainingMinutes !== 1 ? 's' : ''
   }`;
 };
 
@@ -98,7 +98,8 @@ export function generateYearData(
     const month = String(item.date.getMonth() + 1).padStart(2, '0');
     const day = String(item.date.getDate()).padStart(2, '0');
     const dateKey = `${year}-${month}-${day}`; // Format YYYY-MM-DD
-    dataMap.set(dateKey, item.durationInMinutes);
+    const previousDuration = dataMap.get(dateKey) || 0;
+    dataMap.set(dateKey, previousDuration + item.durationInMinutes);
   });
 
   const weeks: Week[] = [];
