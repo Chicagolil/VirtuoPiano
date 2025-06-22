@@ -6,7 +6,11 @@ import 'tippy.js/dist/tippy.css';
 import { Spinner } from './spinner';
 import { SessionCard } from './SessionCard';
 import { useHeatmap } from '@/customHooks/useHeatmap';
-import { formatDuration } from '@/common/utils/function';
+import {
+  formatDuration,
+  generateEmptyGrid,
+  generateMonthLabels,
+} from '@/common/utils/function';
 import {
   HEATMAP_COLORS,
   ANIMATION_STYLES,
@@ -55,6 +59,13 @@ export const Heatmap: React.FC = () => {
     };
   }, []);
 
+  // Utiliser les données réelles ou une grille vide pendant le chargement
+  const displayData = loading ? generateEmptyGrid(selectedYear) : data;
+  const displayMonthLabels = loading
+    ? generateMonthLabels(selectedYear, displayData)
+    : monthLabels;
+  const displayTotalContributions = loading ? 0 : totalContributions;
+
   return (
     <div style={containerStyles.main}>
       {/* Effet de verre avec pseudo-élément */}
@@ -63,7 +74,11 @@ export const Heatmap: React.FC = () => {
       {/* Titre avec nombre total de contributions */}
       <div style={containerStyles.title}>
         <h2 style={containerStyles.titleText}>
-          {formatDuration(totalContributions)} de pratique en {selectedYear}
+          {loading
+            ? 'Chargement des données...'
+            : formatDuration(displayTotalContributions) +
+              ' de pratique en ' +
+              selectedYear}
         </h2>
       </div>
 
@@ -75,10 +90,10 @@ export const Heatmap: React.FC = () => {
           <div
             style={{
               ...containerStyles.monthLabels,
-              width: `${data.length * 23}px`,
+              width: `${displayData.length * 23}px`,
             }}
           >
-            {monthLabels.map((label, index) => (
+            {displayMonthLabels.map((label, index) => (
               <span
                 key={index}
                 style={{
@@ -91,19 +106,19 @@ export const Heatmap: React.FC = () => {
             ))}
           </div>
 
-          {/* Grille avec spinner de chargement */}
+          {/* Grille */}
           <div style={containerStyles.grid}>
-            {loading ? (
+            {loading && (
               <div
-                style={containerStyles.loadingOverlay(data.length)}
+                style={containerStyles.loadingOverlay(displayData.length)}
                 className="flex flex-col items-center justify-center"
               >
                 <p className="text-white">Chargement de l'année en cours...</p>
                 <Spinner variant="bars" size={32} className="text-white" />
               </div>
-            ) : null}
+            )}
 
-            {data.map((week, wi) => (
+            {displayData.map((week, wi) => (
               <div key={wi} style={containerStyles.week}>
                 {week.map((count, di) => {
                   let dateStr = '';
@@ -132,7 +147,9 @@ export const Heatmap: React.FC = () => {
                       '0'
                     );
                     dateStr = `${tooltipDay}/${tooltipMonth}/${tooltipYear}`;
-                    tooltip = `${count} minutes de pratique le ${dayName} ${dateStr}`;
+                    tooltip = loading
+                      ? `${dayName} ${dateStr} - Aucune session`
+                      : `${count} minutes de pratique le ${dayName} ${dateStr}`;
                   }
 
                   let dateKey = '';
@@ -158,7 +175,9 @@ export const Heatmap: React.FC = () => {
                     >
                       <div
                         onClick={() =>
-                          currentDate && handleCellClick(currentDate, count)
+                          currentDate &&
+                          !loading &&
+                          handleCellClick(currentDate, count)
                         }
                         style={containerStyles.cell(
                           count,

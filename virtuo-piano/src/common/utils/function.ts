@@ -138,6 +138,38 @@ export function generateYearData(
   return weeks;
 }
 
+// Fonction pour générer une grille vide pour le chargement
+export function generateEmptyGrid(year: number): Week[] {
+  const startDate = new Date(year, 0, 1);
+  const endDate = new Date(year, 11, 31);
+  const startDayOfWeek = startDate.getDay();
+  const mondayStartDay = startDayOfWeek === 0 ? 6 : startDayOfWeek - 1;
+  const totalDays =
+    Math.floor(
+      (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
+    ) + 1;
+  const totalCells = mondayStartDay + totalDays;
+  const weeksNeeded = Math.ceil(totalCells / 7);
+
+  const weeks: Week[] = [];
+  for (let weekIndex = 0; weekIndex < weeksNeeded; weekIndex++) {
+    const week: (number | null)[] = [];
+    for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
+      const cellIndex = weekIndex * 7 + dayIndex;
+      if (
+        cellIndex < mondayStartDay ||
+        cellIndex >= mondayStartDay + totalDays
+      ) {
+        week.push(null);
+      } else {
+        week.push(0); // Cellules vides avec 0 contribution
+      }
+    }
+    weeks.push(week);
+  }
+  return weeks;
+}
+
 // Fonction pour générer les labels des mois
 export function generateMonthLabels(
   year: number,
