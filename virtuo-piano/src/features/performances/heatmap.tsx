@@ -17,6 +17,7 @@ import {
   HEATMAP_YEARS,
 } from '@/common/constants/heatmaps';
 import { containerStyles } from './heatmap.styles';
+import { ResponsiveContainer } from 'recharts';
 
 // Fonction pour formater la date en français
 const formatDate = (dateString: string) => {

@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 import { Heatmap } from '@/features/performances/heatmap';
 import { Suspense } from 'react';
 import { Spinner } from '@/components/ui/spinner';
-import { BentoShadcnExample } from '@/features/BentoGrid/BentoShadcnExample';
+import GeneralStats from '@/features/performances/generalStats';
 
 export default async function PerformancesPage() {
   const session = await getServerSession(authOptions);
@@ -15,11 +15,7 @@ export default async function PerformancesPage() {
   }
 
   async function LoadPerformances() {
-    return (
-      <div>
-        <Heatmap />
-      </div>
-    );
+    return <div>{/* <Heatmap /> */}</div>;
   }
   return (
     <div>
@@ -35,8 +31,8 @@ export default async function PerformancesPage() {
           }
         >
           <LoadPerformances />
-          <PerformanceBento />
-          <BentoShadcnExample />
+          {/* <PerformanceBento /> */}
+          <GeneralStats />
         </Suspense>
       </div>
     </div>
