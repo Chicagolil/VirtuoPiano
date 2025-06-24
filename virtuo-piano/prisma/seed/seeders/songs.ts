@@ -2,6 +2,7 @@ import { PrismaClient, SourceType, SongType } from '@prisma/client';
 import { faker } from '@faker-js/faker';
 import { uploadImage } from '../../../src/lib/cloudinary';
 import path from 'path';
+import { Note } from '@/common/types/songs';
 
 export const seedSongs = async (prisma: PrismaClient) => {
   const keys = await prisma.key.findMany();
@@ -28,27 +29,49 @@ export const seedSongs = async (prisma: PrismaClient) => {
 
   const hands = ['left', 'right'];
   const fingers = [1, 2, 3, 4, 5];
-  const noteNames = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
-  const octaves = [3, 4, 5];
-
+  const noteNames = [
+    'C',
+    'C#',
+    'D',
+    'D#',
+    'E',
+    'F',
+    'F#',
+    'G',
+    'G#',
+    'A',
+    'A#',
+    'B',
+  ];
+  const octaves = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+  const possibleDurations = [0.5, 1, 1.5, 2, 4];
   const generateNotes = (count: number) => {
     const notes = [];
-    let currentStart = 0;
+    let currentStartBeat = 0;
 
     for (let i = 0; i < count; i++) {
-      const duration = faker.number.int({ min: 100, max: 1000 });
+      const durationInBeats = faker.helpers.arrayElement(possibleDurations);
       notes.push({
         note: `${faker.helpers.arrayElement(
           noteNames
         )}${faker.helpers.arrayElement(octaves)}`,
-        duration,
-        start: currentStart,
+        durationInBeats,
+        startBeat: currentStartBeat,
         finger: faker.helpers.arrayElement(fingers),
         hand: faker.helpers.arrayElement(hands),
       });
-      currentStart += duration;
+      currentStartBeat += durationInBeats;
     }
     return notes;
+  };
+
+  const computeDuration = (notes: Note[], tempo: number) => {
+    const totalBeats = notes.reduce(
+      (acc, note) => acc + note.durationInBeats,
+      0
+    );
+    const durationInMs = (totalBeats * 60000) / tempo;
+    return durationInMs;
   };
 
   const songs = [];
@@ -68,59 +91,59 @@ export const seedSongs = async (prisma: PrismaClient) => {
   const myNotes = [
     {
       note: 'C4',
-      duration: 1000,
-      start: 0,
+      durationInBeats: 1.0,
+      startBeat: 0.0,
       finger: 1,
       hand: 'right',
     },
     {
       note: 'D4',
-      duration: 1000,
-      start: 1000,
+      durationInBeats: 1.0,
+      startBeat: 1.0,
       finger: 2,
       hand: 'right',
     },
     {
       note: 'E4',
-      duration: 1000,
-      start: 2000,
+      durationInBeats: 1.0,
+      startBeat: 2.0,
       finger: 3,
       hand: 'right',
     },
     {
       note: 'F4',
-      duration: 1000,
-      start: 3000,
+      durationInBeats: 1.0,
+      startBeat: 3.0,
       finger: 1,
       hand: 'right',
     },
     {
       note: 'G4',
-      duration: 1000,
-      start: 4000,
+      durationInBeats: 1.0,
+      startBeat: 4.0,
       finger: 2,
       hand: 'right',
     },
     {
       note: 'A4',
-      duration: 1000,
-      start: 5000,
+      durationInBeats: 1.0,
+      startBeat: 5.0,
       finger: 3,
-      hand: 'right',
+      hand: 'left',
     },
     {
       note: 'B4',
-      duration: 1000,
-      start: 6000,
+      durationInBeats: 1.0,
+      startBeat: 6.0,
       finger: 4,
-      hand: 'right',
+      hand: 'left',
     },
     {
       note: 'C5',
-      duration: 1000,
-      start: 7000,
+      durationInBeats: 1.0,
+      startBeat: 7.0,
       finger: 5,
-      hand: 'right',
+      hand: 'left',
     },
   ];
 
@@ -129,7 +152,7 @@ export const seedSongs = async (prisma: PrismaClient) => {
     composer: 'Chicagolil',
     genre: 'C majeur',
     tempo: 120,
-    duration_ms: myNotes.reduce((acc, note) => acc + note.duration, 0),
+    duration_ms: computeDuration(myNotes, 120),
     SongType: SongType.scaleEx,
     SourceType: SourceType.library,
     timeSignature: '4/4',
@@ -137,24 +160,32 @@ export const seedSongs = async (prisma: PrismaClient) => {
     key_id: keys[0].id,
     notes: myNotes,
     imageUrl: defaultImageUrl,
+    releaseDate: faker.date.past({ years: 50 }),
   };
 
   for (let i = 0; i < 100; i++) {
     const key = faker.helpers.arrayElement(keys);
+    const generatedNotes = generateNotes(
+      faker.number.int({ min: 10, max: 30 })
+    );
 
     songs.push({
       title: faker.lorem.word(),
       composer: faker.person.fullName(),
       genre: faker.helpers.arrayElement(genres),
       tempo: faker.number.int({ min: 40, max: 200 }),
-      duration_ms: faker.number.int({ min: 30000, max: 280000 }),
+      duration_ms: computeDuration(
+        generatedNotes,
+        faker.number.int({ min: 40, max: 200 })
+      ),
       SongType: faker.helpers.arrayElement(Object.values(SongType)),
       SourceType: faker.helpers.arrayElement(Object.values(SourceType)),
       timeSignature: faker.helpers.arrayElement(['4/4', '3/4', '6/8']),
       Level: faker.number.int({ min: 1, max: 10 }),
       key_id: key.id,
-      notes: generateNotes(faker.number.int({ min: 10, max: 30 })),
+      notes: generatedNotes,
       imageUrl: defaultImageUrl,
+      releaseDate: faker.date.past({ years: 50 }),
     });
   }
   songs.push(mySong);

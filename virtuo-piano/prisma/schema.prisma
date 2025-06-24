@@ -27,8 +27,15 @@ enum SongType {
   rythmEx
   arpeggioEx
 }
-
 //  earTraining,  sightReading
+
+enum Hands {
+  right
+  left
+  both
+}
+
+
 
 model User {
   id            String    @id @default(uuid())
@@ -76,6 +83,8 @@ model Songs {
   key_id         String 
   key            Key       @relation(fields: [key_id], references: [id])
   scores         Scores[]
+  createdAt      DateTime  @default(now())
+  releaseDate    DateTime?
   userCompositions UsersCompositions[]
   userFavorites  UsersFavorites[]
   userImports    UsersImports[]
@@ -86,10 +95,13 @@ model Scores {
   correctNotes   Int?
   missedNotes    Int?
   wrongNotes     Int?
+  hands          Hands?
+  selectedTempo  Int? 
   totalPoints    Int? 
   maxMultiplier  Int? 
   maxCombo       Int? 
-  played_at      DateTime  @default(now())
+  sessionStartTime     DateTime  
+  sessionEndTime       DateTime
   user_id        String
   song_id        String
   mode_id        String
