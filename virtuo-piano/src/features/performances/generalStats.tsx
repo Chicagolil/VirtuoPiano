@@ -19,6 +19,7 @@ import { ScoreSummary } from '@/components/cards/ScoreCard';
 import { PieChartCard } from '@/components/cards/PieChartCard';
 import { getSongsPropertyRepertory } from '@/lib/actions/generalStats-actions';
 import { PIE_CHART_COLORS } from '@/common/constants/generalStats';
+import PracticeTimeTile from './PracticeTimeTile';
 
 const achievements = [
   {
@@ -45,28 +46,6 @@ const achievements = [
     icon: <IconTargetArrow size={22} />,
     colorClass: 'text-indigo-500',
   },
-];
-
-const songCategoryData = [
-  { name: 'Classique', value: 40 },
-  { name: 'Jazz', value: 25 },
-  { name: 'Pop', value: 20 },
-  { name: 'Rock', value: 15 },
-  { name: 'Autre', value: 10 },
-];
-
-// Exemple avec plus de styles pour tester le regroupement
-const extendedSongCategoryData = [
-  { name: 'Classique', value: 35 },
-  { name: 'Jazz', value: 20 },
-  { name: 'Pop', value: 18 },
-  { name: 'Rock', value: 12 },
-  { name: 'Blues', value: 8 },
-  { name: 'Folk', value: 6 },
-  { name: 'Country', value: 4 },
-  { name: 'Reggae', value: 3 },
-  { name: 'Hip-Hop', value: 2 },
-  { name: 'Électronique', value: 2 },
 ];
 
 const recentScores: ScoreSummary[] = [
@@ -198,6 +177,7 @@ export default function GeneralStats() {
     };
     fetchData();
   }, []);
+
   return (
     <div className="w-full p-4">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -209,6 +189,7 @@ export default function GeneralStats() {
           maxCategories={5}
           minPercentage={10}
           loading={loading}
+          error={error}
         />
         <PieChartCard
           title="Répertoire par compositeur"
@@ -218,6 +199,7 @@ export default function GeneralStats() {
           maxCategories={5}
           minPercentage={10}
           loading={loading}
+          error={error}
         />
         <PieChartCard
           title="Répertoire par difficulté"
@@ -227,16 +209,11 @@ export default function GeneralStats() {
           maxCategories={5}
           minPercentage={10}
           loading={loading}
+          error={error}
         />
       </div>
       <div className="grid grid-cols-2 gap-4 mb-6">
-        <InfoTile
-          title="Temps total de pratique du mois"
-          value="18h 45min"
-          description="Temps cumulé pour ce mois-ci"
-          icon={<IconClock size={24} />}
-          trend={{ value: '+12%', isPositive: true }}
-        />
+        <PracticeTimeTile />
         <InfoTile
           title="Morceaux dans la bibliothèque"
           value="128"

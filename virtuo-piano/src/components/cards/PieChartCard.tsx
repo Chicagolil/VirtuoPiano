@@ -28,6 +28,7 @@ interface PieChartCardProps {
   maxCategories?: number; // Nombre maximum de catégories avant regroupement
   minPercentage?: number; // Pourcentage minimum pour éviter le regroupement
   loading?: boolean; // Nouvelle prop pour l'état de chargement
+  error?: string | null;
 }
 
 const DEFAULT_COLORS = [
@@ -95,6 +96,7 @@ export function PieChartCard({
   maxCategories = 5,
   minPercentage = 5,
   loading = false,
+  error = null,
 }: PieChartCardProps) {
   const processedData = processChartData(data, maxCategories, minPercentage);
 
@@ -117,6 +119,13 @@ export function PieChartCard({
   // Options de configuration pour Chart.js
   const options = {
     responsive: true,
+    borderWidth: 10,
+    borderColor: '#475569',
+    hoverBorderWidth: 3,
+    hoverOffset: 10,
+    hoverBackgroundColor: '#FFFFFF',
+    hoverBorderColor: '#475569',
+
     maintainAspectRatio: false,
     cutout: '60%', // Crée un trou au centre (innerRadius)
     plugins: {
@@ -175,6 +184,10 @@ export function PieChartCard({
           >
             <Spinner variant="bars" size={32} className="text-indigo-500" />
           </div>
+        ) : error ? (
+          <div className="mt-2 text-sm text-red-500 dark:text-red-400">
+            Erreur lors du chargement des données
+          </div>
         ) : (
           <div style={{ height: `${height}px`, width: '100%' }}>
             <Pie data={chartData} options={options} />
@@ -183,19 +196,21 @@ export function PieChartCard({
       </div>
 
       <div className="mt-2 grid grid-cols-2 gap-1">
-        {processedData.map((category, index) => (
-          <div key={index} className="flex items-center space-x-1.5">
-            <div
-              className="w-2.5 h-2.5 rounded-full"
-              style={{
-                backgroundColor: colors[index % colors.length],
-              }}
-            ></div>
-            <span className="text-xs text-slate-500 dark:text-slate-400 truncate">
-              {category.name}
-            </span>
-          </div>
-        ))}
+        {error
+          ? ''
+          : processedData.map((category, index) => (
+              <div key={index} className="flex items-center space-x-1.5">
+                <div
+                  className="w-2.5 h-2.5 rounded-full"
+                  style={{
+                    backgroundColor: colors[index % colors.length],
+                  }}
+                ></div>
+                <span className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                  {category.name}
+                </span>
+              </div>
+            ))}
       </div>
     </div>
   );

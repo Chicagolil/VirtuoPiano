@@ -66,10 +66,17 @@ export async function getSongsPropertyRepertory(): Promise<{
   }
 }
 
-export async function getTotalPracticeTime(): Promise<{
+export async function getPracticeTimeComparison(
+  interval: 'week' | 'month' | 'quarter'
+): Promise<{
   success: boolean;
   data: {
-    totalTime: number;
+    currentTime: number; // en minutes
+    previousTime: number; // en minutes
+    percentageChange: number; // pourcentage de changement
+    formattedCurrentTime: string; // format "12H50"
+    formattedPreviousTime: string; // format "12H50"
+    trend: 'increase' | 'decrease' | 'stable';
   };
   error?: string;
 }> {
@@ -80,20 +87,68 @@ export async function getTotalPracticeTime(): Promise<{
     }
 
     const userId = session.user.id;
-    const rawData = await PerformancesServices.getTotalPracticeTime(userId);
+
+    // Récupérer le temps de pratique pour l'intervalle actuel
+    const currentTime = await PerformancesServices.getPracticeTimeForInterval(
+      userId,
+      interval
+    );
+
+    // Récupérer le temps de pratique pour l'intervalle précédent
+    const previousTime =
+      await PerformancesServices.getPracticeTimeForPreviousInterval(
+        userId,
+        interval
+      );
+
+    // Calculer le pourcentage de changement
+    let percentageChange = 0;
+    let trend: 'increase' | 'decrease' | 'stable' = 'stable';
+
+    if (previousTime > 0) {
+      percentageChange = Math.round(
+        ((currentTime - previousTime) / previousTime) * 100
+      );
+      trend =
+        percentageChange > 0
+          ? 'increase'
+          : percentageChange < 0
+          ? 'decrease'
+          : 'stable';
+    }
+
+    // Fonction pour formater le temps en "HH:MM"
+    const formatTime = (minutes: number): string => {
+      const hours = Math.floor(minutes / 60);
+      const mins = minutes % 60;
+      return `${hours}h${mins.toString().padStart(2, '0')}m`;
+    };
 
     return {
       success: true,
       data: {
-        totalTime: rawData.totalTime,
+        currentTime,
+        previousTime,
+        percentageChange,
+        formattedCurrentTime: formatTime(currentTime),
+        formattedPreviousTime: formatTime(previousTime),
+        trend,
       },
     };
   } catch (error) {
-    console.error('Erreur lors de la récupération des données:', error);
+    console.error(
+      'Erreur lors de la récupération du temps de pratique:',
+      error
+    );
     return {
       success: false,
       data: {
-        totalTime: 0,
+        currentTime: 0,
+        previousTime: 0,
+        percentageChange: 0,
+        formattedCurrentTime: '0H00',
+        formattedPreviousTime: '0H00',
+        trend: 'stable',
       },
       error: error instanceof Error ? error.message : 'Erreur inconnue',
     };
