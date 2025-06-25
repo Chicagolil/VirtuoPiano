@@ -20,6 +20,7 @@ import { PieChartCard } from '@/components/cards/PieChartCard';
 import { getSongsPropertyRepertory } from '@/lib/actions/generalStats-actions';
 import { PIE_CHART_COLORS } from '@/common/constants/generalStats';
 import PracticeTimeTile from './PracticeTimeTile';
+import StartedSongsTile from './StartedSongsTile';
 
 const achievements = [
   {
@@ -214,13 +215,7 @@ export default function GeneralStats() {
       </div>
       <div className="grid grid-cols-2 gap-4 mb-6">
         <PracticeTimeTile />
-        <InfoTile
-          title="Morceaux dans la bibliothèque"
-          value="128"
-          description="32 morceaux commencés"
-          icon={<IconBook size={24} />}
-          trend={{ value: '+3', isPositive: true }}
-        />
+        <StartedSongsTile />
       </div>
       {/* <div className="bg-white dark:bg-slate-800 shadow-md rounded-2xl mb-6 p-5 border border-slate-200 dark:border-slate-700">
         <div className="flex items-center justify-between mb-4">

@@ -176,12 +176,9 @@ export function PieChartCard({
         {title}
       </h3>
 
-      <div className="flex-grow flex items-center justify-center">
+      <div className="flex-grow flex items-center justify-center h-60">
         {loading ? (
-          <div
-            className="flex items-center justify-center"
-            style={{ height: `${height}px` }}
-          >
+          <div className="flex items-center justify-center ">
             <Spinner variant="bars" size={32} className="text-indigo-500" />
           </div>
         ) : error ? (

@@ -154,3 +154,81 @@ export async function getPracticeTimeComparison(
     };
   }
 }
+
+export async function getStartedSongsComparison(
+  interval: 'week' | 'month' | 'quarter'
+): Promise<{
+  success: boolean;
+  data: {
+    currentSongs: number;
+    previousSongs: number;
+    difference: number; // différence absolue
+    totalSongs: number; // nombre total de morceaux dans la bibliothèque
+    trend: 'increase' | 'decrease' | 'stable';
+  };
+  error?: string;
+}> {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      throw new Error('Utilisateur non connecté');
+    }
+
+    const userId = session.user.id;
+
+    // Récupérer le nombre de morceaux démarrés pour l'intervalle actuel
+    const currentSongs = await PerformancesServices.getStartedSongsForInterval(
+      userId,
+      interval
+    );
+
+    // Récupérer le nombre de morceaux démarrés pour l'intervalle précédent
+    const previousSongs =
+      await PerformancesServices.getStartedSongsForPreviousInterval(
+        userId,
+        interval
+      );
+
+    // Récupérer le nombre total de morceaux dans la bibliothèque
+    const totalSongs = await PerformancesServices.getTotalSongsInLibrary(
+      userId
+    );
+
+    // Calculer la différence
+    const difference = currentSongs - previousSongs;
+    let trend: 'increase' | 'decrease' | 'stable' = 'stable';
+
+    if (difference > 0) {
+      trend = 'increase';
+    } else if (difference < 0) {
+      trend = 'decrease';
+    }
+
+    return {
+      success: true,
+      data: {
+        currentSongs,
+        previousSongs,
+        difference,
+        totalSongs,
+        trend,
+      },
+    };
+  } catch (error) {
+    console.error(
+      'Erreur lors de la récupération des morceaux démarrés:',
+      error
+    );
+    return {
+      success: false,
+      data: {
+        currentSongs: 0,
+        previousSongs: 0,
+        difference: 0,
+        totalSongs: 0,
+        trend: 'stable',
+      },
+      error: error instanceof Error ? error.message : 'Erreur inconnue',
+    };
+  }
+}

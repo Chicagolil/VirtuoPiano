@@ -4,8 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { IconClock } from '@tabler/icons-react';
 import InfoTile from '@/components/tiles/Infotile';
 import { getPracticeTimeComparison } from '@/lib/actions/generalStats-actions';
-
-type IntervalType = 'week' | 'month' | 'quarter';
+import { IntervalType } from '@/common/types';
 
 export default function PracticeTimeTile() {
   const [selectedInterval, setSelectedInterval] =

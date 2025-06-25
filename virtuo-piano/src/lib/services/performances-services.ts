@@ -1,5 +1,5 @@
 import prisma from '@/lib/prisma';
-import { getLearnScores } from '@/common/utils/function';
+import { getLearnScores, getDifficultyRange } from '@/common/utils/function';
 
 export type ScoreDurationData = {
   date: Date;
@@ -182,8 +182,9 @@ export class PerformancesServices {
       .filter((composer): composer is string => composer !== null);
 
     const difficulties = scores
-      .map((score) => score.song.Level?.toString())
-      .filter((difficulty): difficulty is string => difficulty !== null);
+      .map((score) => score.song.Level)
+      .filter((difficulty): difficulty is number => difficulty !== null)
+      .map((difficulty) => getDifficultyRange(difficulty).label);
 
     return {
       genre: genres,
@@ -350,5 +351,172 @@ export class PerformancesServices {
     }, 0);
 
     return totalMinutes;
+  }
+
+  static async getStartedSongsForInterval(
+    userId: string,
+    interval: 'week' | 'month' | 'quarter'
+  ): Promise<number> {
+    const now = new Date();
+    let startDate: Date;
+    let endDate: Date;
+
+    switch (interval) {
+      case 'week':
+        // Semaine en cours (lundi à dimanche)
+        const dayOfWeek = now.getDay();
+        const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+        startDate = new Date(now);
+        startDate.setDate(now.getDate() - daysToMonday);
+        startDate.setHours(0, 0, 0, 0);
+        endDate = new Date(startDate);
+        endDate.setDate(startDate.getDate() + 6);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+
+      case 'month':
+        // Mois en cours
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        endDate = new Date(
+          now.getFullYear(),
+          now.getMonth() + 1,
+          0,
+          23,
+          59,
+          59,
+          999
+        );
+        break;
+
+      case 'quarter':
+        // Trimestre en cours
+        const currentQuarter = Math.floor(now.getMonth() / 3);
+        const quarterStartMonth = currentQuarter * 3;
+        startDate = new Date(now.getFullYear(), quarterStartMonth, 1);
+        endDate = new Date(
+          now.getFullYear(),
+          quarterStartMonth + 3,
+          0,
+          23,
+          59,
+          59,
+          999
+        );
+        break;
+
+      default:
+        throw new Error('Intervalle invalide');
+    }
+
+    // Compter les morceaux uniques démarrés dans l'intervalle
+    const startedSongs = await prisma.scores.groupBy({
+      by: ['song_id'],
+      where: {
+        user_id: userId,
+        sessionStartTime: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+    });
+
+    return startedSongs.length;
+  }
+
+  static async getStartedSongsForPreviousInterval(
+    userId: string,
+    interval: 'week' | 'month' | 'quarter'
+  ): Promise<number> {
+    const now = new Date();
+    let startDate: Date;
+    let endDate: Date;
+
+    switch (interval) {
+      case 'week':
+        // Semaine précédente (lundi à dimanche)
+        const dayOfWeek = now.getDay();
+        const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+        const currentWeekStart = new Date(now);
+        currentWeekStart.setDate(now.getDate() - daysToMonday);
+        startDate = new Date(currentWeekStart);
+        startDate.setDate(currentWeekStart.getDate() - 7);
+        startDate.setHours(0, 0, 0, 0);
+        endDate = new Date(startDate);
+        endDate.setDate(startDate.getDate() + 6);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+
+      case 'month':
+        // Mois précédent
+        startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        endDate = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          0,
+          23,
+          59,
+          59,
+          999
+        );
+        break;
+
+      case 'quarter':
+        // Trimestre précédent
+        const currentQuarter = Math.floor(now.getMonth() / 3);
+        const previousQuarterStartMonth = (currentQuarter - 1) * 3;
+        const year =
+          previousQuarterStartMonth < 0
+            ? now.getFullYear() - 1
+            : now.getFullYear();
+        const adjustedMonth =
+          previousQuarterStartMonth < 0
+            ? previousQuarterStartMonth + 12
+            : previousQuarterStartMonth;
+        startDate = new Date(year, adjustedMonth, 1);
+        endDate = new Date(year, adjustedMonth + 3, 0, 23, 59, 59, 999);
+        break;
+
+      default:
+        throw new Error('Intervalle invalide');
+    }
+
+    // Compter les morceaux uniques démarrés dans l'intervalle précédent
+    const startedSongs = await prisma.scores.groupBy({
+      by: ['song_id'],
+      where: {
+        user_id: userId,
+        sessionStartTime: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+    });
+
+    return startedSongs.length;
+  }
+
+  static async getTotalSongsInLibrary(userId: string): Promise<number> {
+    // Compter tous les morceaux de la bibliothèque
+    const librarySongs = await prisma.songs.count({
+      where: {
+        SourceType: 'library',
+      },
+    });
+
+    // Compter les compositions de l'utilisateur via la table de liaison
+    const userCompositions = await prisma.usersCompositions.count({
+      where: {
+        user_id: userId,
+      },
+    });
+
+    // Compter les imports de l'utilisateur via la table de liaison
+    const userImports = await prisma.usersImports.count({
+      where: {
+        user_id: userId,
+      },
+    });
+
+    return librarySongs + userCompositions + userImports;
   }
 }
