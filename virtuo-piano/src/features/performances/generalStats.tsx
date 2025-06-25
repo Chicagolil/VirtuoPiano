@@ -217,7 +217,7 @@ export default function GeneralStats() {
         <PracticeTimeTile />
         <StartedSongsTile />
       </div>
-      {/* <div className="bg-white dark:bg-slate-800 shadow-md rounded-2xl mb-6 p-5 border border-slate-200 dark:border-slate-700">
+      <div className="bg-white dark:bg-slate-800 shadow-md rounded-2xl mb-6 p-5 border border-slate-200 dark:border-slate-700">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center">
             <IconClock size={20} className="mr-2 text-indigo-500" />
@@ -234,7 +234,7 @@ export default function GeneralStats() {
             <ScoreCard key={score.id} score={score} />
           ))}
         </div>
-      </div> */}
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Carte avec Avatar et progression */}

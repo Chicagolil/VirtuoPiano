@@ -25,6 +25,123 @@ export type SessionDetail = {
 };
 
 export class PerformancesServices {
+  // Méthodes utilitaires privées pour calculer les intervalles
+  private static getCurrentIntervalDates(
+    interval: 'week' | 'month' | 'quarter'
+  ): { startDate: Date; endDate: Date } {
+    const now = new Date();
+    let startDate: Date;
+    let endDate: Date;
+
+    switch (interval) {
+      case 'week':
+        // Semaine en cours (lundi à dimanche)
+        const dayOfWeek = now.getDay();
+        const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+        startDate = new Date(now);
+        startDate.setDate(now.getDate() - daysToMonday);
+        startDate.setHours(0, 0, 0, 0);
+        endDate = new Date(startDate);
+        endDate.setDate(startDate.getDate() + 6);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+
+      case 'month':
+        // Mois en cours
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        endDate = new Date(
+          now.getFullYear(),
+          now.getMonth() + 1,
+          0,
+          23,
+          59,
+          59,
+          999
+        );
+        break;
+
+      case 'quarter':
+        // Trimestre en cours
+        const currentQuarter = Math.floor(now.getMonth() / 3);
+        const quarterStartMonth = currentQuarter * 3;
+        startDate = new Date(now.getFullYear(), quarterStartMonth, 1);
+        endDate = new Date(
+          now.getFullYear(),
+          quarterStartMonth + 3,
+          0,
+          23,
+          59,
+          59,
+          999
+        );
+        break;
+
+      default:
+        throw new Error('Intervalle invalide');
+    }
+
+    return { startDate, endDate };
+  }
+
+  private static getPreviousIntervalDates(
+    interval: 'week' | 'month' | 'quarter'
+  ): { startDate: Date; endDate: Date } {
+    const now = new Date();
+    let startDate: Date;
+    let endDate: Date;
+
+    switch (interval) {
+      case 'week':
+        // Semaine précédente (lundi à dimanche)
+        const dayOfWeek = now.getDay();
+        const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+        const currentWeekStart = new Date(now);
+        currentWeekStart.setDate(now.getDate() - daysToMonday);
+        startDate = new Date(currentWeekStart);
+        startDate.setDate(currentWeekStart.getDate() - 7);
+        startDate.setHours(0, 0, 0, 0);
+        endDate = new Date(startDate);
+        endDate.setDate(startDate.getDate() + 6);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+
+      case 'month':
+        // Mois précédent
+        startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        endDate = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          0,
+          23,
+          59,
+          59,
+          999
+        );
+        break;
+
+      case 'quarter':
+        // Trimestre précédent
+        const currentQuarter = Math.floor(now.getMonth() / 3);
+        const previousQuarterStartMonth = (currentQuarter - 1) * 3;
+        const year =
+          previousQuarterStartMonth < 0
+            ? now.getFullYear() - 1
+            : now.getFullYear();
+        const adjustedMonth =
+          previousQuarterStartMonth < 0
+            ? previousQuarterStartMonth + 12
+            : previousQuarterStartMonth;
+        startDate = new Date(year, adjustedMonth, 1);
+        endDate = new Date(year, adjustedMonth + 3, 0, 23, 59, 59, 999);
+        break;
+
+      default:
+        throw new Error('Intervalle invalide');
+    }
+
+    return { startDate, endDate };
+  }
+
   static async getPracticeDataForHeatmap(
     userId: string,
     year: number
@@ -197,56 +314,7 @@ export class PerformancesServices {
     userId: string,
     interval: 'week' | 'month' | 'quarter'
   ): Promise<number> {
-    const now = new Date();
-    let startDate: Date;
-    let endDate: Date;
-
-    switch (interval) {
-      case 'week':
-        // Semaine en cours (lundi à dimanche)
-        const dayOfWeek = now.getDay();
-        const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-        startDate = new Date(now);
-        startDate.setDate(now.getDate() - daysToMonday);
-        startDate.setHours(0, 0, 0, 0);
-        endDate = new Date(startDate);
-        endDate.setDate(startDate.getDate() + 6);
-        endDate.setHours(23, 59, 59, 999);
-        break;
-
-      case 'month':
-        // Mois en cours
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-        endDate = new Date(
-          now.getFullYear(),
-          now.getMonth() + 1,
-          0,
-          23,
-          59,
-          59,
-          999
-        );
-        break;
-
-      case 'quarter':
-        // Trimestre en cours
-        const currentQuarter = Math.floor(now.getMonth() / 3);
-        const quarterStartMonth = currentQuarter * 3;
-        startDate = new Date(now.getFullYear(), quarterStartMonth, 1);
-        endDate = new Date(
-          now.getFullYear(),
-          quarterStartMonth + 3,
-          0,
-          23,
-          59,
-          59,
-          999
-        );
-        break;
-
-      default:
-        throw new Error('Intervalle invalide');
-    }
+    const { startDate, endDate } = this.getCurrentIntervalDates(interval);
 
     const scores = await prisma.scores.findMany({
       where: {
@@ -276,58 +344,7 @@ export class PerformancesServices {
     userId: string,
     interval: 'week' | 'month' | 'quarter'
   ): Promise<number> {
-    const now = new Date();
-    let startDate: Date;
-    let endDate: Date;
-
-    switch (interval) {
-      case 'week':
-        // Semaine précédente (lundi à dimanche)
-        const dayOfWeek = now.getDay();
-        const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-        const currentWeekStart = new Date(now);
-        currentWeekStart.setDate(now.getDate() - daysToMonday);
-        startDate = new Date(currentWeekStart);
-        startDate.setDate(currentWeekStart.getDate() - 7);
-        startDate.setHours(0, 0, 0, 0);
-        endDate = new Date(startDate);
-        endDate.setDate(startDate.getDate() + 6);
-        endDate.setHours(23, 59, 59, 999);
-        break;
-
-      case 'month':
-        // Mois précédent
-        startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-        endDate = new Date(
-          now.getFullYear(),
-          now.getMonth(),
-          0,
-          23,
-          59,
-          59,
-          999
-        );
-        break;
-
-      case 'quarter':
-        // Trimestre précédent
-        const currentQuarter = Math.floor(now.getMonth() / 3);
-        const previousQuarterStartMonth = (currentQuarter - 1) * 3;
-        const year =
-          previousQuarterStartMonth < 0
-            ? now.getFullYear() - 1
-            : now.getFullYear();
-        const adjustedMonth =
-          previousQuarterStartMonth < 0
-            ? previousQuarterStartMonth + 12
-            : previousQuarterStartMonth;
-        startDate = new Date(year, adjustedMonth, 1);
-        endDate = new Date(year, adjustedMonth + 3, 0, 23, 59, 59, 999);
-        break;
-
-      default:
-        throw new Error('Intervalle invalide');
-    }
+    const { startDate, endDate } = this.getPreviousIntervalDates(interval);
 
     const scores = await prisma.scores.findMany({
       where: {
@@ -357,56 +374,7 @@ export class PerformancesServices {
     userId: string,
     interval: 'week' | 'month' | 'quarter'
   ): Promise<number> {
-    const now = new Date();
-    let startDate: Date;
-    let endDate: Date;
-
-    switch (interval) {
-      case 'week':
-        // Semaine en cours (lundi à dimanche)
-        const dayOfWeek = now.getDay();
-        const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-        startDate = new Date(now);
-        startDate.setDate(now.getDate() - daysToMonday);
-        startDate.setHours(0, 0, 0, 0);
-        endDate = new Date(startDate);
-        endDate.setDate(startDate.getDate() + 6);
-        endDate.setHours(23, 59, 59, 999);
-        break;
-
-      case 'month':
-        // Mois en cours
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-        endDate = new Date(
-          now.getFullYear(),
-          now.getMonth() + 1,
-          0,
-          23,
-          59,
-          59,
-          999
-        );
-        break;
-
-      case 'quarter':
-        // Trimestre en cours
-        const currentQuarter = Math.floor(now.getMonth() / 3);
-        const quarterStartMonth = currentQuarter * 3;
-        startDate = new Date(now.getFullYear(), quarterStartMonth, 1);
-        endDate = new Date(
-          now.getFullYear(),
-          quarterStartMonth + 3,
-          0,
-          23,
-          59,
-          59,
-          999
-        );
-        break;
-
-      default:
-        throw new Error('Intervalle invalide');
-    }
+    const { startDate, endDate } = this.getCurrentIntervalDates(interval);
 
     // Compter les morceaux uniques démarrés dans l'intervalle
     const startedSongs = await prisma.scores.groupBy({
@@ -427,58 +395,7 @@ export class PerformancesServices {
     userId: string,
     interval: 'week' | 'month' | 'quarter'
   ): Promise<number> {
-    const now = new Date();
-    let startDate: Date;
-    let endDate: Date;
-
-    switch (interval) {
-      case 'week':
-        // Semaine précédente (lundi à dimanche)
-        const dayOfWeek = now.getDay();
-        const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-        const currentWeekStart = new Date(now);
-        currentWeekStart.setDate(now.getDate() - daysToMonday);
-        startDate = new Date(currentWeekStart);
-        startDate.setDate(currentWeekStart.getDate() - 7);
-        startDate.setHours(0, 0, 0, 0);
-        endDate = new Date(startDate);
-        endDate.setDate(startDate.getDate() + 6);
-        endDate.setHours(23, 59, 59, 999);
-        break;
-
-      case 'month':
-        // Mois précédent
-        startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-        endDate = new Date(
-          now.getFullYear(),
-          now.getMonth(),
-          0,
-          23,
-          59,
-          59,
-          999
-        );
-        break;
-
-      case 'quarter':
-        // Trimestre précédent
-        const currentQuarter = Math.floor(now.getMonth() / 3);
-        const previousQuarterStartMonth = (currentQuarter - 1) * 3;
-        const year =
-          previousQuarterStartMonth < 0
-            ? now.getFullYear() - 1
-            : now.getFullYear();
-        const adjustedMonth =
-          previousQuarterStartMonth < 0
-            ? previousQuarterStartMonth + 12
-            : previousQuarterStartMonth;
-        startDate = new Date(year, adjustedMonth, 1);
-        endDate = new Date(year, adjustedMonth + 3, 0, 23, 59, 59, 999);
-        break;
-
-      default:
-        throw new Error('Intervalle invalide');
-    }
+    const { startDate, endDate } = this.getPreviousIntervalDates(interval);
 
     // Compter les morceaux uniques démarrés dans l'intervalle précédent
     const startedSongs = await prisma.scores.groupBy({
