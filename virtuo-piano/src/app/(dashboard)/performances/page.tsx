@@ -6,9 +6,9 @@ import * as Tabs from '@radix-ui/react-tabs';
 import { IconChartBar } from '@tabler/icons-react';
 
 const Heatmap = lazy(() => import('@/features/performances/heatmap'));
-const BentoShadcnExample = lazy(
-  () => import('@/features/performances/generalStats')
-);
+const GeneralStats = lazy(() => import('@/features/performances/GeneralStats'));
+const HistoryStats = lazy(() => import('@/features/performances/HistoryStats'));
+const PlayedSongs = lazy(() => import('@/features/performances/PlayedSongs'));
 
 export default function PerformancesPage() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -20,15 +20,12 @@ export default function PerformancesPage() {
         defaultValue="overview"
         onValueChange={setActiveTab}
       >
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+        <div className="flex  flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center">
-              <IconChartBar size={24} className="mr-2 text-indigo-500" />
-              Performances
-            </h1>
-            <p className="text-slate-500 dark:text-slate-400 mt-1">
+            <h1 className="text-xl text-white font-bold text-slate-900  flex items-center">
+              <IconChartBar size={28} className="mr-2 text-indigo-500" />
               Suivez votre progression et vos performances
-            </p>
+            </h1>
           </div>
 
           <Tabs.List className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-lg">
@@ -74,32 +71,32 @@ export default function PerformancesPage() {
             }
           >
             <Heatmap />
-            <BentoShadcnExample />
+            <GeneralStats />
           </Suspense>
         </Tabs.Content>
 
         <Tabs.Content value="history" className="focus:outline-none">
-          <div className="text-center p-8 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700">
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-              Historique des sessions
-            </h3>
-            <p className="text-slate-500 dark:text-slate-400 mt-2">
-              Cette section affichera l'historique complet de vos sessions de
-              jeu.
-            </p>
-          </div>
+          <Suspense
+            fallback={
+              <div className="flex justify-center items-center h-64">
+                <Spinner variant="bars" size={32} className="text-white" />
+              </div>
+            }
+          >
+            <HistoryStats />
+          </Suspense>
         </Tabs.Content>
 
         <Tabs.Content value="playedSongs" className="focus:outline-none">
-          <div className="text-center p-8 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700">
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-              Chansons Jouées
-            </h3>
-            <p className="text-slate-500 dark:text-slate-400 mt-2">
-              Cette section listera toutes les chansons que vous avez jouées,
-              avec vos statistiques pour chacune.
-            </p>
-          </div>
+          <Suspense
+            fallback={
+              <div className="flex justify-center items-center h-64">
+                <Spinner variant="bars" size={32} className="text-white" />
+              </div>
+            }
+          >
+            <PlayedSongs />
+          </Suspense>
         </Tabs.Content>
       </Tabs.Root>
     </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import {
   IconStar,
@@ -17,6 +17,8 @@ import UserAvatar from '@/components/badge/UserAvatar';
 import ScoreCard from '@/components/cards/ScoreCard';
 import { ScoreSummary } from '@/components/cards/ScoreCard';
 import { PieChartCard } from '@/components/cards/PieChartCard';
+import { getSongsPropertyRepertory } from '@/lib/actions/generalStats-actions';
+import { PIE_CHART_COLORS } from '@/common/constants/generalStats';
 
 const achievements = [
   {
@@ -66,8 +68,6 @@ const extendedSongCategoryData = [
   { name: 'Hip-Hop', value: 2 },
   { name: 'Électronique', value: 2 },
 ];
-
-const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#ff4040'];
 
 const recentScores: ScoreSummary[] = [
   {
@@ -165,43 +165,87 @@ const recentScores: ScoreSummary[] = [
 ];
 
 export default function GeneralStats() {
+  const [genreData, setGenreData] = useState<{ name: string; value: number }[]>(
+    []
+  );
+  const [composerData, setComposerData] = useState<
+    { name: string; value: number }[]
+  >([]);
+  const [difficultyData, setDifficultyData] = useState<
+    { name: string; value: number }[]
+  >([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const { success, data, error } = await getSongsPropertyRepertory();
+        if (success) {
+          setGenreData(data.genre);
+          setComposerData(data.composer);
+          setDifficultyData(data.difficulty);
+          setError(null);
+        } else {
+          setError(error || 'Erreur inconnue');
+        }
+      } catch (err) {
+        setError('Erreur lors du chargement des données');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
   return (
     <div className="w-full p-4">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <PieChartCard
-          title="Répertoire (5 styles max)"
-          data={songCategoryData}
-          colors={COLORS}
+          title="Répertoire par genre"
+          data={genreData}
+          colors={PIE_CHART_COLORS}
           showLabels={true}
           maxCategories={5}
-          minPercentage={5}
+          minPercentage={10}
+          loading={loading}
         />
         <PieChartCard
-          title="Répertoire caca (regroupement auto)"
-          data={extendedSongCategoryData}
-          colors={COLORS}
+          title="Répertoire par compositeur"
+          data={composerData}
+          colors={PIE_CHART_COLORS}
           showLabels={true}
-          maxCategories={10}
-          minPercentage={50}
+          maxCategories={5}
+          minPercentage={10}
+          loading={loading}
         />
-        <div className="grid grid-cols-1 gap-4">
-          <InfoTile
-            title="Temps total de pratique"
-            value="18h 45min"
-            description="Temps cumulé pour ce mois-ci"
-            icon={<IconClock size={24} />}
-            trend={{ value: '+12%', isPositive: true }}
-          />
-          <InfoTile
-            title="Morceaux dans la bibliothèque"
-            value="128"
-            description="32 morceaux commencés"
-            icon={<IconBook size={24} />}
-            trend={{ value: '+3', isPositive: true }}
-          />
-        </div>
+        <PieChartCard
+          title="Répertoire par difficulté"
+          data={difficultyData}
+          colors={PIE_CHART_COLORS}
+          showLabels={true}
+          maxCategories={5}
+          minPercentage={10}
+          loading={loading}
+        />
       </div>
-      <div className="bg-white dark:bg-slate-800 shadow-md rounded-2xl mb-6 p-5 border border-slate-200 dark:border-slate-700">
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        <InfoTile
+          title="Temps total de pratique du mois"
+          value="18h 45min"
+          description="Temps cumulé pour ce mois-ci"
+          icon={<IconClock size={24} />}
+          trend={{ value: '+12%', isPositive: true }}
+        />
+        <InfoTile
+          title="Morceaux dans la bibliothèque"
+          value="128"
+          description="32 morceaux commencés"
+          icon={<IconBook size={24} />}
+          trend={{ value: '+3', isPositive: true }}
+        />
+      </div>
+      {/* <div className="bg-white dark:bg-slate-800 shadow-md rounded-2xl mb-6 p-5 border border-slate-200 dark:border-slate-700">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center">
             <IconClock size={20} className="mr-2 text-indigo-500" />
@@ -218,7 +262,8 @@ export default function GeneralStats() {
             <ScoreCard key={score.id} score={score} />
           ))}
         </div>
-      </div>
+      </div> */}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Carte avec Avatar et progression */}
         <div className="bg-white dark:bg-slate-800 shadow-md rounded-2xl p-5 border border-slate-200 dark:border-slate-700">

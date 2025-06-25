@@ -1,4 +1,3 @@
-import { Note } from '@/common/types/songs';
 import prisma from '@/lib/prisma';
 import { getLearnScores } from '@/common/utils/function';
 
@@ -152,4 +151,47 @@ export class PerformancesServices {
       };
     });
   }
+
+  static async getSongsRepertory(userId: string): Promise<{
+    genre: string[];
+    composer: string[];
+    difficulty: string[];
+  }> {
+    const scores = await prisma.scores.findMany({
+      where: {
+        user_id: userId,
+      },
+      select: {
+        song: {
+          select: {
+            genre: true,
+            composer: true,
+            Level: true,
+          },
+        },
+      },
+    });
+
+    // Extraire les données brutes
+    const genres = scores
+      .map((score) => score.song.genre)
+      .filter((genre): genre is string => genre !== null);
+
+    const composers = scores
+      .map((score) => score.song.composer)
+      .filter((composer): composer is string => composer !== null);
+
+    const difficulties = scores
+      .map((score) => score.song.Level?.toString())
+      .filter((difficulty): difficulty is string => difficulty !== null);
+
+    return {
+      genre: genres,
+      composer: composers,
+      difficulty: difficulties,
+    };
+  }
+
+  static async getPracticeTimeData(userId: string): Promise<{
+
 }

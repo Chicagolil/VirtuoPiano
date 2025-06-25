@@ -1,5 +1,17 @@
 import React from 'react';
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
+import {
+  Chart as ChartJS,
+  ArcElement,
+  Tooltip,
+  Legend,
+  CategoryScale,
+  LinearScale,
+} from 'chart.js';
+import { Pie } from 'react-chartjs-2';
+import { Spinner } from '@/components/ui/spinner';
+
+// Enregistrer les composants Chart.js nécessaires
+ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale);
 
 interface PieChartData {
   name: string;
@@ -15,6 +27,7 @@ interface PieChartCardProps {
   className?: string;
   maxCategories?: number; // Nombre maximum de catégories avant regroupement
   minPercentage?: number; // Pourcentage minimum pour éviter le regroupement
+  loading?: boolean; // Nouvelle prop pour l'état de chargement
 }
 
 const DEFAULT_COLORS = [
@@ -81,8 +94,70 @@ export function PieChartCard({
   className = '',
   maxCategories = 5,
   minPercentage = 5,
+  loading = false,
 }: PieChartCardProps) {
   const processedData = processChartData(data, maxCategories, minPercentage);
+
+  // Préparer les données pour Chart.js
+  const chartData = {
+    labels: processedData.map((item) => item.name),
+    datasets: [
+      {
+        data: processedData.map((item) => item.value),
+        backgroundColor: colors.slice(0, processedData.length),
+        borderColor: colors
+          .slice(0, processedData.length)
+          .map((color) => color + '80'),
+        borderWidth: 2,
+        hoverOffset: 4,
+      },
+    ],
+  };
+
+  // Options de configuration pour Chart.js
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: '60%', // Crée un trou au centre (innerRadius)
+    plugins: {
+      legend: {
+        display: false,
+      },
+      tooltip: {
+        backgroundColor: '#1e293b',
+        titleColor: '#e2e8f0',
+        bodyColor: '#e2e8f0',
+        borderColor: '#475569',
+        borderWidth: 1,
+        cornerRadius: 8,
+        displayColors: false,
+        padding: 10,
+        bodyFont: {
+          size: 12,
+          weight: 'bold' as const,
+        },
+        titleFont: {
+          size: 12,
+        },
+        callbacks: {
+          label: function (context: any) {
+            const total = context.dataset.data.reduce(
+              (a: number, b: number) => a + b,
+              0
+            );
+            const percentage = ((context.parsed / total) * 100).toFixed(0);
+            return `${percentage}%`;
+          },
+        },
+      },
+    },
+    animation: {
+      duration: 1500,
+      easing: 'easeOutQuart' as const,
+      animateRotate: true,
+      animateScale: true,
+    },
+  };
 
   return (
     <div
@@ -93,45 +168,18 @@ export function PieChartCard({
       </h3>
 
       <div className="flex-grow flex items-center justify-center">
-        <ResponsiveContainer width="100%" height={height}>
-          <PieChart>
-            <Pie
-              data={processedData}
-              cx="50%"
-              cy="50%"
-              innerRadius={30}
-              outerRadius={45}
-              labelLine={false}
-              label={
-                showLabels
-                  ? ({ name, percent }) =>
-                      `${name}: ${(percent * 100).toFixed(0)}%`
-                  : undefined
-              }
-              paddingAngle={2}
-              dataKey="value"
-              blendStroke={true}
-            >
-              {processedData.map((entry, index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={colors[index % colors.length]}
-                />
-              ))}
-            </Pie>
-            <Tooltip
-              formatter={(value, name) => [`${value}`, name]}
-              contentStyle={{
-                backgroundColor: '#1e293b',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '12px',
-              }}
-              itemStyle={{ color: '#e2e8f0' }}
-              labelStyle={{ color: '#e2e8f0', fontWeight: 'bold' }}
-            />
-          </PieChart>
-        </ResponsiveContainer>
+        {loading ? (
+          <div
+            className="flex items-center justify-center"
+            style={{ height: `${height}px` }}
+          >
+            <Spinner variant="bars" size={32} className="text-indigo-500" />
+          </div>
+        ) : (
+          <div style={{ height: `${height}px`, width: '100%' }}>
+            <Pie data={chartData} options={options} />
+          </div>
+        )}
       </div>
 
       <div className="mt-2 grid grid-cols-2 gap-1">
