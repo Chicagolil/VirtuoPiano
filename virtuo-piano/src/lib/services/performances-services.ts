@@ -24,6 +24,22 @@ export type SessionDetail = {
   performance: number;
 };
 
+export interface ScoreSummaryService {
+  id: string;
+  songTitle: string;
+  songComposer: string | null;
+  totalPoints: number | null;
+  maxMultiplier: number | null;
+  imageUrl: string | null;
+  wrongNotes: number | null;
+  correctNotes: number | null;
+  missedNotes: number | null;
+  maxCombo: number | null;
+  sessionStartTime: Date;
+  sessionEndTime: Date;
+  modeName: string;
+}
+
 export class PerformancesServices {
   // Méthodes utilitaires privées pour calculer les intervalles
   private static getCurrentIntervalDates(
@@ -435,5 +451,52 @@ export class PerformancesServices {
     });
 
     return librarySongs + userCompositions + userImports;
+  }
+
+  static async getRecentSessions(
+    userId: string,
+    limit: number = 5
+  ): Promise<ScoreSummaryService[]> {
+    const scores = await prisma.scores.findMany({
+      where: {
+        user_id: userId,
+      },
+      include: {
+        song: {
+          select: {
+            title: true,
+            composer: true,
+            imageUrl: true,
+            tempo: true,
+            Level: true,
+          },
+        },
+        mode: {
+          select: {
+            name: true,
+          },
+        },
+      },
+      orderBy: {
+        sessionStartTime: 'desc',
+      },
+      take: limit,
+    });
+
+    return scores.map((score) => ({
+      id: score.id,
+      songTitle: score.song.title,
+      songComposer: score.song.composer,
+      modeName: score.mode.name,
+      imageUrl: score.song.imageUrl,
+      wrongNotes: score.wrongNotes,
+      correctNotes: score.correctNotes,
+      missedNotes: score.missedNotes,
+      totalPoints: score.totalPoints,
+      maxMultiplier: score.maxMultiplier,
+      maxCombo: score.maxCombo,
+      sessionStartTime: score.sessionStartTime,
+      sessionEndTime: score.sessionEndTime,
+    }));
   }
 }

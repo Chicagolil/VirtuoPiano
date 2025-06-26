@@ -1,4 +1,9 @@
-import { IconCalendar, IconClock, IconMusic } from '@tabler/icons-react';
+import {
+  IconCalendar,
+  IconClock,
+  IconMusic,
+  IconTrophy,
+} from '@tabler/icons-react';
 import AccuracyBadge from '../badge/AccuracyBadge';
 import ProgressBar from '../ProgressBar';
 import ModeBadge from '../badge/ModeBadge';
@@ -7,20 +12,15 @@ export interface ScoreSummary {
   id: string;
   songTitle: string;
   songComposer?: string;
-  correctNotes: number;
-  missedNotes: number;
-  wrongNotes: number;
   totalPoints: number;
   maxMultiplier: number;
   maxCombo: number;
   playedAt: string;
   mode: 'learning' | 'game';
-  accuracy: number; // pourcentage de notes correctes
-  duration: string; // durée de la session
-  thumbnail?: string;
-  progress: number; // progression totale dans le morceau
-  tempo: number; // tempo en BPM
-  level: number; // niveau de difficulté
+  accuracy: number;
+  duration: string;
+  imageUrl?: string;
+  performance: number;
 }
 
 export default function ScoreCard({ score }: { score: ScoreSummary }) {
@@ -34,9 +34,9 @@ export default function ScoreCard({ score }: { score: ScoreSummary }) {
     >
       <div className="flex items-start">
         <div className="flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-700 mr-3">
-          {score.thumbnail ? (
+          {score.imageUrl ? (
             <img
-              src={score.thumbnail}
+              src={score.imageUrl}
               alt={score.songTitle}
               className="w-full h-full object-cover"
             />
@@ -76,58 +76,56 @@ export default function ScoreCard({ score }: { score: ScoreSummary }) {
           </div>
 
           <div className="flex items-center justify-between">
-            <AccuracyBadge accuracy={score.accuracy} />
-            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-              {score.totalPoints} pts
-            </span>
+            {score.mode === 'learning' ? (
+              <AccuracyBadge accuracy={score.accuracy} />
+            ) : (
+              <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
+                <IconTrophy size={14} className="mr-1" />
+                {score.totalPoints} pts
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      <div className="mt-3">
-        <div className="flex justify-between items-center text-xs mb-1">
-          <span className="text-slate-500 dark:text-slate-400">
-            Progression
-          </span>
-          <span className="text-slate-700 dark:text-slate-300">
-            {score.progress}%
-          </span>
+      {/* Barre de progression seulement en mode apprentissage */}
+      {score.mode === 'learning' && (
+        <div className="mt-3">
+          <div className="flex justify-between items-center text-xs mb-1">
+            <span className="text-slate-500 dark:text-slate-400">
+              Progression
+            </span>
+            <span className="text-slate-700 dark:text-slate-300">
+              {score.performance}%
+            </span>
+          </div>
+          <ProgressBar
+            value={score.performance}
+            max={100}
+            colorClass={
+              score.performance === 100 ? 'bg-emerald-500' : 'bg-indigo-500'
+            }
+          />
         </div>
-        <ProgressBar
-          value={score.progress}
-          max={100}
-          colorClass={
-            score.progress === 100
-              ? 'bg-emerald-500'
-              : score.mode === 'learning'
-              ? 'bg-indigo-500'
-              : 'bg-purple-500'
-          }
-        />
-      </div>
+      )}
 
-      <div className="grid grid-cols-3 gap-2 mt-3 text-center">
-        <div className="bg-slate-50 dark:bg-slate-700/40 rounded py-1.5 px-1">
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Précision
-          </p>
-          <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-            {score.accuracy}%
-          </p>
+      {/* Tuiles du bas seulement en mode jeu */}
+      {score.mode === 'game' && (
+        <div className="grid grid-cols-2 gap-2 mt-3 text-center">
+          <div className="bg-slate-50 dark:bg-slate-700/40 rounded py-1.5 px-1">
+            <p className="text-xs text-slate-500 dark:text-slate-400">Combo</p>
+            <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+              x{score.maxCombo}
+            </p>
+          </div>
+          <div className="bg-slate-50 dark:bg-slate-700/40 rounded py-1.5 px-1">
+            <p className="text-xs text-slate-500 dark:text-slate-400">Multi.</p>
+            <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+              x{score.maxMultiplier}
+            </p>
+          </div>
         </div>
-        <div className="bg-slate-50 dark:bg-slate-700/40 rounded py-1.5 px-1">
-          <p className="text-xs text-slate-500 dark:text-slate-400">Combo</p>
-          <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-            x{score.maxCombo}
-          </p>
-        </div>
-        <div className="bg-slate-50 dark:bg-slate-700/40 rounded py-1.5 px-1">
-          <p className="text-xs text-slate-500 dark:text-slate-400">Multi.</p>
-          <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-            x{score.maxMultiplier}
-          </p>
-        </div>
-      </div>
+      )}
     </div>
   );
 }

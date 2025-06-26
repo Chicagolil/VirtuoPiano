@@ -230,7 +230,7 @@ export default function GeneralStats() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {recentScores.slice(0, 3).map((score) => (
+          {recentScores.slice(0, 5).map((score) => (
             <ScoreCard key={score.id} score={score} />
           ))}
         </div>
