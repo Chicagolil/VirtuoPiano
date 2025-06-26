@@ -453,7 +453,7 @@ export class PerformancesServices {
     return librarySongs + userCompositions + userImports;
   }
 
-  static async getRecentSessions(
+  static async getRecentSessionsData(
     userId: string,
     limit: number = 5
   ): Promise<ScoreSummaryService[]> {

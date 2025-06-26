@@ -1,10 +1,12 @@
+'use server';
+
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../authoption';
 import { PerformancesServices } from '../services/performances-services';
 import { ScoreSummary } from '@/components/cards/ScoreCard';
 import { getLearnScores } from '@/common/utils/function';
 
-export async function getRecentSessionsAction(limit: number = 3): Promise<{
+export async function getRecentSessions(limit: number = 3): Promise<{
   success: boolean;
   data: ScoreSummary[];
   error?: string;
@@ -18,7 +20,7 @@ export async function getRecentSessionsAction(limit: number = 3): Promise<{
     const userId = session.user.id;
 
     // Récupérer les sessions récentes depuis le service
-    const sessions = await PerformancesServices.getRecentSessions(
+    const sessions = await PerformancesServices.getRecentSessionsData(
       userId,
       limit
     );
@@ -79,14 +81,12 @@ export async function getRecentSessionsAction(limit: number = 3): Promise<{
         id: score.id,
         songTitle: score.songTitle,
         songComposer: score.songComposer || undefined,
-        correctNotes: score.correctNotes || 0,
-        missedNotes: score.missedNotes || 0,
-        wrongNotes: score.wrongNotes || 0,
+
         totalPoints: score.totalPoints || 0,
         maxMultiplier: score.maxMultiplier || 0,
         maxCombo: score.maxCombo || 0,
         playedAt,
-        mode: score.modeName === 'learning' ? 'learning' : 'game',
+        mode: score.modeName === 'Apprentissage' ? 'learning' : 'game',
         accuracy,
         duration,
         imageUrl: score.imageUrl || undefined,

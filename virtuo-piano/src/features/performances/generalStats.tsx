@@ -18,6 +18,7 @@ import ScoreCard from '@/components/cards/ScoreCard';
 import { ScoreSummary } from '@/components/cards/ScoreCard';
 import { PieChartCard } from '@/components/cards/PieChartCard';
 import { getSongsPropertyRepertory } from '@/lib/actions/generalStats-actions';
+import { getRecentSessions } from '@/lib/actions/history-actions';
 import { PIE_CHART_COLORS } from '@/common/constants/generalStats';
 import PracticeTimeTile from './PracticeTimeTile';
 import StartedSongsTile from './StartedSongsTile';
@@ -49,101 +50,6 @@ const achievements = [
   },
 ];
 
-const recentScores: ScoreSummary[] = [
-  {
-    id: '1',
-    songTitle: 'Nocturne Op. 9 No. 2',
-    songComposer: 'Frédéric Chopin',
-    correctNotes: 342,
-    missedNotes: 18,
-    wrongNotes: 24,
-    totalPoints: 4850,
-    maxMultiplier: 4,
-    maxCombo: 78,
-    playedAt: "Aujourd'hui, 14:30",
-    mode: 'game',
-    accuracy: 89,
-    duration: '4:12',
-    thumbnail: '/images/songs/nocturne.jpg',
-    progress: 100,
-    tempo: 120,
-    level: 3,
-  },
-  {
-    id: '2',
-    songTitle: 'Clair de Lune',
-    songComposer: 'Claude Debussy',
-    correctNotes: 278,
-    missedNotes: 12,
-    wrongNotes: 16,
-    totalPoints: 3750,
-    maxMultiplier: 3,
-    maxCombo: 56,
-    playedAt: 'Hier, 19:15',
-    mode: 'learning',
-    accuracy: 91,
-    duration: '5:05',
-    thumbnail: '/images/songs/clairdelune.jpg',
-    progress: 73,
-    tempo: 110,
-    level: 3,
-  },
-  {
-    id: '3',
-    songTitle: 'Sonate au Clair de Lune',
-    songComposer: 'Ludwig van Beethoven',
-    correctNotes: 186,
-    missedNotes: 28,
-    wrongNotes: 32,
-    totalPoints: 2200,
-    maxMultiplier: 2,
-    maxCombo: 42,
-    playedAt: 'Il y a 3 jours',
-    mode: 'game',
-    accuracy: 76,
-    duration: '3:45',
-    progress: 65,
-    tempo: 125,
-    level: 4,
-  },
-  {
-    id: '4',
-    songTitle: 'Gymnopédie No. 1',
-    songComposer: 'Erik Satie',
-    correctNotes: 154,
-    missedNotes: 8,
-    wrongNotes: 12,
-    totalPoints: 2800,
-    maxMultiplier: 3,
-    maxCombo: 64,
-    playedAt: 'Il y a 5 jours',
-    mode: 'learning',
-    accuracy: 88,
-    duration: '2:58',
-    progress: 100,
-    tempo: 100,
-    level: 2,
-  },
-  {
-    id: '5',
-    songTitle: 'Prélude en C Majeur',
-    songComposer: 'J.S. Bach',
-    correctNotes: 208,
-    missedNotes: 4,
-    wrongNotes: 8,
-    totalPoints: 3100,
-    maxMultiplier: 4,
-    maxCombo: 72,
-    playedAt: 'Il y a 1 semaine',
-    mode: 'game',
-    accuracy: 95,
-    duration: '2:40',
-    progress: 100,
-    tempo: 118,
-    level: 2,
-  },
-];
-
 export default function GeneralStats() {
   const [genreData, setGenreData] = useState<{ name: string; value: number }[]>(
     []
@@ -154,8 +60,11 @@ export default function GeneralStats() {
   const [difficultyData, setDifficultyData] = useState<
     { name: string; value: number }[]
   >([]);
+  const [recentScores, setRecentScores] = useState<ScoreSummary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [scoresLoading, setScoresLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [scoresError, setScoresError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -176,7 +85,28 @@ export default function GeneralStats() {
         setLoading(false);
       }
     };
+
+    const fetchRecentSessions = async () => {
+      try {
+        setScoresLoading(true);
+        const { success, data, error } = await getRecentSessions(3);
+        if (success) {
+          setRecentScores(data);
+          setScoresError(null);
+        } else {
+          setScoresError(
+            error || 'Erreur lors du chargement des sessions récentes'
+          );
+        }
+      } catch (err) {
+        setScoresError('Erreur lors du chargement des sessions récentes');
+      } finally {
+        setScoresLoading(false);
+      }
+    };
+
     fetchData();
+    fetchRecentSessions();
   }, []);
 
   return (
@@ -229,11 +159,25 @@ export default function GeneralStats() {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {recentScores.slice(0, 5).map((score) => (
-            <ScoreCard key={score.id} score={score} />
-          ))}
-        </div>
+        {scoresLoading ? (
+          <div className="flex justify-center items-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+          </div>
+        ) : scoresError ? (
+          <div className="text-center py-8 text-red-500">
+            Erreur lors du chargement des sessions récentes
+          </div>
+        ) : recentScores.length === 0 ? (
+          <div className="text-center py-8 text-slate-500">
+            Aucune session récente trouvée
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {recentScores.map((score) => (
+              <ScoreCard key={score.id} score={score} />
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
