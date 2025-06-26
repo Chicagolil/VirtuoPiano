@@ -49,7 +49,6 @@ export default function PracticeTimeTile() {
 
     fetchPracticeTime();
   }, [selectedInterval]);
-  console.log(practiceTimeData);
   return (
     <InfoTile
       value={

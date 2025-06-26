@@ -6,7 +6,7 @@ import * as Tabs from '@radix-ui/react-tabs';
 import { IconChartBar } from '@tabler/icons-react';
 
 const Heatmap = lazy(() => import('@/features/performances/heatmap'));
-const GeneralStats = lazy(() => import('@/features/performances/GeneralStats'));
+const GeneralStats = lazy(() => import('@/features/performances/generalStats'));
 const HistoryStats = lazy(() => import('@/features/performances/HistoryStats'));
 const PlayedSongs = lazy(() => import('@/features/performances/PlayedSongs'));
 

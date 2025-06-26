@@ -14,7 +14,6 @@ import {
 } from '@tabler/icons-react';
 import * as Separator from '@radix-ui/react-separator';
 import ProgressBar from '@/components/ProgressBar';
-import InfoTile from '@/components/tiles/Infotile';
 import AchievementsCard from '@/components/cards/AchievementsCard';
 import UserAvatar from '@/components/badge/UserAvatar';
 import ScoreCard from '@/components/cards/ScoreCard';
