@@ -47,6 +47,9 @@ export const Heatmap: React.FC = () => {
     setColorTheme,
     handleCellClick,
     closeSessions,
+    sessionsError,
+    heatmapError,
+    loadPerformanceData,
   } = useHeatmap();
 
   // Injecter les styles CSS pour les animations
@@ -67,6 +70,10 @@ export const Heatmap: React.FC = () => {
     : monthLabels;
   const displayTotalContributions = loading ? 0 : totalContributions;
 
+  // Test temporaire pour voir l'erreur
+  const testHeatmapError = "Erreur de test pour vérifier l'affichage";
+  const testSessionsError = 'Erreur de test pour les sessions';
+
   return (
     <div style={containerStyles.main}>
       {/* Effet de verre avec pseudo-élément */}
@@ -83,183 +90,249 @@ export const Heatmap: React.FC = () => {
         </h2>
       </div>
 
-      {/* Heatmap */}
+      {/* Heatmap ou Erreur */}
       <div style={containerStyles.heatmapContainer}>
-        {/* Partie heatmap avec mois */}
-        <div style={containerStyles.gridContainer}>
-          {/* Labels des mois */}
+        {heatmapError ? (
           <div
             style={{
-              ...containerStyles.monthLabels,
-              width: `${displayData.length * 23}px`,
+              color: '#ff6b6b',
+              fontSize: '16px',
+              textAlign: 'center',
+              padding: '40px 20px',
+              backgroundColor: 'rgba(255, 107, 107, 0.1)',
+              borderRadius: '12px',
+              border: '1px solid rgba(255, 107, 107, 0.3)',
+              margin: '20px',
+              minHeight: '200px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
-            {displayMonthLabels.map((label, index) => (
-              <span
-                key={index}
+            <div>
+              <div
                 style={{
-                  ...containerStyles.monthLabel,
-                  left: `${label.position * 23}px`,
+                  fontSize: '18px',
+                  fontWeight: 'bold',
+                  marginBottom: '8px',
                 }}
               >
-                {label.month}
-              </span>
-            ))}
-          </div>
-
-          {/* Grille */}
-          <div style={containerStyles.grid}>
-            {loading && (
-              <div
-                style={containerStyles.loadingOverlay(displayData.length)}
-                className="flex flex-col items-center justify-center"
-              >
-                <p className="text-white">Chargement de l'année en cours...</p>
-                <Spinner variant="bars" size={32} className="text-white" />
+                Erreur
               </div>
-            )}
-
-            {displayData.map((week, wi) => (
-              <div key={wi} style={containerStyles.week}>
-                {week.map((count, di) => {
-                  let dateStr = '';
-                  let tooltip = '';
-                  let currentDate: Date | null = null;
-
-                  if (count !== null) {
-                    const startDate = new Date(selectedYear, 0, 1);
-                    const startDayOfWeek = startDate.getDay();
-                    const mondayStartDay =
-                      startDayOfWeek === 0 ? 6 : startDayOfWeek - 1;
-
-                    const cellIndex = wi * 7 + di;
-                    const daysSinceStart = cellIndex - mondayStartDay;
-
-                    currentDate = new Date(selectedYear, 0, 1 + daysSinceStart);
-                    const dayName = currentDate.toLocaleDateString('fr-FR', {
-                      weekday: 'long',
-                    });
-                    const tooltipYear = currentDate.getFullYear();
-                    const tooltipMonth = String(
-                      currentDate.getMonth() + 1
-                    ).padStart(2, '0');
-                    const tooltipDay = String(currentDate.getDate()).padStart(
-                      2,
-                      '0'
-                    );
-                    dateStr = `${tooltipDay}/${tooltipMonth}/${tooltipYear}`;
-                    tooltip = loading
-                      ? `${dayName} ${dateStr} - Aucune session`
-                      : `${count} minutes de pratique le ${dayName} ${dateStr}`;
-                  }
-
-                  let dateKey = '';
-                  if (currentDate) {
-                    const keyYear = currentDate.getFullYear();
-                    const keyMonth = String(
-                      currentDate.getMonth() + 1
-                    ).padStart(2, '0');
-                    const keyDay = String(currentDate.getDate()).padStart(
-                      2,
-                      '0'
-                    );
-                    dateKey = `${keyYear}-${keyMonth}-${keyDay}`;
-                  }
-                  const isSelected = selectedDate === dateKey;
-
-                  return count !== null ? (
-                    <Tippy
-                      content={tooltip}
-                      delay={[0, 0]}
-                      key={di}
-                      placement="top"
-                    >
-                      <div
-                        onClick={() =>
-                          currentDate &&
-                          !loading &&
-                          handleCellClick(currentDate, count)
-                        }
-                        style={containerStyles.cell(
-                          count,
-                          isSelected,
-                          loading,
-                          colorTheme
-                        )}
-                      />
-                    </Tippy>
-                  ) : (
-                    <div
-                      key={di}
-                      style={containerStyles.cell(
-                        null,
-                        false,
-                        loading,
-                        colorTheme
-                      )}
-                    />
-                  );
-                })}
+              <div style={{ marginBottom: '20px' }}>
+                Erreur lors du chargement des données
               </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Légende + Dropdown + Boutons couleur à droite, en colonne */}
-        <div style={containerStyles.legendContainer}>
-          <div style={containerStyles.legend}>
-            <span style={containerStyles.legendText}>Moins</span>
-            {HEATMAP_COLORS[colorTheme].map((color, i) => (
-              <div
-                key={i}
+              <button
+                onClick={() => loadPerformanceData(selectedYear)}
                 style={{
-                  ...containerStyles.legendColor,
-                  background: color,
+                  backgroundColor: '#ff6b6b',
+                  color: 'white',
+                  border: 'none',
+                  padding: '10px 20px',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.2s',
                 }}
-              />
-            ))}
-            <span style={containerStyles.legendText}>Plus</span>
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#ff5252';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#ff6b6b';
+                }}
+              >
+                Réessayer
+              </button>
+            </div>
           </div>
+        ) : (
+          <>
+            {/* Partie heatmap avec mois */}
+            <div style={containerStyles.gridContainer}>
+              {/* Labels des mois */}
+              <div
+                style={{
+                  ...containerStyles.monthLabels,
+                  width: `${displayData.length * 23}px`,
+                }}
+              >
+                {displayMonthLabels.map((label, index) => (
+                  <span
+                    key={index}
+                    style={{
+                      ...containerStyles.monthLabel,
+                      left: `${label.position * 23}px`,
+                    }}
+                  >
+                    {label.month}
+                  </span>
+                ))}
+              </div>
 
-          <div style={containerStyles.controls}>
-            <select
-              id="year-select"
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(Number(e.target.value))}
-              style={containerStyles.yearSelect}
-            >
-              {HEATMAP_YEARS.map((year) => (
-                <option
-                  key={year}
-                  value={year}
-                  style={{ color: '#fff', background: '#161b22' }}
+              {/* Grille */}
+              <div style={containerStyles.grid}>
+                {loading && (
+                  <div
+                    style={containerStyles.loadingOverlay(displayData.length)}
+                    className="flex flex-col items-center justify-center"
+                  >
+                    <p className="text-white">
+                      Chargement de l'année en cours...
+                    </p>
+                    <Spinner variant="bars" size={32} className="text-white" />
+                  </div>
+                )}
+
+                {displayData.map((week, wi) => (
+                  <div key={wi} style={containerStyles.week}>
+                    {week.map((count, di) => {
+                      let dateStr = '';
+                      let tooltip = '';
+                      let currentDate: Date | null = null;
+
+                      if (count !== null) {
+                        const startDate = new Date(selectedYear, 0, 1);
+                        const startDayOfWeek = startDate.getDay();
+                        const mondayStartDay =
+                          startDayOfWeek === 0 ? 6 : startDayOfWeek - 1;
+
+                        const cellIndex = wi * 7 + di;
+                        const daysSinceStart = cellIndex - mondayStartDay;
+
+                        currentDate = new Date(
+                          selectedYear,
+                          0,
+                          1 + daysSinceStart
+                        );
+                        const dayName = currentDate.toLocaleDateString(
+                          'fr-FR',
+                          {
+                            weekday: 'long',
+                          }
+                        );
+                        const tooltipYear = currentDate.getFullYear();
+                        const tooltipMonth = String(
+                          currentDate.getMonth() + 1
+                        ).padStart(2, '0');
+                        const tooltipDay = String(
+                          currentDate.getDate()
+                        ).padStart(2, '0');
+                        dateStr = `${tooltipDay}/${tooltipMonth}/${tooltipYear}`;
+                        tooltip = loading
+                          ? `${dayName} ${dateStr} - Aucune session`
+                          : `${count} minutes de pratique le ${dayName} ${dateStr}`;
+                      }
+
+                      let dateKey = '';
+                      if (currentDate) {
+                        const keyYear = currentDate.getFullYear();
+                        const keyMonth = String(
+                          currentDate.getMonth() + 1
+                        ).padStart(2, '0');
+                        const keyDay = String(currentDate.getDate()).padStart(
+                          2,
+                          '0'
+                        );
+                        dateKey = `${keyYear}-${keyMonth}-${keyDay}`;
+                      }
+                      const isSelected = selectedDate === dateKey;
+
+                      return count !== null ? (
+                        <Tippy
+                          content={tooltip}
+                          delay={[0, 0]}
+                          key={di}
+                          placement="top"
+                        >
+                          <div
+                            onClick={() =>
+                              currentDate &&
+                              !loading &&
+                              handleCellClick(currentDate, count)
+                            }
+                            style={containerStyles.cell(
+                              count,
+                              isSelected,
+                              loading,
+                              colorTheme
+                            )}
+                          />
+                        </Tippy>
+                      ) : (
+                        <div
+                          key={di}
+                          style={containerStyles.cell(
+                            null,
+                            false,
+                            loading,
+                            colorTheme
+                          )}
+                        />
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Légende + Dropdown + Boutons couleur à droite, en colonne */}
+            <div style={containerStyles.legendContainer}>
+              <div style={containerStyles.legend}>
+                <span style={containerStyles.legendText}>Moins</span>
+                {HEATMAP_COLORS[colorTheme].map((color, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      ...containerStyles.legendColor,
+                      background: color,
+                    }}
+                  />
+                ))}
+                <span style={containerStyles.legendText}>Plus</span>
+              </div>
+
+              <div style={containerStyles.controls}>
+                <select
+                  id="year-select"
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(Number(e.target.value))}
+                  style={containerStyles.yearSelect}
                 >
-                  {year}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div style={containerStyles.colorButtons}>
-            <button
-              onClick={() => setColorTheme('green')}
-              style={containerStyles.colorButton(
-                colorTheme === 'green',
-                'green'
-              )}
-            >
-              Bleu
-            </button>
-            <button
-              onClick={() => setColorTheme('orange')}
-              style={containerStyles.colorButton(
-                colorTheme === 'orange',
-                'orange'
-              )}
-            >
-              Orange
-            </button>
-          </div>
-        </div>
+                  {HEATMAP_YEARS.map((year) => (
+                    <option
+                      key={year}
+                      value={year}
+                      style={{ color: '#fff', background: '#161b22' }}
+                    >
+                      {year}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div style={containerStyles.colorButtons}>
+                <button
+                  onClick={() => setColorTheme('green')}
+                  style={containerStyles.colorButton(
+                    colorTheme === 'green',
+                    'green'
+                  )}
+                >
+                  Bleu
+                </button>
+                <button
+                  onClick={() => setColorTheme('orange')}
+                  style={containerStyles.colorButton(
+                    colorTheme === 'orange',
+                    'orange'
+                  )}
+                >
+                  Orange
+                </button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Section des sessions sélectionnées avec animation */}
@@ -294,6 +367,21 @@ export const Heatmap: React.FC = () => {
             {sessionsLoading ? (
               <div style={containerStyles.loadingSpinner}>
                 <Spinner variant="bars" size={24} className="text-white" />
+              </div>
+            ) : sessionsError ? (
+              <div
+                style={{
+                  color: '#ff6b6b',
+                  fontSize: '14px',
+                  textAlign: 'center',
+                  padding: '16px',
+                  backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                  borderRadius: '8px',
+                  border: '1px solid rgba(255, 107, 107, 0.3)',
+                  margin: '16px',
+                }}
+              >
+                Erreur lors du chargement des sessions
               </div>
             ) : sessions.length > 0 ? (
               <div style={containerStyles.sessionsList}>

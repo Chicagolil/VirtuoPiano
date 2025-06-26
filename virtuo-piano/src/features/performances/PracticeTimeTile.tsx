@@ -18,12 +18,13 @@ export default function PracticeTimeTile() {
     trend: 'stable' as 'increase' | 'decrease' | 'stable',
   });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | undefined>(undefined);
 
   const getInfoTileDescription = (interval: IntervalType) => {
     return {
-      week: 'la semaine dernière',
-      month: 'le mois dernier',
-      quarter: 'le trimestre dernier',
+      week: 'les 7 derniers jours',
+      month: 'les 31 derniers jours',
+      quarter: 'les 90 derniers jours',
     }[interval];
   };
   // Effet pour récupérer les données de temps de pratique
@@ -37,10 +38,10 @@ export default function PracticeTimeTile() {
         if (success) {
           setPracticeTimeData(data);
         } else {
-          console.error('Erreur temps de pratique:', error);
+          setError('Erreur lors du chargement du temps de pratique');
         }
       } catch (err) {
-        console.error('Erreur lors du chargement du temps de pratique:', err);
+        setError('Erreur lors du chargement du temps de pratique');
       } finally {
         setLoading(false);
       }
@@ -48,15 +49,25 @@ export default function PracticeTimeTile() {
 
     fetchPracticeTime();
   }, [selectedInterval]);
+  console.log(practiceTimeData);
   return (
     <InfoTile
-      value={practiceTimeData.formattedCurrentTime}
+      value={
+        practiceTimeData.currentTime === 0
+          ? 'Aucune pratique'
+          : practiceTimeData.formattedCurrentTime
+      }
       icon={<IconClock size={24} />}
       title={`Temps total de pratique `}
-      description={`Temps cumulé pour ${getInfoTileDescription(
-        selectedInterval
-      )}`}
+      description={
+        practiceTimeData.currentTime === 0
+          ? `Aucune session de pratique enregistrée ${getInfoTileDescription(
+              selectedInterval
+            )}`
+          : `Temps cumulé pour ${getInfoTileDescription(selectedInterval)}`
+      }
       loading={loading}
+      error={error}
       trend={
         practiceTimeData.trend !== 'stable'
           ? {
@@ -65,7 +76,10 @@ export default function PracticeTimeTile() {
               }%`,
               isPositive: practiceTimeData.trend === 'increase',
             }
-          : undefined
+          : {
+              value: 'Aucun changement',
+              isPositive: true,
+            }
       }
       showIntervalSelector={true}
       selectedInterval={selectedInterval}

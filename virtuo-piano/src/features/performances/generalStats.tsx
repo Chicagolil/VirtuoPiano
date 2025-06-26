@@ -22,6 +22,7 @@ import { getRecentSessions } from '@/lib/actions/history-actions';
 import { PIE_CHART_COLORS } from '@/common/constants/generalStats';
 import PracticeTimeTile from './PracticeTimeTile';
 import StartedSongsTile from './StartedSongsTile';
+import { Spinner } from '@/components/ui/spinner';
 
 const achievements = [
   {
@@ -63,8 +64,36 @@ export default function GeneralStats() {
   const [recentScores, setRecentScores] = useState<ScoreSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [scoresLoading, setScoresLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [scoresError, setScoresError] = useState<string | null>(null);
+  const [hasMoreSessions, setHasMoreSessions] = useState(true);
+
+  const loadMoreSessions = async () => {
+    try {
+      setLoadingMore(true);
+      const currentCount = recentScores.length;
+      const { success, data, error } = await getRecentSessions(
+        currentCount + 3
+      );
+      if (success) {
+        setRecentScores(data);
+        // Si on reçoit moins de 3 nouvelles sessions, il n'y a plus de sessions à charger
+        if (data.length <= currentCount) {
+          setHasMoreSessions(false);
+        }
+        setScoresError(null);
+      } else {
+        setScoresError(
+          error || 'Erreur lors du chargement des sessions supplémentaires'
+        );
+      }
+    } catch (err) {
+      setScoresError('Erreur lors du chargement des sessions supplémentaires');
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -92,6 +121,10 @@ export default function GeneralStats() {
         const { success, data, error } = await getRecentSessions(3);
         if (success) {
           setRecentScores(data);
+          // Si on reçoit moins de 3 sessions, il n'y a plus de sessions à charger
+          if (data.length < 3) {
+            setHasMoreSessions(false);
+          }
           setScoresError(null);
         } else {
           setScoresError(
@@ -153,7 +186,7 @@ export default function GeneralStats() {
             <IconClock size={20} className="mr-2 text-indigo-500" />
             Sessions récentes
           </h2>
-          <button className="text-xs text-indigo-600 dark:text-indigo-400 font-medium hover:underline flex items-center">
+          <button className="text-xs cursor-pointer text-indigo-600 dark:text-indigo-400 font-medium flex items-center relative hover:after:w-[calc(100%-1rem)] after:absolute after:bottom-0 after:left-0 after:h-px after:bg-current after:transition-all after:duration-300 after:ease-out after:w-0">
             Voir l'historique complet
             <IconChevronRight size={14} className="ml-1" />
           </button>
@@ -161,22 +194,66 @@ export default function GeneralStats() {
 
         {scoresLoading ? (
           <div className="flex justify-center items-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+            <Spinner variant="bars" size={32} className="text-indigo-500" />
           </div>
         ) : scoresError ? (
-          <div className="text-center py-8 text-red-500">
-            Erreur lors du chargement des sessions récentes
+          <div className="text-center py-8">
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-4 max-w-md mx-auto">
+              <p className="text-red-600 dark:text-red-400 mb-4">
+                Erreur lors du chargement des sessions récentes
+              </p>
+              <button
+                onClick={loadMoreSessions}
+                disabled={loadingMore}
+                className="inline-flex cursor-pointer items-center px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-md transition-colors"
+              >
+                Réessayer
+                <IconChevronRight size={16} className="ml-1" />
+              </button>
+            </div>
           </div>
         ) : recentScores.length === 0 ? (
           <div className="text-center py-8 text-slate-500">
             Aucune session récente trouvée
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {recentScores.map((score) => (
-              <ScoreCard key={score.id} score={score} />
-            ))}
-          </div>
+          <>
+            <div className="grid cursor-pointer grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {recentScores.map((score) => (
+                <ScoreCard key={score.id} score={score} />
+              ))}
+            </div>
+
+            {hasMoreSessions && (
+              <div className="flex justify-center mt-6">
+                <button
+                  onClick={loadMoreSessions}
+                  disabled={loadingMore}
+                  className={`flex cursor-pointer items-center px-4 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 disabled:opacity-50 disabled:cursor-not-allowed relative after:absolute after:bottom-2.5 after:left-4 after:h-px after:bg-current after:w-0 ${
+                    !loadingMore
+                      ? 'hover:after:w-[calc(100%-3.2rem)] after:transition-all after:duration-300 after:ease-out'
+                      : 'after:transition-none'
+                  }`}
+                >
+                  {loadingMore ? (
+                    <>
+                      <Spinner
+                        variant="bars"
+                        size={32}
+                        className="text-indigo-500 mr-2"
+                      />
+                      Chargement...
+                    </>
+                  ) : (
+                    <>
+                      Voir plus de sessions
+                      <IconChevronRight size={16} className="ml-1" />
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
 

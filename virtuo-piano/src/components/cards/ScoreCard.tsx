@@ -26,7 +26,7 @@ export interface ScoreSummary {
 export default function ScoreCard({ score }: { score: ScoreSummary }) {
   return (
     <div
-      className={`bg-white dark:bg-slate-800 shadow-sm rounded-xl p-4 border ${
+      className={`group bg-white dark:bg-slate-800 shadow-sm rounded-xl p-4 border ${
         score.mode === 'learning'
           ? 'border-indigo-200 dark:border-indigo-900/30'
           : 'border-purple-200 dark:border-purple-900/30'
@@ -52,7 +52,7 @@ export default function ScoreCard({ score }: { score: ScoreSummary }) {
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-1">
-            <h3 className="text-sm font-medium text-slate-900 dark:text-white truncate pr-2">
+            <h3 className="text-sm font-medium text-slate-900 dark:text-white truncate pr-2 relative group-hover:after:w-[calc(100%-0.5rem)] after:absolute after:bottom-0 after:left-0 after:h-px after:bg-current after:transition-all after:duration-300 after:ease-out after:w-0">
               {score.songTitle}
             </h3>
             <ModeBadge mode={score.mode} />

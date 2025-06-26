@@ -17,7 +17,7 @@ interface InfoTileProps {
   onIntervalChange?: (interval: IntervalType) => void;
   showIntervalSelector?: boolean;
   loading?: boolean;
-  error?: string;
+  error?: string | null;
 }
 
 export default function InfoTile({
@@ -51,6 +51,10 @@ export default function InfoTile({
           {loading ? (
             <div className="flex items-center justify-center h-21">
               <Spinner variant="bars" className="w-8 h-8" />
+            </div>
+          ) : error ? (
+            <div className="mt-2 text-sm text-red-500 dark:text-red-400">
+              {error}
             </div>
           ) : (
             <>

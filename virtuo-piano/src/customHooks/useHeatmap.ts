@@ -30,6 +30,9 @@ interface UseHeatmapReturn {
   setColorTheme: (theme: 'green' | 'orange') => void;
   handleCellClick: (date: Date, count: number) => Promise<void>;
   closeSessions: () => void;
+  sessionsError: string | null;
+  heatmapError: string | null;
+  loadPerformanceData: (year: number) => Promise<void>;
 }
 
 export const useHeatmap = (initialYear: number = 2025): UseHeatmapReturn => {
@@ -48,7 +51,8 @@ export const useHeatmap = (initialYear: number = 2025): UseHeatmapReturn => {
     { month: string; position: number }[]
   >([]);
   const [totalContributions, setTotalContributions] = useState(0);
-
+  const [sessionsError, setSessionsError] = useState<string | null>(null);
+  const [heatmapError, setHeatmapError] = useState<string | null>(null);
   // Charger les données de performance
   const loadPerformanceData = useCallback(async (year: number) => {
     setLoading(true);
@@ -69,13 +73,19 @@ export const useHeatmap = (initialYear: number = 2025): UseHeatmapReturn => {
           .reduce((sum, count) => sum + count, 0);
         setTotalContributions(total);
       } else {
-        console.error('Erreur lors du chargement des données:', result.error);
+        setHeatmapError(
+          result.error || 'Erreur lors du chargement des données'
+        );
         setData([]);
         setMonthLabels([]);
         setTotalContributions(0);
       }
     } catch (error) {
-      console.error('Erreur lors du chargement des données:', error);
+      setHeatmapError(
+        error instanceof Error
+          ? error.message
+          : 'Erreur lors du chargement des données'
+      );
       setData([]);
       setMonthLabels([]);
       setTotalContributions(0);
@@ -102,11 +112,17 @@ export const useHeatmap = (initialYear: number = 2025): UseHeatmapReturn => {
         setIsExpanded(true);
         setIsClosing(false);
       } else {
-        console.error('Erreur lors du chargement des sessions:', result.error);
+        setSessionsError(
+          result.error || 'Erreur lors du chargement des sessions'
+        );
         setSessions([]);
       }
     } catch (error) {
-      console.error('Erreur lors du chargement des sessions:', error);
+      setSessionsError(
+        error instanceof Error
+          ? error.message
+          : 'Erreur lors du chargement des sessions'
+      );
       setSessions([]);
     } finally {
       setSessionsLoading(false);
@@ -159,5 +175,8 @@ export const useHeatmap = (initialYear: number = 2025): UseHeatmapReturn => {
     setColorTheme,
     handleCellClick,
     closeSessions,
+    sessionsError,
+    heatmapError,
+    loadPerformanceData,
   };
 };

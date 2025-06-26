@@ -25,12 +25,13 @@ export default function StartedSongsTile() {
     trend: 'stable',
   });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const getInfoTileDescription = (interval: IntervalType) => {
     return {
-      week: 'la semaine dernière',
-      month: 'le mois dernier',
-      quarter: 'le trimestre dernier',
+      week: 'les 7 derniers jours',
+      month: 'les 31 derniers jours',
+      quarter: 'les 90 derniers jours',
     }[interval];
   };
 
@@ -45,10 +46,10 @@ export default function StartedSongsTile() {
         if (success) {
           setStartedSongsData(data);
         } else {
-          console.error('Erreur morceaux démarrés:', error);
+          setError('Erreur lors du chargement des morceaux démarrés');
         }
       } catch (err) {
-        console.error('Erreur lors du chargement des morceaux démarrés:', err);
+        setError('Erreur lors du chargement des morceaux démarrés');
       } finally {
         setLoading(false);
       }
@@ -59,11 +60,22 @@ export default function StartedSongsTile() {
 
   return (
     <InfoTile
-      value={startedSongsData.currentSongs.toString()}
+      value={
+        startedSongsData.currentSongs === 0
+          ? 'Aucun nouveau morceau'
+          : startedSongsData.currentSongs.toString()
+      }
       icon={<IconBook size={24} />}
       title={`Morceaux commencés `}
-      description={`sur ${startedSongsData.totalSongs} morceaux dans la bibliothèque`}
+      description={
+        startedSongsData.currentSongs === 0
+          ? `Aucun nouveau morceau commencé ${getInfoTileDescription(
+              selectedInterval
+            )}`
+          : `sur ${startedSongsData.totalSongs} morceaux dans la bibliothèque`
+      }
       loading={loading}
+      error={error}
       trend={
         startedSongsData.trend !== 'stable'
           ? {
