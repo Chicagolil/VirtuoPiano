@@ -7,11 +7,11 @@ export const containerStyles = {
     display: 'flex' as const,
     flexDirection: 'column' as const,
     alignItems: 'center' as const,
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
     backdropFilter: 'blur(8px)',
     borderRadius: '1rem',
     overflow: 'hidden',
-    border: '1px solid rgba(255, 255, 255, 0.1)',
+    border: '1px solid rgba(255, 255, 255, 0.05)',
     width: '100%',
     maxWidth: '1500px',
     margin: '2rem auto',
@@ -131,8 +131,8 @@ export const containerStyles = {
   yearSelect: {
     padding: '0.5rem 1rem',
     borderRadius: '0.5rem',
-    border: '1px solid rgba(255, 255, 255, 0.1)',
-    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    border: '1px solid rgba(255, 255, 255, 0.05)',
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
     color: 'white',
     backdropFilter: 'blur(4px)',
     fontWeight: 'bold',
@@ -149,12 +149,12 @@ export const containerStyles = {
     borderRadius: '0.5rem',
     border: isActive
       ? `2px solid ${theme === 'green' ? '#60a5fa' : '#fb923c'}`
-      : '1px solid rgba(255, 255, 255, 0.1)',
+      : '1px solid rgba(255, 255, 255, 0.05)',
     backgroundColor: isActive
       ? theme === 'green'
         ? 'rgba(12, 45, 72, 0.3)'
         : 'rgba(124, 45, 18, 0.3)'
-      : 'rgba(0, 0, 0, 0.1)',
+      : 'rgba(255, 255, 255, 0.03)',
     color: 'white',
     fontSize: 12,
     cursor: 'pointer',
@@ -164,7 +164,7 @@ export const containerStyles = {
   sessionsSection: {
     marginTop: '2rem',
     width: '100%',
-    borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+    borderTop: '1px solid rgba(255, 255, 255, 0.05)',
     paddingTop: '1.5rem',
   },
   sessionsHeader: {
@@ -180,8 +180,8 @@ export const containerStyles = {
     margin: 0,
   },
   closeButton: {
-    background: 'rgba(255, 255, 255, 0.1)',
-    border: '1px solid rgba(255, 255, 255, 0.2)',
+    background: 'rgba(255, 255, 255, 0.03)',
+    border: '1px solid rgba(255, 255, 255, 0.05)',
     borderRadius: '0.5rem',
     padding: '0.5rem 1rem',
     color: 'white',
