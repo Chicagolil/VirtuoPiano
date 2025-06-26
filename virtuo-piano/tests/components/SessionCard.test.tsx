@@ -131,7 +131,7 @@ describe('SessionCard Component', () => {
   it('should render performance when available', () => {
     render(<SessionCard session={mockSession} />);
 
-    expect(screen.getByText('Performance:')).toBeInTheDocument();
+    expect(screen.getByText('Progression:')).toBeInTheDocument();
     expect(screen.getByText('90%')).toBeInTheDocument();
   });
 
@@ -143,7 +143,7 @@ describe('SessionCard Component', () => {
 
     render(<SessionCard session={sessionWithoutPerformance} />);
 
-    expect(screen.queryByText('Performance:')).not.toBeInTheDocument();
+    expect(screen.queryByText('Progression:')).not.toBeInTheDocument();
   });
 
   it('should handle session without composer', () => {
@@ -207,7 +207,7 @@ describe('SessionCard Component', () => {
     expect(screen.getByText('x3')).toBeInTheDocument();
     expect(screen.getByText('Précision:')).toBeInTheDocument();
     expect(screen.getByText('85%')).toBeInTheDocument();
-    expect(screen.getByText('Performance:')).toBeInTheDocument();
+    expect(screen.getByText('Progression:')).toBeInTheDocument();
     expect(screen.getByText('90%')).toBeInTheDocument();
   });
 
@@ -244,6 +244,6 @@ describe('SessionCard Component', () => {
       screen.queryByText('Multiplicateur Maximal:')
     ).not.toBeInTheDocument();
     expect(screen.queryByText('Précision:')).not.toBeInTheDocument();
-    expect(screen.queryByText('Performance:')).not.toBeInTheDocument();
+    expect(screen.queryByText('Progression:')).not.toBeInTheDocument();
   });
 });
