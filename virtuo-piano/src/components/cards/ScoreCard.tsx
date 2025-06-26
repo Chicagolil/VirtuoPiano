@@ -26,10 +26,10 @@ export interface ScoreSummary {
 export default function ScoreCard({ score }: { score: ScoreSummary }) {
   return (
     <div
-      className={`group bg-white dark:bg-slate-800 shadow-sm rounded-xl p-4 border ${
+      className={`group bg-white/3 shadow-sm rounded-xl p-4 border ${
         score.mode === 'learning'
-          ? 'border-indigo-200 dark:border-indigo-900/30'
-          : 'border-purple-200 dark:border-purple-900/30'
+          ? 'border-indigo-200/10 dark:border-indigo-900/10'
+          : 'border-purple-200/10 dark:border-purple-900/10'
       } hover:shadow-md transition-shadow`}
     >
       <div className="flex items-start">
@@ -52,19 +52,17 @@ export default function ScoreCard({ score }: { score: ScoreSummary }) {
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-1">
-            <h3 className="text-sm font-medium text-slate-900 dark:text-white truncate pr-2 relative group-hover:after:w-[calc(100%-0.5rem)] after:absolute after:bottom-0 after:left-0 after:h-px after:bg-current after:transition-all after:duration-300 after:ease-out after:w-0">
+            <h3 className="text-sm font-medium text-white truncate pr-2 relative group-hover:after:w-[calc(100%-0.5rem)] after:absolute after:bottom-0 after:left-0 after:h-px after:bg-current after:transition-all after:duration-300 after:ease-out after:w-0">
               {score.songTitle}
             </h3>
             <ModeBadge mode={score.mode} />
           </div>
 
           {score.songComposer && (
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-1.5">
-              {score.songComposer}
-            </p>
+            <p className="text-xs text-white/70 mb-1.5">{score.songComposer}</p>
           )}
 
-          <div className="flex items-center mb-2 text-xs text-slate-500 dark:text-slate-400">
+          <div className="flex items-center mb-2 text-xs text-white/70">
             <span className="inline-flex items-center mr-3">
               <IconCalendar size={14} className="mr-1" />
               {score.playedAt}
@@ -92,12 +90,8 @@ export default function ScoreCard({ score }: { score: ScoreSummary }) {
       {score.mode === 'learning' && (
         <div className="mt-3">
           <div className="flex justify-between items-center text-xs mb-1">
-            <span className="text-slate-500 dark:text-slate-400">
-              Progression
-            </span>
-            <span className="text-slate-700 dark:text-slate-300">
-              {score.performance}%
-            </span>
+            <span className="text-white/70">Progression</span>
+            <span className="text-white">{score.performance}%</span>
           </div>
           <ProgressBar
             value={score.performance}
@@ -112,15 +106,13 @@ export default function ScoreCard({ score }: { score: ScoreSummary }) {
       {/* Tuiles du bas seulement en mode jeu */}
       {score.mode === 'game' && (
         <div className="grid grid-cols-2 gap-2 mt-3 text-center">
-          <div className="bg-slate-50 dark:bg-slate-700/40 rounded py-1.5 px-1">
-            <p className="text-xs text-slate-500 dark:text-slate-400">Combo</p>
-            <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-              x{score.maxCombo}
-            </p>
+          <div className="bg-white/5 rounded py-1.5 px-1">
+            <p className="text-xs text-white/70">Combo</p>
+            <p className="text-sm font-medium text-white">x{score.maxCombo}</p>
           </div>
-          <div className="bg-slate-50 dark:bg-slate-700/40 rounded py-1.5 px-1">
-            <p className="text-xs text-slate-500 dark:text-slate-400">Multi.</p>
-            <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+          <div className="bg-white/5 rounded py-1.5 px-1">
+            <p className="text-xs text-white/70">Multi.</p>
+            <p className="text-sm font-medium text-white">
               x{score.maxMultiplier}
             </p>
           </div>

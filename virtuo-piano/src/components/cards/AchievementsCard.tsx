@@ -14,13 +14,13 @@ export default function AchievementsCard({
   achievements: Achievement[];
 }) {
   return (
-    <div className="bg-white dark:bg-slate-800 shadow-md rounded-2xl p-5 border border-slate-200 dark:border-slate-700">
+    <div className="bg-white/3 shadow-md rounded-2xl p-5 border border-slate-200/10 dark:border-slate-700/10">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center">
-          <IconAward size={20} className="mr-2 text-amber-500" />
+        <h2 className="text-lg font-semibold text-white flex items-center">
+          <IconAward size={20} className="mr-2 text-amber-400" />
           Réussites
         </h2>
-        <button className="text-xs text-indigo-600 dark:text-indigo-400 font-medium hover:underline flex items-center">
+        <button className="text-xs text-indigo-400 hover:text-indigo-300 font-medium hover:underline flex items-center">
           Voir tout
           <IconChevronRight size={14} className="ml-1" />
         </button>
@@ -41,22 +41,22 @@ export default function AchievementsCard({
               </div>
               <div className="flex-1">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+                  <h3 className="text-sm font-semibold text-white">
                     {achievement.title}
                     {achievement.progress >= 100 && (
-                      <span className="ml-2 text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded-full">
+                      <span className="ml-2 text-xs bg-amber-900/30 text-amber-400 px-2 py-0.5 rounded-full">
                         Complété
                       </span>
                     )}
                   </h3>
-                  <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                  <span className="text-xs font-medium text-white/70">
                     {achievement.progress}%
                   </span>
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 mb-1.5">
+                <p className="text-xs text-white/70 mt-0.5 mb-1.5">
                   {achievement.description}
                 </p>
-                <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                <div className="h-1.5 w-full bg-white/20 rounded-full overflow-hidden">
                   <div
                     className={`h-full rounded-full ${
                       achievement.progress >= 100

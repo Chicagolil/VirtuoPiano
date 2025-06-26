@@ -10,6 +10,7 @@ import {
   IconFilter,
   IconChevronLeft,
   IconChevronRight,
+  IconVinyl,
 } from '@tabler/icons-react';
 
 import styles from './SongList.module.css';
@@ -231,7 +232,13 @@ export function SongsList({ songs }: SongsListProps) {
   return (
     <div className={`${styles.container} ${styles.pageWidth}`}>
       <div className={styles.content}>
-        <h2 className={styles.title}>Bibliothèque de chansons</h2>
+        {/* Header avec fond dégradé */}
+        <div className="bg-gradient-to-r from-blue-500/20 via-indigo-500/20 to-orange-400/20 rounded-t-xl py-8 px-6 mb-6 -mx-6 -mt-6">
+          <h2 className="text-xl font-bold text-white flex items-center">
+            <IconVinyl size={28} className="mr-2 text-orange-300" />
+            Bibliothèque de chansons
+          </h2>
+        </div>
 
         {/* Barre de recherche et filtres */}
         <div className={styles.searchContainer}>

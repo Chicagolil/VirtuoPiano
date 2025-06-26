@@ -20,6 +20,7 @@ interface PieChartData {
 
 interface PieChartCardProps {
   title: string;
+  icon?: React.ReactNode;
   data: PieChartData[];
   colors?: string[];
   height?: number;
@@ -88,6 +89,7 @@ function processChartData(
 
 export function PieChartCard({
   title,
+  icon,
   data,
   colors = DEFAULT_COLORS,
   height = 160,
@@ -170,19 +172,20 @@ export function PieChartCard({
 
   return (
     <div
-      className={`bg-white dark:bg-slate-800 shadow-md rounded-2xl p-5 border border-slate-200 dark:border-slate-700 flex flex-col ${className}`}
+      className={`bg-white/3 shadow-md rounded-2xl p-5 border border-slate-200/10 dark:border-slate-700/10 flex flex-col ${className}`}
     >
-      <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
+      <h3 className="text-lg font-semibold text-white mb-2 flex items-center">
+        {icon && <span className="mr-2">{icon}</span>}
         {title}
       </h3>
 
       <div className="flex-grow flex items-center justify-center h-60">
         {loading ? (
           <div className="flex items-center justify-center ">
-            <Spinner variant="bars" size={32} className="text-indigo-500" />
+            <Spinner variant="bars" size={32} className="text-white" />
           </div>
         ) : error ? (
-          <div className="mt-2 text-sm text-red-500 dark:text-red-400">
+          <div className="mt-2 text-sm text-red-400">
             Erreur lors du chargement des données
           </div>
         ) : (
@@ -203,7 +206,7 @@ export function PieChartCard({
                     backgroundColor: colors[index % colors.length],
                   }}
                 ></div>
-                <span className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                <span className="text-xs text-white/70 truncate">
                   {category.name}
                 </span>
               </div>

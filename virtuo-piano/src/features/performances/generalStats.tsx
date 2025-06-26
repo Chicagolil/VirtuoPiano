@@ -8,6 +8,9 @@ import {
   IconBook,
   IconChevronRight,
   IconTargetArrow,
+  IconMusic,
+  IconUsers,
+  IconTrendingUp,
 } from '@tabler/icons-react';
 import * as Separator from '@radix-ui/react-separator';
 import ProgressBar from '@/components/ProgressBar';
@@ -143,10 +146,11 @@ export default function GeneralStats() {
   }, []);
 
   return (
-    <div className="w-full p-4">
+    <div className="max-w-full mx-auto p-4 px-8">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <PieChartCard
           title="Répertoire par genre"
+          icon={<IconMusic size={20} className="text-purple-400" />}
           data={genreData}
           colors={PIE_CHART_COLORS}
           showLabels={true}
@@ -157,6 +161,7 @@ export default function GeneralStats() {
         />
         <PieChartCard
           title="Répertoire par compositeur"
+          icon={<IconUsers size={20} className="text-emerald-400" />}
           data={composerData}
           colors={PIE_CHART_COLORS}
           showLabels={true}
@@ -167,6 +172,7 @@ export default function GeneralStats() {
         />
         <PieChartCard
           title="Répertoire par difficulté"
+          icon={<IconTrendingUp size={20} className="text-amber-400" />}
           data={difficultyData}
           colors={PIE_CHART_COLORS}
           showLabels={true}
@@ -180,13 +186,13 @@ export default function GeneralStats() {
         <PracticeTimeTile />
         <StartedSongsTile />
       </div>
-      <div className="bg-white dark:bg-slate-800 shadow-md rounded-2xl mb-6 p-5 border border-slate-200 dark:border-slate-700">
+      <div className="bg-white/3 shadow-md rounded-2xl mb-6 p-5 border border-slate-200/10 dark:border-slate-700/10">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center">
-            <IconClock size={20} className="mr-2 text-indigo-500" />
+          <h2 className="text-lg font-semibold text-white flex items-center">
+            <IconClock size={20} className="mr-2 text-indigo-400" />
             Sessions récentes
           </h2>
-          <button className="text-xs cursor-pointer text-indigo-600 dark:text-indigo-400 font-medium flex items-center relative hover:after:w-[calc(100%-1rem)] after:absolute after:bottom-0 after:left-0 after:h-px after:bg-current after:transition-all after:duration-300 after:ease-out after:w-0">
+          <button className="text-xs cursor-pointer text-indigo-400 hover:text-indigo-300 font-medium flex items-center relative hover:after:w-[calc(100%-1rem)] after:absolute after:bottom-0 after:left-0 after:h-px after:bg-current after:transition-all after:duration-300 after:ease-out after:w-0">
             Voir l'historique complet
             <IconChevronRight size={14} className="ml-1" />
           </button>
@@ -194,7 +200,7 @@ export default function GeneralStats() {
 
         {scoresLoading ? (
           <div className="flex justify-center items-center py-8">
-            <Spinner variant="bars" size={32} className="text-indigo-500" />
+            <Spinner variant="bars" size={32} className="text-white" />
           </div>
         ) : scoresError ? (
           <div className="text-center py-8">
@@ -213,7 +219,7 @@ export default function GeneralStats() {
             </div>
           </div>
         ) : recentScores.length === 0 ? (
-          <div className="text-center py-8 text-slate-500">
+          <div className="text-center py-8 text-white/70">
             Aucune session récente trouvée
           </div>
         ) : (
@@ -229,7 +235,7 @@ export default function GeneralStats() {
                 <button
                   onClick={loadMoreSessions}
                   disabled={loadingMore}
-                  className={`flex cursor-pointer items-center px-4 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 disabled:opacity-50 disabled:cursor-not-allowed relative after:absolute after:bottom-2.5 after:left-4 after:h-px after:bg-current after:w-0 ${
+                  className={`flex cursor-pointer items-center px-4 py-2 text-sm font-medium text-indigo-400 hover:text-indigo-300 disabled:opacity-50 disabled:cursor-not-allowed relative after:absolute after:bottom-2.5 after:left-4 after:h-px after:bg-current after:w-0 ${
                     !loadingMore
                       ? 'hover:after:w-[calc(100%-3.2rem)] after:transition-all after:duration-300 after:ease-out'
                       : 'after:transition-none'
@@ -240,7 +246,7 @@ export default function GeneralStats() {
                       <Spinner
                         variant="bars"
                         size={32}
-                        className="text-indigo-500 mr-2"
+                        className="text-white mr-2"
                       />
                       Chargement...
                     </>
@@ -259,52 +265,38 @@ export default function GeneralStats() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Carte avec Avatar et progression */}
-        <div className="bg-white dark:bg-slate-800 shadow-md rounded-2xl p-5 border border-slate-200 dark:border-slate-700">
+        <div className="bg-white/3 shadow-md rounded-2xl p-5 border border-slate-200/10 dark:border-slate-700/10">
           <div className="flex items-start space-x-3">
             <UserAvatar name="Jean Dupont" />
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-                Jean Dupont
-              </h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                Niveau intermédiaire
-              </p>
+              <h3 className="text-lg font-semibold text-white">Jean Dupont</h3>
+              <p className="text-sm text-white/70">Niveau intermédiaire</p>
             </div>
           </div>
 
           <div className="mt-4 space-y-3">
             <div>
               <div className="flex justify-between text-sm mb-1">
-                <span className="text-slate-500 dark:text-slate-400">
-                  Progression niveau
-                </span>
-                <span className="text-slate-700 dark:text-slate-300 font-medium">
-                  68%
-                </span>
+                <span className="text-white/70">Progression niveau</span>
+                <span className="text-white font-medium">68%</span>
               </div>
               <ProgressBar value={68} max={100} />
             </div>
 
             <div>
               <div className="flex justify-between text-sm mb-1">
-                <span className="text-slate-500 dark:text-slate-400">
-                  Objectif hebdomadaire
-                </span>
-                <span className="text-slate-700 dark:text-slate-300 font-medium">
-                  5h / 7h
-                </span>
+                <span className="text-white/70">Objectif hebdomadaire</span>
+                <span className="text-white font-medium">5h / 7h</span>
               </div>
               <ProgressBar value={5} max={7} className="h-2.5" />
             </div>
           </div>
 
-          <Separator.Root className="h-px bg-slate-200 dark:bg-slate-700 my-4" />
+          <Separator.Root className="h-px bg-white/20 my-4" />
 
           <div className="flex justify-between items-center">
-            <span className="text-sm text-slate-500 dark:text-slate-400">
-              4 jours consécutifs
-            </span>
-            <button className="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 text-sm font-medium">
+            <span className="text-sm text-white/70">4 jours consécutifs</span>
+            <button className="text-indigo-400 hover:text-indigo-300 text-sm font-medium">
               Profil complet
             </button>
           </div>
