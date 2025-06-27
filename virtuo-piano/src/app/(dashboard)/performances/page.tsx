@@ -1,41 +1,107 @@
-import { PerformanceBento } from '@/features/BentoGrid/PerformanceBento';
-import { authOptions } from '@/lib/authoption';
-import { getServerSession } from 'next-auth';
-import { redirect } from 'next/navigation';
-import Heatmap from '@/components/ui/heatmap';
-import { Suspense } from 'react';
+'use client';
+
+import React, { useState, Suspense, lazy } from 'react';
 import { Spinner } from '@/components/ui/spinner';
-import { getHeatmapData } from '@/lib/actions/heatmap-actions';
+import * as Tabs from '@radix-ui/react-tabs';
+import { IconChartBar } from '@tabler/icons-react';
 
-export default async function PerformancesPage() {
-  const session = await getServerSession(authOptions);
+const Heatmap = lazy(() => import('@/features/performances/heatmap'));
+const GeneralStats = lazy(() => import('@/features/performances/generalStats'));
+const HistoryStats = lazy(() => import('@/features/performances/HistoryStats'));
+const PlayedSongs = lazy(() => import('@/features/performances/PlayedSongs'));
 
-  if (!session?.user?.id) {
-    redirect('/auth/login');
-  }
+export default function PerformancesPage() {
+  const [activeTab, setActiveTab] = useState('overview');
 
-  async function LoadPerformances() {
-    return (
-      <div>
-        <Heatmap />
-      </div>
-    );
-  }
   return (
-    <div>
-      <div>
-        <Suspense
-          fallback={
-            <div className="flex justify-center items-center h-64">
-              <div className="flex flex-col items-center">
-                <p className="text-white">Chargement des performances...</p>
-                <Spinner variant="bars" size={32} className="text-white" />
-              </div>
-            </div>
-          }
+    <div className="w-full p-4 pt-7">
+      <div className="bg-transparent shadow-md rounded-2xl p-6 border border-slate-200/30 dark:border-slate-700/30">
+        <Tabs.Root
+          className="w-full"
+          defaultValue="overview"
+          onValueChange={setActiveTab}
         >
-          <LoadPerformances />
-        </Suspense>
+          <div className="bg-gradient-to-r from-blue-500/20 via-indigo-500/20 to-orange-400/20 rounded-t-xl p-6 mb-6 -mx-6 -mt-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h1 className="text-xl font-bold text-white flex items-center">
+                  <IconChartBar size={28} className="mr-2 text-orange-300" />
+                  Suivez votre progression et vos performances
+                </h1>
+              </div>
+
+              <Tabs.List className="flex p-1 bg-white/20 backdrop-blur-sm rounded-lg">
+                <Tabs.Trigger
+                  className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                    activeTab === 'overview'
+                      ? 'bg-white/90 text-indigo-600 shadow-sm'
+                      : 'text-white/80 hover:text-white hover:bg-white/10'
+                  }`}
+                  value="overview"
+                >
+                  Vue d'ensemble
+                </Tabs.Trigger>
+                <Tabs.Trigger
+                  className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                    activeTab === 'history'
+                      ? 'bg-white/90 text-indigo-600 shadow-sm'
+                      : 'text-white/80 hover:text-white hover:bg-white/10'
+                  }`}
+                  value="history"
+                >
+                  Historique
+                </Tabs.Trigger>
+                <Tabs.Trigger
+                  className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                    activeTab === 'playedSongs'
+                      ? 'bg-white/90 text-indigo-600 shadow-sm'
+                      : 'text-white/80 hover:text-white hover:bg-white/10'
+                  }`}
+                  value="playedSongs"
+                >
+                  Chansons Jouées
+                </Tabs.Trigger>
+              </Tabs.List>
+            </div>
+          </div>
+
+          <Tabs.Content value="overview" className="focus:outline-none">
+            <Suspense
+              fallback={
+                <div className="flex justify-center items-center h-64">
+                  <Spinner variant="bars" size={32} className="text-white" />
+                </div>
+              }
+            >
+              <Heatmap />
+              <GeneralStats />
+            </Suspense>
+          </Tabs.Content>
+
+          <Tabs.Content value="history" className="focus:outline-none">
+            <Suspense
+              fallback={
+                <div className="flex justify-center items-center h-64">
+                  <Spinner variant="bars" size={32} className="text-white" />
+                </div>
+              }
+            >
+              <HistoryStats />
+            </Suspense>
+          </Tabs.Content>
+
+          <Tabs.Content value="playedSongs" className="focus:outline-none">
+            <Suspense
+              fallback={
+                <div className="flex justify-center items-center h-64">
+                  <Spinner variant="bars" size={32} className="text-white" />
+                </div>
+              }
+            >
+              <PlayedSongs />
+            </Suspense>
+          </Tabs.Content>
+        </Tabs.Root>
       </div>
     </div>
   );

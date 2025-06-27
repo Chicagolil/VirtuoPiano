@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { Heatmap } from '@/components/ui/heatmap';
+import { Heatmap } from '@/features/performances/heatmap';
 import { useHeatmap } from '@/customHooks/useHeatmap';
 import {
   getHeatmapData,
@@ -104,6 +104,9 @@ describe('Heatmap Integration Tests', () => {
       { month: 'Mar', position: 8 },
     ],
     totalContributions: 120,
+    sessionsError: null,
+    heatmapError: null,
+    loadPerformanceData: vi.fn(),
     setSelectedYear: vi.fn(),
     setColorTheme: vi.fn(),
     handleCellClick: vi.fn(),

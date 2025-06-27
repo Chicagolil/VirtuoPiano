@@ -765,7 +765,66 @@ export function BentoShadcnExample() {
           </div>
         </div>
       </div>
+      <div className="mt-6 mb-6 backdrop-blur-md bg-gradient-to-r from-blue-500/10 to-orange-500/10 dark:from-blue-900/20 dark:to-orange-900/20 rounded-2xl overflow-hidden border border-blue-200/30 dark:border-blue-900/30 shadow-lg relative">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-300/20 dark:bg-blue-500/10 rounded-full -mt-20 -mr-20 blur-2xl"></div>
+        <div className="absolute bottom-0 left-0 w-40 h-40 bg-orange-300/20 dark:bg-orange-500/10 rounded-full -mb-10 -ml-10 blur-xl"></div>
 
+        <div className="p-6 relative z-10">
+          <div className="flex justify-between items-start">
+            <div>
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                Défi hebdomadaire
+              </h3>
+              <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">
+                Pratiquez 30 minutes par jour pendant 7 jours consécutifs
+              </p>
+            </div>
+            <div className="flex items-center justify-center w-16 h-16 rounded-full bg-white/80 dark:bg-slate-800/80 border-4 border-blue-100 dark:border-blue-900/40">
+              <div className="text-center">
+                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                  5
+                </p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 -mt-1">
+                  jours
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <div className="w-full h-3 bg-white/50 dark:bg-slate-700/50 rounded-full overflow-hidden mb-2">
+              <div
+                className="h-full bg-gradient-to-r from-blue-500 to-orange-500 rounded-full"
+                style={{ width: '70%' }}
+              ></div>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-slate-600 dark:text-slate-400">
+                Progression: 70%
+              </span>
+              <span className="text-blue-600 dark:text-blue-400 font-medium">
+                5/7 jours
+              </span>
+            </div>
+          </div>
+
+          <div className="mt-4 flex items-center">
+            <div className="flex items-center text-orange-600 dark:text-orange-400 mr-3">
+              <IconStar size={18} className="mr-1" />
+              <span className="text-sm font-medium">+150 points</span>
+            </div>
+            <div className="flex items-center text-emerald-600 dark:text-emerald-400">
+              <IconTrendingUp size={18} className="mr-1" />
+              <span className="text-sm font-medium">+3 niveau</span>
+            </div>
+            <div className="ml-auto">
+              <button className="bg-white/80 dark:bg-slate-700/80 text-blue-600 dark:text-blue-400 border border-blue-200/30 dark:border-blue-800/30 hover:bg-blue-50/80 dark:hover:bg-blue-900/20 py-2 px-4 rounded-lg text-sm font-medium transition-colors">
+                Voir tous les défis
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
       {/* Calendrier de pratique */}
       <div className="mb-6 bg-white dark:bg-slate-800 shadow-md rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700">
         <div className="p-5">
