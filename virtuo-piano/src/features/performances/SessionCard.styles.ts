@@ -1,10 +1,10 @@
 // Styles pour le composant SessionCard (version originale)
 export const sessionCardStyles = {
   card: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
     borderRadius: '0.75rem',
     padding: '1rem',
-    border: '1px solid rgba(255, 255, 255, 0.1)',
+    border: '1px solid rgba(255, 255, 255, 0.05)',
     marginBottom: '0.75rem',
   },
   header: {

@@ -73,7 +73,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({ session }) => {
         ) : null}
         {session.performance ? (
           <div style={sessionCardStyles.statLabel}>
-            Performance:{' '}
+            Progression:{' '}
             <span style={sessionCardStyles.statValue}>
               {session.performance}%
             </span>
