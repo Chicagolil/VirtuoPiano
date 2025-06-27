@@ -22,7 +22,7 @@ interface PieChartCardProps {
   title: string;
   icon?: React.ReactNode;
   data: PieChartData[];
-  colors?: string[];
+  colors?: readonly string[];
   height?: number;
   showLabels?: boolean;
   className?: string;
