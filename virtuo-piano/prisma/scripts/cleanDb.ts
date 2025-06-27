@@ -35,6 +35,10 @@ async function cleanDatabase() {
     await prisma.key.deleteMany();
     console.log('✓ Keys supprimés');
 
+    // Suppression des challenges
+    await prisma.challenge.deleteMany();
+    console.log('✓ Challenges supprimés');
+
     console.log('✅ Base de données nettoyée avec succès!');
   } catch (error) {
     console.error('❌ Erreur lors du nettoyage de la base de données:', error);
