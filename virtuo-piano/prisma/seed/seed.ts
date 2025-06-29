@@ -7,6 +7,8 @@ import { seedScores } from './seeders/scores';
 import { seedUsersFavorites } from './seeders/usersFavorites';
 import { seedUsersCompositions } from './seeders/usersCompositions';
 import { seedUsersImports } from './seeders/usersImports';
+import { seedChallenges } from './seeders/challenges';
+import { seedUserChallengeProgress } from './seeders/userChallengeProgress';
 
 const prisma = new PrismaClient();
 
@@ -34,6 +36,12 @@ async function main() {
 
   console.log('🌱 Seeding user imports...');
   await seedUsersImports(prisma);
+
+  console.log('🌱 Seeding challenges...');
+  await seedChallenges(prisma);
+
+  console.log('🌱 Seeding user challenge progress...');
+  await seedUserChallengeProgress(prisma);
 }
 
 main()
