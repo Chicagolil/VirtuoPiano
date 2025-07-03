@@ -470,4 +470,50 @@ export class PerformancesServices {
       sessionEndTime: score.sessionEndTime,
     }));
   }
+
+  // A TESTER
+  static async getAllSessionsData(
+    userId: string
+  ): Promise<ScoreSummaryService[]> {
+    const scores = await prisma.scores.findMany({
+      where: {
+        user_id: userId,
+      },
+      include: {
+        song: {
+          select: {
+            title: true,
+            composer: true,
+            imageUrl: true,
+            tempo: true,
+            Level: true,
+          },
+        },
+        mode: {
+          select: {
+            name: true,
+          },
+        },
+      },
+      orderBy: {
+        sessionStartTime: 'desc',
+      },
+    });
+
+    return scores.map((score) => ({
+      id: score.id,
+      songTitle: score.song.title,
+      songComposer: score.song.composer,
+      modeName: score.mode.name,
+      imageUrl: score.song.imageUrl,
+      wrongNotes: score.wrongNotes,
+      correctNotes: score.correctNotes,
+      missedNotes: score.missedNotes,
+      totalPoints: score.totalPoints,
+      maxMultiplier: score.maxMultiplier,
+      maxCombo: score.maxCombo,
+      sessionStartTime: score.sessionStartTime,
+      sessionEndTime: score.sessionEndTime,
+    }));
+  }
 }
