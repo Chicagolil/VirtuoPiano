@@ -33,7 +33,7 @@ describe('ModeBadge Component', () => {
     it('should render game mode with correct text', () => {
       render(<ModeBadge mode="game" />);
 
-      expect(screen.getByText('Performance')).toBeInTheDocument();
+      expect(screen.getByText('Jeu')).toBeInTheDocument();
     });
 
     it('should render gamepad icon for game mode', () => {
@@ -125,7 +125,7 @@ describe('ModeBadge Component', () => {
     it('should be accessible with proper text content for game mode', () => {
       render(<ModeBadge mode="game" />);
 
-      const badge = screen.getByText('Performance');
+      const badge = screen.getByText('Jeu');
       expect(badge).toBeVisible();
     });
   });
