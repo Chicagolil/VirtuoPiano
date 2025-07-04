@@ -16,7 +16,7 @@ export default function ModeBadge({ mode }: { mode: 'learning' | 'game' }) {
       ) : (
         <IconDeviceGamepad size={14} className="mr-1" />
       )}
-      {isLearning ? 'Apprentissage' : 'Performance'}
+      {isLearning ? 'Apprentissage' : 'Jeu'}
     </div>
   );
 }
