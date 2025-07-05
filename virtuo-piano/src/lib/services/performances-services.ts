@@ -78,7 +78,7 @@ export class PerformancesServices {
         break;
 
       default:
-        throw new Error('Intervalle invalide');
+        throw new Error('Paramètre invalide');
     }
 
     return { startDate, endDate };
@@ -123,7 +123,7 @@ export class PerformancesServices {
         break;
 
       default:
-        throw new Error('Intervalle invalide');
+        throw new Error('Paramètre invalide');
     }
 
     return { startDate, endDate };
@@ -469,5 +469,237 @@ export class PerformancesServices {
       sessionStartTime: score.sessionStartTime,
       sessionEndTime: score.sessionEndTime,
     }));
+  }
+
+  // A TESTER
+  static async getAllSessionsData(
+    userId: string
+  ): Promise<ScoreSummaryService[]> {
+    const scores = await prisma.scores.findMany({
+      where: {
+        user_id: userId,
+      },
+      include: {
+        song: {
+          select: {
+            title: true,
+            composer: true,
+            imageUrl: true,
+            tempo: true,
+            Level: true,
+          },
+        },
+        mode: {
+          select: {
+            name: true,
+          },
+        },
+      },
+      orderBy: {
+        sessionStartTime: 'desc',
+      },
+    });
+
+    return scores.map((score) => ({
+      id: score.id,
+      songTitle: score.song.title,
+      songComposer: score.song.composer,
+      modeName: score.mode.name,
+      imageUrl: score.song.imageUrl,
+      wrongNotes: score.wrongNotes,
+      correctNotes: score.correctNotes,
+      missedNotes: score.missedNotes,
+      totalPoints: score.totalPoints,
+      maxMultiplier: score.maxMultiplier,
+      maxCombo: score.maxCombo,
+      sessionStartTime: score.sessionStartTime,
+      sessionEndTime: score.sessionEndTime,
+    }));
+  }
+
+  static async getFilteredSessionsData(
+    userId: string,
+    filters: {
+      searchQuery?: string;
+      modeFilter?: 'all' | 'learning' | 'game';
+      onlyCompleted?: boolean;
+      dateStart?: string;
+      dateEnd?: string;
+    },
+    pagination: {
+      limit: number;
+      offset: number;
+    }
+  ): Promise<{
+    sessions: ScoreSummaryService[];
+    hasMore: boolean;
+    total: number;
+  }> {
+    // Construire les conditions where
+    const whereConditions: any = {
+      user_id: userId,
+    };
+
+    // Filtre par mode
+    if (filters.modeFilter && filters.modeFilter !== 'all') {
+      whereConditions.mode = {
+        name: filters.modeFilter === 'learning' ? 'Apprentissage' : 'Jeu',
+      };
+    }
+
+    // Filtre par recherche textuelle
+    if (filters.searchQuery && filters.searchQuery.trim()) {
+      const searchTerm = filters.searchQuery.trim();
+      whereConditions.song = {
+        OR: [
+          {
+            title: {
+              contains: searchTerm,
+              mode: 'insensitive',
+            },
+          },
+          {
+            composer: {
+              contains: searchTerm,
+              mode: 'insensitive',
+            },
+          },
+        ],
+      };
+    }
+
+    // Filtre par dates
+    if (filters.dateStart && filters.dateEnd) {
+      const startDate = new Date(filters.dateStart);
+      const endDate = new Date(filters.dateEnd);
+      endDate.setHours(23, 59, 59, 999);
+
+      whereConditions.sessionStartTime = {
+        gte: startDate,
+        lte: endDate,
+      };
+    }
+
+    // Si on filtre les chansons terminées, on doit récupérer TOUTES les sessions correspondantes
+    // pour pouvoir calculer la performance et filtrer correctement AVANT la pagination
+    if (filters.modeFilter === 'learning' && filters.onlyCompleted) {
+      // Récupérer TOUTES les sessions qui matchent les autres critères
+      const allScores = await prisma.scores.findMany({
+        where: whereConditions,
+        include: {
+          song: {
+            select: {
+              title: true,
+              composer: true,
+              imageUrl: true,
+              tempo: true,
+              Level: true,
+            },
+          },
+          mode: {
+            select: {
+              name: true,
+            },
+          },
+        },
+        orderBy: {
+          sessionStartTime: 'desc',
+        },
+      });
+
+      // Mapper et filtrer les chansons terminées
+      const completedSessions = allScores
+        .map((score) => ({
+          id: score.id,
+          songTitle: score.song.title,
+          songComposer: score.song.composer,
+          modeName: score.mode.name,
+          imageUrl: score.song.imageUrl,
+          wrongNotes: score.wrongNotes,
+          correctNotes: score.correctNotes,
+          missedNotes: score.missedNotes,
+          totalPoints: score.totalPoints,
+          maxMultiplier: score.maxMultiplier,
+          maxCombo: score.maxCombo,
+          sessionStartTime: score.sessionStartTime,
+          sessionEndTime: score.sessionEndTime,
+        }))
+        .filter((score) => {
+          const { performance } = getLearnScores(
+            score.wrongNotes || 0,
+            score.correctNotes || 0,
+            score.missedNotes || 0
+          );
+          return performance >= 90;
+        });
+
+      // Maintenant appliquer la pagination sur les sessions filtrées
+      const total = completedSessions.length;
+      const sessions = completedSessions.slice(
+        pagination.offset,
+        pagination.offset + pagination.limit
+      );
+      const hasMore = pagination.offset + sessions.length < total;
+
+      return {
+        sessions,
+        hasMore,
+        total,
+      };
+    } else {
+      // Comportement normal pour les autres cas
+      const total = await prisma.scores.count({
+        where: whereConditions,
+      });
+
+      const scores = await prisma.scores.findMany({
+        where: whereConditions,
+        include: {
+          song: {
+            select: {
+              title: true,
+              composer: true,
+              imageUrl: true,
+              tempo: true,
+              Level: true,
+            },
+          },
+          mode: {
+            select: {
+              name: true,
+            },
+          },
+        },
+        orderBy: {
+          sessionStartTime: 'desc',
+        },
+        skip: pagination.offset,
+        take: pagination.limit,
+      });
+
+      const mappedScores = scores.map((score) => ({
+        id: score.id,
+        songTitle: score.song.title,
+        songComposer: score.song.composer,
+        modeName: score.mode.name,
+        imageUrl: score.song.imageUrl,
+        wrongNotes: score.wrongNotes,
+        correctNotes: score.correctNotes,
+        missedNotes: score.missedNotes,
+        totalPoints: score.totalPoints,
+        maxMultiplier: score.maxMultiplier,
+        maxCombo: score.maxCombo,
+        sessionStartTime: score.sessionStartTime,
+        sessionEndTime: score.sessionEndTime,
+      }));
+
+      const hasMore = pagination.offset + mappedScores.length < total;
+
+      return {
+        sessions: mappedScores,
+        hasMore,
+        total,
+      };
+    }
   }
 }

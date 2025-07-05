@@ -83,7 +83,7 @@ describe('Performance Components Integration', () => {
       // Vérifier le fallback et les badges
       expect(screen.getByText('JS')).toBeInTheDocument();
       expect(screen.getByText('88% précision')).toBeInTheDocument();
-      expect(screen.getByText('Performance')).toBeInTheDocument();
+      expect(screen.getByText('Jeu')).toBeInTheDocument();
     });
   });
 
