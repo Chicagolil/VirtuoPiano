@@ -5,7 +5,12 @@ import {
   getDifficultyRange,
   getSongType,
   getPageName,
+  formatDuration,
+  generateYearData,
+  generateEmptyGrid,
+  generateMonthLabels,
 } from '@/common/utils/function';
+import { ScoreDurationData } from '@/lib/services/performances-services';
 
 describe('Fonctions utilitaires', () => {
   describe('castMsToMin', () => {
@@ -136,6 +141,135 @@ describe('Fonctions utilitaires', () => {
     it('devrait gérer les chemins vides ou invalides', () => {
       expect(getPageName('')).toBe('Accueil');
       expect(getPageName('///')).toBe('Accueil');
+    });
+  });
+
+  describe('formatDuration', () => {
+    it('should format minutes correctly', () => {
+      expect(formatDuration(1)).toBe('1 minute');
+      expect(formatDuration(30)).toBe('30 minutes');
+      expect(formatDuration(59)).toBe('59 minutes');
+    });
+
+    it('should format hours correctly', () => {
+      expect(formatDuration(60)).toBe('1 heure');
+      expect(formatDuration(120)).toBe('2 heures');
+      expect(formatDuration(180)).toBe('3 heures');
+    });
+
+    it('should format hours and minutes correctly', () => {
+      expect(formatDuration(61)).toBe('1 heure 1 minute');
+      expect(formatDuration(90)).toBe('1 heure 30 minutes');
+      expect(formatDuration(125)).toBe('2 heures 5 minutes');
+      expect(formatDuration(185)).toBe('3 heures 5 minutes');
+    });
+
+    it('should handle zero minutes', () => {
+      expect(formatDuration(0)).toBe('0 minutes');
+    });
+  });
+
+  describe('generateYearData', () => {
+    it('should generate correct year data with performance data', () => {
+      const year = 2024;
+      const performanceData: ScoreDurationData[] = [
+        {
+          date: new Date('2024-01-01'),
+          durationInMinutes: 30,
+        },
+        {
+          date: new Date('2024-01-01'),
+          durationInMinutes: 15,
+        },
+        {
+          date: new Date('2024-06-15'),
+          durationInMinutes: 45,
+        },
+      ];
+
+      const result = generateYearData(year, performanceData);
+
+      expect(result).toBeDefined();
+      expect(result.length).toBeGreaterThan(0);
+      expect(result[0]).toHaveLength(7); // Each week has 7 days
+    });
+
+    it('should handle empty performance data', () => {
+      const year = 2024;
+      const performanceData: ScoreDurationData[] = [];
+
+      const result = generateYearData(year, performanceData);
+
+      expect(result).toBeDefined();
+      expect(result.length).toBeGreaterThan(0);
+
+      // Check that all values are 0 or null
+      const allValues = result.flat();
+      const nonNullValues = allValues.filter((val) => val !== null);
+      expect(nonNullValues.every((val) => val === 0)).toBe(true);
+    });
+
+    it('should aggregate multiple sessions on the same day', () => {
+      const year = 2024;
+      const performanceData: ScoreDurationData[] = [
+        {
+          date: new Date('2024-01-01'),
+          durationInMinutes: 30,
+        },
+        {
+          date: new Date('2024-01-01'),
+          durationInMinutes: 15,
+        },
+      ];
+
+      const result = generateYearData(year, performanceData);
+
+      // Find the first non-null value (should be January 1st)
+      const firstWeek = result[0];
+      const firstNonNullIndex = firstWeek.findIndex((val) => val !== null);
+      expect(firstWeek[firstNonNullIndex]).toBe(45); // 30 + 15
+    });
+  });
+
+  describe('generateEmptyGrid', () => {
+    it('should generate empty grid for a year', () => {
+      const year = 2024;
+      const result = generateEmptyGrid(year);
+
+      expect(result).toBeDefined();
+      expect(result.length).toBeGreaterThan(0);
+      expect(result[0]).toHaveLength(7);
+
+      // Check that all non-null values are 0
+      const allValues = result.flat();
+      const nonNullValues = allValues.filter((val) => val !== null);
+      expect(nonNullValues.every((val) => val === 0)).toBe(true);
+    });
+  });
+
+  describe('generateMonthLabels', () => {
+    it('should generate month labels for a year', () => {
+      const year = 2024;
+      const weeksData = generateEmptyGrid(year);
+      const result = generateMonthLabels(year, weeksData);
+
+      expect(result).toBeDefined();
+      expect(result.length).toBeLessThanOrEqual(12);
+      expect(result[0]).toHaveProperty('month');
+      expect(result[0]).toHaveProperty('position');
+      expect(typeof result[0].position).toBe('number');
+      expect(typeof result[0].month).toBe('string');
+    });
+
+    it('should have valid positions within weeks range', () => {
+      const year = 2024;
+      const weeksData = generateEmptyGrid(year);
+      const result = generateMonthLabels(year, weeksData);
+
+      result.forEach((monthLabel) => {
+        expect(monthLabel.position).toBeGreaterThanOrEqual(0);
+        expect(monthLabel.position).toBeLessThan(weeksData.length);
+      });
     });
   });
 });
