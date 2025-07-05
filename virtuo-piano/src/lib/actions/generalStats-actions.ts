@@ -16,7 +16,7 @@ export async function getSongsPropertyRepertory(): Promise<{
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
-      throw new Error('Utilisateur non connecté');
+      throw new Error('Accès non autorisé');
     }
 
     const userId = session.user.id;
@@ -53,7 +53,7 @@ export async function getSongsPropertyRepertory(): Promise<{
       data: processedData,
     };
   } catch (error) {
-    console.error('Erreur lors de la récupération des données:', error);
+    console.error('Échec du chargement des données');
     return {
       success: false,
       data: {
@@ -61,7 +61,7 @@ export async function getSongsPropertyRepertory(): Promise<{
         composer: [],
         difficulty: [],
       },
-      error: error instanceof Error ? error.message : 'Erreur inconnue',
+      error: 'Échec du chargement des données',
     };
   }
 }
@@ -83,7 +83,7 @@ export async function getPracticeTimeComparison(
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
-      throw new Error('Utilisateur non connecté');
+      throw new Error('Accès non autorisé');
     }
 
     const userId = session.user.id;
@@ -136,10 +136,7 @@ export async function getPracticeTimeComparison(
       },
     };
   } catch (error) {
-    console.error(
-      'Erreur lors de la récupération du temps de pratique:',
-      error
-    );
+    console.error('Échec du chargement des données');
     return {
       success: false,
       data: {
@@ -150,7 +147,7 @@ export async function getPracticeTimeComparison(
         formattedPreviousTime: '0H00',
         trend: 'stable',
       },
-      error: error instanceof Error ? error.message : 'Erreur inconnue',
+      error: 'Échec du chargement des données',
     };
   }
 }
@@ -171,7 +168,7 @@ export async function getStartedSongsComparison(
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
-      throw new Error('Utilisateur non connecté');
+      throw new Error('Accès non autorisé');
     }
 
     const userId = session.user.id;
@@ -215,10 +212,7 @@ export async function getStartedSongsComparison(
       },
     };
   } catch (error) {
-    console.error(
-      'Erreur lors de la récupération des morceaux démarrés:',
-      error
-    );
+    console.error('Échec du chargement des données');
     return {
       success: false,
       data: {
@@ -228,7 +222,7 @@ export async function getStartedSongsComparison(
         totalSongs: 0,
         trend: 'stable',
       },
-      error: error instanceof Error ? error.message : 'Erreur inconnue',
+      error: 'Échec du chargement des données',
     };
   }
 }

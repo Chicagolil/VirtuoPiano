@@ -78,7 +78,7 @@ export class PerformancesServices {
         break;
 
       default:
-        throw new Error('Intervalle invalide');
+        throw new Error('Paramètre invalide');
     }
 
     return { startDate, endDate };
@@ -123,7 +123,7 @@ export class PerformancesServices {
         break;
 
       default:
-        throw new Error('Intervalle invalide');
+        throw new Error('Paramètre invalide');
     }
 
     return { startDate, endDate };

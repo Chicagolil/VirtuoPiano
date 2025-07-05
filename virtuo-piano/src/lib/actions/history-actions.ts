@@ -88,7 +88,7 @@ export async function getRecentSessions(limit: number = 3): Promise<{
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
-      throw new Error('Utilisateur non connecté');
+      throw new Error('Accès non autorisé');
     }
 
     const userId = session.user.id;
@@ -107,14 +107,11 @@ export async function getRecentSessions(limit: number = 3): Promise<{
       data: scoreSummaries,
     };
   } catch (error) {
-    console.error(
-      'Erreur lors de la récupération des sessions récentes:',
-      error
-    );
+    console.error('Échec du chargement des données');
     return {
       success: false,
       data: [],
-      error: error instanceof Error ? error.message : 'Erreur inconnue',
+      error: 'Échec du chargement des données',
     };
   }
 }
@@ -128,7 +125,7 @@ export async function getAllSessions(): Promise<{
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
-      throw new Error('Utilisateur non connecté');
+      throw new Error('Accès non autorisé');
     }
 
     const userId = session.user.id;
@@ -144,14 +141,11 @@ export async function getAllSessions(): Promise<{
       data: scoreSummaries,
     };
   } catch (error) {
-    console.error(
-      'Erreur lors de la récupération de toutes les sessions:',
-      error
-    );
+    console.error('Échec du chargement des données');
     return {
       success: false,
       data: [],
-      error: error instanceof Error ? error.message : 'Erreur inconnue',
+      error: 'Échec du chargement des données',
     };
   }
 }
@@ -178,7 +172,7 @@ export async function getFilteredSessions(
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
-      throw new Error('Utilisateur non connecté');
+      throw new Error('Accès non autorisé');
     }
 
     const userId = session.user.id;
@@ -201,16 +195,13 @@ export async function getFilteredSessions(
       total,
     };
   } catch (error) {
-    console.error(
-      'Erreur lors de la récupération des sessions filtrées:',
-      error
-    );
+    console.error('Échec du chargement des données');
     return {
       success: false,
       data: [],
       hasMore: false,
       total: 0,
-      error: error instanceof Error ? error.message : 'Erreur inconnue',
+      error: 'Échec du chargement des données',
     };
   }
 }

@@ -30,7 +30,7 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          throw new Error('Email et mot de passe requis');
+          throw new Error('Informations manquantes');
         }
 
         const user = await prisma.user.findUnique({
@@ -40,7 +40,7 @@ export const authOptions: NextAuthOptions = {
         });
 
         if (!user) {
-          throw new Error('Utilisateur non trouvé');
+          throw new Error('Identifiants invalides');
         }
 
         const isPasswordValid = await argon2.verify(
@@ -49,7 +49,7 @@ export const authOptions: NextAuthOptions = {
         );
 
         if (!isPasswordValid) {
-          throw new Error('Mot de passe incorrect');
+          throw new Error('Identifiants invalides');
         }
 
         return {
