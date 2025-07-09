@@ -8,6 +8,7 @@ vi.mock('@/lib/prisma', () => ({
     scores: {
       findMany: vi.fn(),
       groupBy: vi.fn(),
+      count: vi.fn(),
     },
     songs: {
       count: vi.fn(),
@@ -686,6 +687,468 @@ describe('PerformancesServices', () => {
       );
 
       expect(mockPrisma.scores.findMany).toHaveBeenCalledTimes(3);
+    });
+  });
+
+  describe('getAllSessionsData', () => {
+    it('should return all sessions without limit', async () => {
+      const mockScores = [
+        {
+          id: 'score1',
+          wrongNotes: 5,
+          correctNotes: 95,
+          missedNotes: 2,
+          totalPoints: 1500,
+          maxMultiplier: 4,
+          maxCombo: 30,
+          sessionStartTime: new Date('2025-01-15T10:00:00'),
+          sessionEndTime: new Date('2025-01-15T10:30:00'),
+          song: {
+            title: 'Song 1',
+            composer: 'Composer 1',
+            imageUrl: '/images/song1.jpg',
+            tempo: 120,
+            Level: 4,
+          },
+          mode: {
+            name: 'Apprentissage',
+          },
+        },
+        {
+          id: 'score2',
+          wrongNotes: 10,
+          correctNotes: 80,
+          missedNotes: 5,
+          totalPoints: 1200,
+          maxMultiplier: 3,
+          maxCombo: 25,
+          sessionStartTime: new Date('2025-01-14T14:00:00'),
+          sessionEndTime: new Date('2025-01-14T14:30:00'),
+          song: {
+            title: 'Song 2',
+            composer: 'Composer 2',
+            imageUrl: null,
+            tempo: 140,
+            Level: 3,
+          },
+          mode: {
+            name: 'Jeu',
+          },
+        },
+      ];
+
+      mockPrisma.scores.findMany.mockResolvedValue(mockScores);
+
+      const result = await PerformancesServices.getAllSessionsData('user123');
+
+      expect(result).toHaveLength(2);
+      expect(result[0].songTitle).toBe('Song 1');
+      expect(result[1].modeName).toBe('Jeu');
+
+      expect(mockPrisma.scores.findMany).toHaveBeenCalledWith({
+        where: {
+          user_id: 'user123',
+        },
+        include: {
+          song: {
+            select: {
+              title: true,
+              composer: true,
+              imageUrl: true,
+              tempo: true,
+              Level: true,
+            },
+          },
+          mode: {
+            select: {
+              name: true,
+            },
+          },
+        },
+        orderBy: {
+          sessionStartTime: 'desc',
+        },
+      });
+    });
+
+    it('should handle empty results', async () => {
+      mockPrisma.scores.findMany.mockResolvedValue([]);
+
+      const result = await PerformancesServices.getAllSessionsData('user123');
+
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe('getFilteredSessionsData', () => {
+    beforeEach(() => {
+      vi.clearAllMocks();
+    });
+
+    it('should return filtered sessions with search query', async () => {
+      const mockScores = [
+        {
+          id: 'score1',
+          wrongNotes: 5,
+          correctNotes: 95,
+          missedNotes: 2,
+          totalPoints: 1500,
+          maxMultiplier: 4,
+          maxCombo: 30,
+          sessionStartTime: new Date('2025-01-15T10:00:00'),
+          sessionEndTime: new Date('2025-01-15T10:30:00'),
+          song: {
+            title: 'Moonlight Sonata',
+            composer: 'Beethoven',
+            imageUrl: '/images/moonlight.jpg',
+            tempo: 120,
+            Level: 4,
+          },
+          mode: {
+            name: 'Apprentissage',
+          },
+        },
+      ];
+
+      mockPrisma.scores.findMany.mockResolvedValue(mockScores);
+      mockPrisma.scores.count.mockResolvedValue(1);
+
+      const filters = {
+        searchQuery: 'moonlight',
+        modeFilter: 'learning' as const,
+      };
+
+      const pagination = { limit: 10, offset: 0 };
+
+      const result = await PerformancesServices.getFilteredSessionsData(
+        'user123',
+        filters,
+        pagination
+      );
+
+      expect(result.sessions).toHaveLength(1);
+      expect(result.sessions[0].songTitle).toBe('Moonlight Sonata');
+      expect(result.hasMore).toBe(false);
+      expect(result.total).toBe(1);
+
+      expect(mockPrisma.scores.findMany).toHaveBeenCalledWith({
+        where: {
+          user_id: 'user123',
+          mode: {
+            name: 'Apprentissage',
+          },
+          song: {
+            OR: [
+              {
+                title: {
+                  contains: 'moonlight',
+                  mode: 'insensitive',
+                },
+              },
+              {
+                composer: {
+                  contains: 'moonlight',
+                  mode: 'insensitive',
+                },
+              },
+            ],
+          },
+        },
+        include: {
+          song: {
+            select: {
+              title: true,
+              composer: true,
+              imageUrl: true,
+              tempo: true,
+              Level: true,
+            },
+          },
+          mode: {
+            select: {
+              name: true,
+            },
+          },
+        },
+        orderBy: {
+          sessionStartTime: 'desc',
+        },
+        skip: 0,
+        take: 10,
+      });
+    });
+
+    it('should filter by mode correctly', async () => {
+      mockPrisma.scores.findMany.mockResolvedValue([]);
+      mockPrisma.scores.count.mockResolvedValue(0);
+
+      const filters = {
+        modeFilter: 'game' as const,
+      };
+
+      await PerformancesServices.getFilteredSessionsData('user123', filters, {
+        limit: 10,
+        offset: 0,
+      });
+
+      expect(mockPrisma.scores.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            mode: {
+              name: 'Jeu',
+            },
+          }),
+        })
+      );
+    });
+
+    it('should filter by date range', async () => {
+      mockPrisma.scores.findMany.mockResolvedValue([]);
+      mockPrisma.scores.count.mockResolvedValue(0);
+
+      const filters = {
+        dateStart: '2025-01-01',
+        dateEnd: '2025-01-31',
+      };
+
+      await PerformancesServices.getFilteredSessionsData('user123', filters, {
+        limit: 10,
+        offset: 0,
+      });
+
+      expect(mockPrisma.scores.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            sessionStartTime: {
+              gte: new Date('2025-01-01T00:00:00.000Z'),
+              lte: new Date('2025-01-31T22:59:59.999Z'),
+            },
+          }),
+        })
+      );
+    });
+
+    it('should handle onlyCompleted filter for learning mode', async () => {
+      const mockScores = [
+        {
+          id: 'score1',
+          wrongNotes: 5,
+          correctNotes: 95,
+          missedNotes: 0, // 95% accuracy
+          totalPoints: 1500,
+          maxMultiplier: 4,
+          maxCombo: 30,
+          sessionStartTime: new Date('2025-01-15T10:00:00'),
+          sessionEndTime: new Date('2025-01-15T10:30:00'),
+          song: {
+            title: 'Complete Song',
+            composer: 'Test',
+            imageUrl: null,
+            tempo: 120,
+            Level: 4,
+          },
+          mode: {
+            name: 'Apprentissage',
+          },
+        },
+        {
+          id: 'score2',
+          wrongNotes: 20,
+          correctNotes: 70,
+          missedNotes: 10, // 70% accuracy
+          totalPoints: 1000,
+          maxMultiplier: 2,
+          maxCombo: 15,
+          sessionStartTime: new Date('2025-01-14T10:00:00'),
+          sessionEndTime: new Date('2025-01-14T10:30:00'),
+          song: {
+            title: 'Incomplete Song',
+            composer: 'Test',
+            imageUrl: null,
+            tempo: 120,
+            Level: 4,
+          },
+          mode: {
+            name: 'Apprentissage',
+          },
+        },
+      ];
+
+      // Configure le mock pour retourner les bonnes valeurs d'accuracy
+      mockGetLearnScores.mockImplementation(
+        (wrongNotes, correctNotes, missedNotes) => {
+          const accuracy =
+            Math.floor((correctNotes / (correctNotes + wrongNotes)) * 100) || 0;
+          const performance =
+            Math.floor(
+              (correctNotes / (wrongNotes + correctNotes + missedNotes)) * 100
+            ) || 0;
+          return { accuracy, performance };
+        }
+      );
+
+      mockPrisma.scores.findMany.mockResolvedValue(mockScores);
+      mockPrisma.scores.count.mockResolvedValue(2);
+
+      const filters = {
+        modeFilter: 'learning' as const,
+        onlyCompleted: true,
+      };
+
+      const result = await PerformancesServices.getFilteredSessionsData(
+        'user123',
+        filters,
+        { limit: 10, offset: 0 }
+      );
+
+      // Seule la première session devrait être retournée (95% >= 90%)
+      expect(result.sessions).toHaveLength(1);
+      expect(result.sessions[0].songTitle).toBe('Complete Song');
+    });
+
+    it('should calculate hasMore correctly', async () => {
+      const mockScores = new Array(10).fill(null).map((_, index) => ({
+        id: `score${index}`,
+        wrongNotes: 5,
+        correctNotes: 95,
+        missedNotes: 0,
+        totalPoints: 1500,
+        maxMultiplier: 4,
+        maxCombo: 30,
+        sessionStartTime: new Date('2025-01-15T10:00:00'),
+        sessionEndTime: new Date('2025-01-15T10:30:00'),
+        song: {
+          title: `Song ${index}`,
+          composer: 'Test',
+          imageUrl: null,
+          tempo: 120,
+          Level: 4,
+        },
+        mode: {
+          name: 'Apprentissage',
+        },
+      }));
+
+      mockPrisma.scores.findMany.mockResolvedValue(mockScores);
+      mockPrisma.scores.count.mockResolvedValue(25);
+
+      const result = await PerformancesServices.getFilteredSessionsData(
+        'user123',
+        {},
+        { limit: 10, offset: 0 }
+      );
+
+      expect(result.hasMore).toBe(true);
+
+      // Test with last page
+      const result2 = await PerformancesServices.getFilteredSessionsData(
+        'user123',
+        {},
+        { limit: 10, offset: 20 }
+      );
+
+      expect(result2.hasMore).toBe(false);
+    });
+
+    it('should handle pagination correctly', async () => {
+      mockPrisma.scores.findMany.mockResolvedValue([]);
+      mockPrisma.scores.count.mockResolvedValue(100);
+
+      await PerformancesServices.getFilteredSessionsData(
+        'user123',
+        {},
+        { limit: 30, offset: 60 }
+      );
+
+      expect(mockPrisma.scores.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          skip: 60,
+          take: 30,
+        })
+      );
+    });
+
+    it('should handle empty search results', async () => {
+      mockPrisma.scores.findMany.mockResolvedValue([]);
+      mockPrisma.scores.count.mockResolvedValue(0);
+
+      const result = await PerformancesServices.getFilteredSessionsData(
+        'user123',
+        { searchQuery: 'nonexistent' },
+        { limit: 10, offset: 0 }
+      );
+
+      expect(result.sessions).toEqual([]);
+      expect(result.hasMore).toBe(false);
+      expect(result.total).toBe(0);
+    });
+
+    it('should handle all filters combined', async () => {
+      mockPrisma.scores.findMany.mockResolvedValue([]);
+      mockPrisma.scores.count.mockResolvedValue(0);
+
+      const filters = {
+        searchQuery: 'bach',
+        modeFilter: 'learning' as const,
+        onlyCompleted: false,
+        dateStart: '2025-01-01',
+        dateEnd: '2025-01-31',
+      };
+
+      await PerformancesServices.getFilteredSessionsData('user123', filters, {
+        limit: 20,
+        offset: 40,
+      });
+
+      expect(mockPrisma.scores.findMany).toHaveBeenCalledWith({
+        where: {
+          user_id: 'user123',
+          mode: {
+            name: 'Apprentissage',
+          },
+          sessionStartTime: {
+            gte: new Date('2025-01-01T00:00:00.000Z'),
+            lte: new Date('2025-01-31T22:59:59.999Z'),
+          },
+          song: {
+            OR: [
+              {
+                title: {
+                  contains: 'bach',
+                  mode: 'insensitive',
+                },
+              },
+              {
+                composer: {
+                  contains: 'bach',
+                  mode: 'insensitive',
+                },
+              },
+            ],
+          },
+        },
+        include: {
+          song: {
+            select: {
+              title: true,
+              composer: true,
+              imageUrl: true,
+              tempo: true,
+              Level: true,
+            },
+          },
+          mode: {
+            select: {
+              name: true,
+            },
+          },
+        },
+        orderBy: {
+          sessionStartTime: 'desc',
+        },
+        skip: 40,
+        take: 20,
+      });
     });
   });
 });

@@ -18,7 +18,8 @@ export default function PerformancesPage() {
       <div className="bg-transparent shadow-md rounded-2xl p-6 border border-slate-200/30 dark:border-slate-700/30">
         <Tabs.Root
           className="w-full"
-          defaultValue="overview"
+          // A TESTER
+          value={activeTab}
           onValueChange={setActiveTab}
         >
           <div className="bg-gradient-to-r from-blue-500/20 via-indigo-500/20 to-orange-400/20 rounded-t-xl p-6 mb-6 -mx-6 -mt-6">
@@ -74,7 +75,8 @@ export default function PerformancesPage() {
               }
             >
               <Heatmap />
-              <GeneralStats />
+              {/* A TESTER */}
+              <GeneralStats onTabChange={setActiveTab} />
             </Suspense>
           </Tabs.Content>
 
