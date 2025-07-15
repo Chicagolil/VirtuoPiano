@@ -7,12 +7,7 @@ import React, {
   useRef,
   useMemo,
 } from 'react';
-import {
-  IconClock,
-  IconSearch,
-  IconCalendar,
-  IconFilter,
-} from '@tabler/icons-react';
+import { IconClock, IconSearch, IconFilter } from '@tabler/icons-react';
 import ScoreCard from '@/components/cards/ScoreCard';
 import { ScoreSummary } from '@/components/cards/ScoreCard';
 import { getFilteredSessions } from '@/lib/actions/history-actions';
@@ -30,14 +25,13 @@ type CacheEntry = {
   timestamp: Date;
 };
 
-// A TESTER
 export default function HistoryStats() {
   const [allScores, setAllScores] = useState<ScoreSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [dateFilter, setDateFilter] = useState('all'); // 'all', 'custom'
+  const [dateFilter, setDateFilter] = useState('all');
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
   const [showDateFilters, setShowDateFilters] = useState(false);
@@ -134,7 +128,7 @@ export default function HistoryStats() {
           }
         }
 
-        // Construire les filtres pour l'API
+        // Construire les filtres pour l'action serveur
         const filters = {
           searchQuery: searchQuery.trim() || undefined,
           modeFilter,

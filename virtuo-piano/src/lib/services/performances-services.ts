@@ -471,7 +471,6 @@ export class PerformancesServices {
     }));
   }
 
-  // A TESTER
   static async getAllSessionsData(
     userId: string
   ): Promise<ScoreSummaryService[]> {

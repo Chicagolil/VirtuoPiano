@@ -18,7 +18,6 @@ export default function PerformancesPage() {
       <div className="bg-transparent shadow-md rounded-2xl p-6 border border-slate-200/30 dark:border-slate-700/30">
         <Tabs.Root
           className="w-full"
-          // A TESTER
           value={activeTab}
           onValueChange={setActiveTab}
         >
@@ -75,7 +74,7 @@ export default function PerformancesPage() {
               }
             >
               <Heatmap />
-              {/* A TESTER */}
+
               <GeneralStats onTabChange={setActiveTab} />
             </Suspense>
           </Tabs.Content>
