@@ -1,28 +1,25 @@
 'use client';
 
-import React, {
-  useEffect,
-  useState,
-  useCallback,
-  useRef,
-  useMemo,
-} from 'react';
-import { IconClock, IconSearch, IconFilter } from '@tabler/icons-react';
+import React, { useEffect, useState } from 'react';
+import {
+  IconClock,
+  IconSearch,
+  IconFilter,
+  IconChevronRight,
+} from '@tabler/icons-react';
 import ScoreCard from '@/components/cards/ScoreCard';
 import { ScoreSummary } from '@/components/cards/ScoreCard';
 import { getFilteredSessions } from '@/lib/actions/history-actions';
 import { Spinner } from '@/components/ui/spinner';
+import { useSearchCache } from '@/customHooks/useSearchCache';
 
 const SESSIONS_PER_PAGE = 30;
 
-// Types pour le cache
-type CacheKey = string;
-type CacheEntry = {
+// Type pour les données retournées par getFilteredSessions
+type SessionsResult = {
   sessions: ScoreSummary[];
-  total: number;
-  lastOffset: number;
   hasMore: boolean;
-  timestamp: Date;
+  total: number;
 };
 
 export default function HistoryStats() {
@@ -41,29 +38,102 @@ export default function HistoryStats() {
   const [onlyCompleted, setOnlyCompleted] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [total, setTotal] = useState(0);
-  const [currentOffset, setCurrentOffset] = useState(0);
 
-  // Cache côté client
-  const [sessionsCache, setSessionsCache] = useState<Map<CacheKey, CacheEntry>>(
-    new Map()
-  );
-
-  // Ref pour détecter le scroll
-  const observerRef = useRef<IntersectionObserver | null>(null);
-  const loadMoreRef = useRef<HTMLDivElement | null>(null);
-
-  // Générer la clé de cache basée sur les filtres actuels
-  const cacheKey = useMemo(() => {
-    const filters = {
+  // Utilisation du custom hook seulement pour les recherches/filtres initiaux
+  const {
+    data: initialSessionsData,
+    isLoading: initialLoading,
+    error: initialError,
+    clearCache,
+    refetch,
+    hasCache,
+  } = useSearchCache<SessionsResult>({
+    filters: {
       search: searchQuery.trim(),
       mode: modeFilter,
       completed: modeFilter === 'learning' ? onlyCompleted : false,
       dateFilter,
       startDate: dateFilter === 'custom' ? customStartDate : '',
       endDate: dateFilter === 'custom' ? customEndDate : '',
-    };
-    return JSON.stringify(filters);
+    },
+    searchQuery,
+    fetchFunction: async () => {
+      const filters = {
+        searchQuery: searchQuery.trim() || undefined,
+        modeFilter,
+        onlyCompleted: modeFilter === 'learning' ? onlyCompleted : false,
+        dateStart: dateFilter === 'custom' ? customStartDate : undefined,
+        dateEnd: dateFilter === 'custom' ? customEndDate : undefined,
+      };
+
+      const pagination = {
+        limit: SESSIONS_PER_PAGE,
+        offset: 0, // Toujours commencer à 0 pour les nouvelles recherches
+      };
+
+      const {
+        success,
+        data,
+        hasMore: newHasMore,
+        total: newTotal,
+        error,
+      } = await getFilteredSessions(filters, pagination);
+
+      if (success) {
+        return {
+          sessions: data,
+          hasMore: newHasMore,
+          total: newTotal,
+        };
+      } else {
+        throw new Error(error || 'Erreur lors du chargement des sessions');
+      }
+    },
+  });
+
+  // Mettre à jour les états locaux quand les données initiales changent
+  useEffect(() => {
+    if (initialSessionsData) {
+      // Vérifier si on a déjà des sessions chargées pour ce filtre
+      const currentCacheKey = JSON.stringify({
+        search: searchQuery.trim(),
+        mode: modeFilter,
+        completed: modeFilter === 'learning' ? onlyCompleted : false,
+        dateFilter,
+        startDate: dateFilter === 'custom' ? customStartDate : '',
+        endDate: dateFilter === 'custom' ? customEndDate : '',
+      });
+
+      // Si on a des sessions stockées localement pour cette combinaison de filtres, les garder
+      const storedKey = `sessions_${currentCacheKey}`;
+      const storedSessions = sessionStorage.getItem(storedKey);
+
+      if (storedSessions) {
+        const parsedData = JSON.parse(storedSessions);
+        setAllScores(parsedData.sessions);
+        setHasMore(parsedData.hasMore);
+        setTotal(parsedData.total);
+      } else {
+        setAllScores(initialSessionsData.sessions);
+        setHasMore(initialSessionsData.hasMore);
+        setTotal(initialSessionsData.total);
+
+        // Sauvegarder les données initiales dans sessionStorage
+        sessionStorage.setItem(
+          storedKey,
+          JSON.stringify({
+            sessions: initialSessionsData.sessions,
+            hasMore: initialSessionsData.hasMore,
+            total: initialSessionsData.total,
+          })
+        );
+      }
+      setError(null);
+    }
+    setLoading(initialLoading);
   }, [
+    initialSessionsData,
+    initialLoading,
     searchQuery,
     modeFilter,
     onlyCompleted,
@@ -72,10 +142,11 @@ export default function HistoryStats() {
     customEndDate,
   ]);
 
-  // Fonction pour vider le cache (utile pour le refresh manuel)
-  const clearCache = useCallback(() => {
-    setSessionsCache(new Map());
-  }, []);
+  useEffect(() => {
+    if (initialError) {
+      setError(initialError);
+    }
+  }, [initialError]);
 
   // Fonction pour réinitialiser tous les filtres
   const resetAllFilters = () => {
@@ -86,49 +157,20 @@ export default function HistoryStats() {
     setModeFilter('all');
     setOnlyCompleted(false);
     setShowDateFilters(false);
-    // Le cache se mettra à jour automatiquement avec la nouvelle clé
+
+    // Nettoyer le sessionStorage
+    Object.keys(sessionStorage).forEach((key) => {
+      if (key.startsWith('sessions_')) {
+        sessionStorage.removeItem(key);
+      }
+    });
   };
 
-  // Fonction pour charger les sessions avec cache intelligent
-  const loadSessions = useCallback(
-    async (reset = false) => {
+  // Fonction pour charger plus de sessions manuellement
+  const loadMoreSessions = async () => {
+    if (hasMore && !loading && !loadingMore) {
+      setLoadingMore(true);
       try {
-        const currentCacheEntry = sessionsCache.get(cacheKey);
-
-        // Si on reset ou qu'on n'a pas de cache, on recommence depuis le début
-        if (reset) {
-          setLoading(true);
-          setCurrentOffset(0);
-          setAllScores([]);
-        } else {
-          setLoadingMore(true);
-        }
-
-        // Calculer l'offset réel
-        const targetOffset = reset ? 0 : currentOffset;
-
-        // Vérifier si on a déjà les données en cache
-        if (currentCacheEntry && !reset) {
-          // Si on demande des données qu'on a déjà en cache
-          const cachedSessionsCount = currentCacheEntry.sessions.length;
-          if (targetOffset < cachedSessionsCount) {
-            // On a les données en cache, les utiliser
-            const sessionsByOffset = currentCacheEntry.sessions.slice(
-              0,
-              targetOffset + SESSIONS_PER_PAGE
-            );
-            setAllScores(sessionsByOffset);
-            setTotal(currentCacheEntry.total);
-            setHasMore(sessionsByOffset.length < currentCacheEntry.total);
-            setCurrentOffset(sessionsByOffset.length);
-            setError(null);
-            setLoading(false);
-            setLoadingMore(false);
-            return;
-          }
-        }
-
-        // Construire les filtres pour l'action serveur
         const filters = {
           searchQuery: searchQuery.trim() || undefined,
           modeFilter,
@@ -139,7 +181,7 @@ export default function HistoryStats() {
 
         const pagination = {
           limit: SESSIONS_PER_PAGE,
-          offset: targetOffset,
+          offset: allScores.length, // Charger à partir de la fin des sessions actuelles
         };
 
         const {
@@ -147,145 +189,44 @@ export default function HistoryStats() {
           data,
           hasMore: newHasMore,
           total: newTotal,
-          error,
         } = await getFilteredSessions(filters, pagination);
 
         if (success) {
-          // Mettre à jour le cache
-          const existingCacheEntry = sessionsCache.get(cacheKey);
-          let updatedSessions: ScoreSummary[];
-
-          if (reset || !existingCacheEntry) {
-            // Nouveau cache ou reset
-            updatedSessions = data;
-          } else {
-            // Ajouter aux données existantes
-            updatedSessions = [...existingCacheEntry.sessions, ...data];
-          }
-
-          // Créer la nouvelle entrée de cache
-          const newCacheEntry: CacheEntry = {
-            sessions: updatedSessions,
-            total: newTotal,
-            lastOffset: targetOffset + data.length,
-            hasMore: newHasMore,
-            timestamp: new Date(),
-          };
-
-          // Mettre à jour le cache (garder seulement les 5 dernières recherches pour éviter une surcharge mémoire)
-          setSessionsCache((prevCache) => {
-            const newCache = new Map(prevCache);
-            newCache.set(cacheKey, newCacheEntry);
-
-            // Limiter la taille du cache à 5 entrées
-            if (newCache.size > 5) {
-              const oldestKey = Array.from(newCache.keys())[0];
-              newCache.delete(oldestKey);
-            }
-
-            return newCache;
-          });
-
-          // Mettre à jour l'état
-          if (reset) {
-            setAllScores(updatedSessions);
-            setCurrentOffset(updatedSessions.length);
-          } else {
-            setAllScores((prev) => [...prev, ...data]);
-            setCurrentOffset((prev) => prev + data.length);
-          }
-
+          // Ajouter les nouvelles sessions aux existantes
+          const newAllScores = [...allScores, ...data];
+          setAllScores(newAllScores);
           setHasMore(newHasMore);
           setTotal(newTotal);
           setError(null);
-        } else {
-          setError(error || 'Erreur lors du chargement des sessions');
+
+          // Sauvegarder dans sessionStorage pour préserver lors des changements de filtres
+          const currentCacheKey = JSON.stringify({
+            search: searchQuery.trim(),
+            mode: modeFilter,
+            completed: modeFilter === 'learning' ? onlyCompleted : false,
+            dateFilter,
+            startDate: dateFilter === 'custom' ? customStartDate : '',
+            endDate: dateFilter === 'custom' ? customEndDate : '',
+          });
+
+          const storedKey = `sessions_${currentCacheKey}`;
+          sessionStorage.setItem(
+            storedKey,
+            JSON.stringify({
+              sessions: newAllScores,
+              hasMore: newHasMore,
+              total: newTotal,
+            })
+          );
         }
-      } catch (err) {
-        setError('Erreur lors du chargement des sessions');
+      } catch (error) {
+        console.error('Erreur lors du chargement de plus de sessions:', error);
+        setError('Erreur lors du chargement de plus de sessions');
       } finally {
-        setLoading(false);
         setLoadingMore(false);
       }
-    },
-    [
-      cacheKey,
-      sessionsCache,
-      searchQuery,
-      dateFilter,
-      customStartDate,
-      customEndDate,
-      modeFilter,
-      onlyCompleted,
-      currentOffset,
-    ]
-  );
-
-  // Configurer l'Intersection Observer pour le scroll infini
-  useEffect(() => {
-    if (observerRef.current) {
-      observerRef.current.disconnect();
     }
-
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        const [entry] = entries;
-        if (entry.isIntersecting && hasMore && !loading && !loadingMore) {
-          loadSessions(false);
-        }
-      },
-      {
-        threshold: 0.1,
-        rootMargin: '100px', // Commencer le chargement 100px avant d'atteindre le bas
-      }
-    );
-
-    if (loadMoreRef.current) {
-      observerRef.current.observe(loadMoreRef.current);
-    }
-
-    return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-      }
-    };
-  }, [hasMore, loading, loadingMore, loadSessions]);
-
-  // Effet pour charger depuis le cache ou faire une nouvelle requête quand les filtres changent
-  useEffect(() => {
-    const currentCacheEntry = sessionsCache.get(cacheKey);
-
-    if (currentCacheEntry) {
-      // On a les données en cache, les utiliser immédiatement
-      const cachedSessions = currentCacheEntry.sessions.slice(
-        0,
-        SESSIONS_PER_PAGE
-      );
-      setAllScores(cachedSessions);
-      setTotal(currentCacheEntry.total);
-      setHasMore(cachedSessions.length < currentCacheEntry.total);
-      setCurrentOffset(cachedSessions.length);
-      setError(null);
-      setLoading(false);
-    } else {
-      // Pas de cache, charger avec debounce pour la recherche textuelle
-      if (searchQuery.trim()) {
-        const timeoutId = setTimeout(() => {
-          loadSessions(true);
-        }, 300); // Debounce pour la recherche
-
-        return () => clearTimeout(timeoutId);
-      } else {
-        // Chargement immédiat pour les filtres non-textuels
-        loadSessions(true);
-      }
-    }
-  }, [cacheKey, sessionsCache, searchQuery]);
-
-  // Charger les sessions au début
-  useEffect(() => {
-    loadSessions(true);
-  }, []);
+  };
 
   return (
     <div className="max-w-full mx-auto p-4 px-8">
@@ -294,7 +235,7 @@ export default function HistoryStats() {
           <IconClock size={20} className="mr-2 text-indigo-400" />
           Toutes les sessions
           {/* Indicateur de cache pour debug */}
-          {sessionsCache.has(cacheKey) && (
+          {hasCache && (
             <span className="ml-2 text-xs text-green-400 opacity-50">📋</span>
           )}
         </h2>
@@ -303,7 +244,7 @@ export default function HistoryStats() {
         <button
           onClick={() => {
             clearCache();
-            loadSessions(true);
+            refetch();
           }}
           className="text-xs text-white/50 hover:text-white/70 transition-colors"
           title="Actualiser les données"
@@ -493,7 +434,7 @@ export default function HistoryStats() {
           <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-4 max-w-md mx-auto">
             <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>
             <button
-              onClick={() => loadSessions(true)}
+              onClick={() => refetch()}
               className="inline-flex cursor-pointer items-center px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-md transition-colors"
             >
               Réessayer
@@ -532,22 +473,34 @@ export default function HistoryStats() {
             ))}
           </div>
 
-          {/* Zone de détection pour le scroll infini */}
+          {/* Bouton pour charger plus de sessions */}
           {hasMore && (
-            <div
-              ref={loadMoreRef}
-              className="flex justify-center items-center py-8"
-            >
-              {loadingMore && (
-                <div className="flex items-center text-white/70">
-                  <Spinner
-                    variant="bars"
-                    size={24}
-                    className="text-white mr-2"
-                  />
-                  Chargement des sessions suivantes...
-                </div>
-              )}
+            <div className="flex justify-center mt-6">
+              <button
+                onClick={loadMoreSessions}
+                disabled={loadingMore}
+                className={`flex cursor-pointer items-center px-4 py-2 text-sm font-medium text-indigo-400 hover:text-indigo-300 disabled:opacity-50 disabled:cursor-not-allowed relative after:absolute after:bottom-2.5 after:left-4 after:h-px after:bg-current after:w-0 ${
+                  !loadingMore
+                    ? 'hover:after:w-[calc(100%-3.2rem)] after:transition-all after:duration-300 after:ease-out'
+                    : 'after:transition-none'
+                }`}
+              >
+                {loadingMore ? (
+                  <>
+                    <Spinner
+                      variant="bars"
+                      size={24}
+                      className="text-white mr-2"
+                    />
+                    Chargement...
+                  </>
+                ) : (
+                  <>
+                    Voir plus de sessions
+                    <IconChevronRight size={16} className="ml-1" />
+                  </>
+                )}
+              </button>
             </div>
           )}
 

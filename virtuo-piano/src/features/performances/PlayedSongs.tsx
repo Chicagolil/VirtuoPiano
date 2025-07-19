@@ -1,13 +1,6 @@
 'use client';
 
-import React, {
-  useState,
-  useRef,
-  useEffect,
-  useTransition,
-  useMemo,
-  useCallback,
-} from 'react';
+import React, { useState, useRef, useEffect, useTransition } from 'react';
 import {
   IconMusic,
   IconHeart,
@@ -26,19 +19,13 @@ import { castMsToMin } from '@/common/utils/function';
 import {
   getPlayedSongsAction,
   getAllPlayedSongsAction,
-  PlayedSongsResult,
+  type PlayedSongsResult,
 } from '@/lib/actions/playedSongs-actions';
 import { toggleFavorite } from '@/lib/actions/songs';
 import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { Spinner } from '@/components/ui/spinner';
-
-// Types pour le cache
-type CacheKey = string;
-type CacheEntry = {
-  data: PlayedSongsResult;
-  timestamp: Date;
-};
+import { useSearchCache } from '@/customHooks/useSearchCache';
 
 export default function PlayedSongs() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -50,8 +37,46 @@ export default function PlayedSongs() {
   const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [isPending, startTransition] = useTransition();
-  const [isLoading, setIsLoading] = useState(true);
-  const [playedSongsData, setPlayedSongsData] = useState<PlayedSongsResult>({
+  const [allGenres, setAllGenres] = useState<string[]>([]);
+
+  const filterMenuRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  const [filterMenuPosition, setFilterMenuPosition] = useState<
+    'top' | 'bottom'
+  >('bottom');
+
+  // Utilisation du custom hook pour la gestion du cache
+  const {
+    data: playedSongsData,
+    isLoading,
+    error,
+    clearCache,
+    refetch,
+    hasCache,
+  } = useSearchCache<PlayedSongsResult>({
+    filters: {
+      search: searchQuery.trim(),
+      page: currentPage,
+      genre: activeFilter && activeFilter !== 'Favoris' ? activeFilter : '',
+      favorites: activeFilter === 'Favoris',
+      sortBy,
+      sortOrder,
+    },
+    searchQuery,
+    fetchFunction: async () => {
+      return await getPlayedSongsAction(
+        currentPage,
+        searchQuery || undefined,
+        activeFilter && activeFilter !== 'Favoris' ? activeFilter : undefined,
+        activeFilter === 'Favoris',
+        sortBy,
+        sortOrder
+      );
+    },
+  });
+
+  // Valeurs par défaut si pas de données
+  const safePlayedSongsData = playedSongsData || {
     songs: [],
     pagination: {
       currentPage: 1,
@@ -60,101 +85,7 @@ export default function PlayedSongs() {
       hasNextPage: false,
       hasPreviousPage: false,
     },
-  });
-  const [allGenres, setAllGenres] = useState<string[]>([]);
-
-  // Cache côté client
-  const [songsCache, setSongsCache] = useState<Map<CacheKey, CacheEntry>>(
-    new Map()
-  );
-
-  const filterMenuRef = useRef<HTMLDivElement>(null);
-  const router = useRouter();
-  const initialLoadRef = useRef(false);
-  const [filterMenuPosition, setFilterMenuPosition] = useState<
-    'top' | 'bottom'
-  >('bottom');
-
-  // Générer la clé de cache basée sur les filtres actuels
-  const cacheKey = useMemo(() => {
-    const filters = {
-      search: searchQuery.trim(),
-      page: currentPage,
-      genre: activeFilter && activeFilter !== 'Favoris' ? activeFilter : '',
-      favorites: activeFilter === 'Favoris',
-      sortBy,
-      sortOrder,
-    };
-    return JSON.stringify(filters);
-  }, [searchQuery, currentPage, activeFilter, sortBy, sortOrder]);
-
-  // Fonction pour vider le cache (utile pour le refresh manuel)
-  const clearCache = useCallback(() => {
-    setSongsCache(new Map());
-  }, []);
-
-  // Fonction pour charger les chansons jouées avec cache intelligent
-  const loadPlayedSongs = useCallback(
-    async (forceRefresh = false) => {
-      try {
-        // Vérifier si on a les données en cache
-        const currentCacheEntry = songsCache.get(cacheKey);
-
-        if (currentCacheEntry && !forceRefresh) {
-          // On a les données en cache, les utiliser immédiatement
-          setPlayedSongsData(currentCacheEntry.data);
-          setIsLoading(false);
-          return;
-        }
-
-        setIsLoading(true);
-
-        const result = await getPlayedSongsAction(
-          currentPage,
-          searchQuery || undefined,
-          activeFilter && activeFilter !== 'Favoris' ? activeFilter : undefined,
-          activeFilter === 'Favoris',
-          sortBy,
-          sortOrder
-        );
-
-        setPlayedSongsData(result);
-
-        // Mettre à jour le cache
-        const newCacheEntry: CacheEntry = {
-          data: result,
-          timestamp: new Date(),
-        };
-
-        setSongsCache((prevCache) => {
-          const newCache = new Map(prevCache);
-          newCache.set(cacheKey, newCacheEntry);
-
-          // Limiter la taille du cache à 10 entrées
-          if (newCache.size > 10) {
-            const oldestKey = Array.from(newCache.keys())[0];
-            newCache.delete(oldestKey);
-          }
-
-          return newCache;
-        });
-      } catch (error) {
-        console.error('Erreur lors du chargement des chansons jouées:', error);
-        toast.error('Erreur lors du chargement des chansons jouées');
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [
-      cacheKey,
-      songsCache,
-      currentPage,
-      searchQuery,
-      activeFilter,
-      sortBy,
-      sortOrder,
-    ]
-  );
+  };
 
   // Charger tous les genres au montage pour les filtres
   useEffect(() => {
@@ -177,36 +108,12 @@ export default function PlayedSongs() {
     loadAllGenres();
   }, []);
 
-  // Effet pour charger depuis le cache ou faire une nouvelle requête quand les filtres changent
+  // Afficher les erreurs avec toast
   useEffect(() => {
-    const currentCacheEntry = songsCache.get(cacheKey);
-
-    if (currentCacheEntry) {
-      // On a les données en cache, les utiliser immédiatement
-      setPlayedSongsData(currentCacheEntry.data);
-      setIsLoading(false);
-    } else {
-      // Pas de cache, charger avec debounce pour la recherche textuelle
-      if (searchQuery.trim()) {
-        const timer = setTimeout(() => {
-          loadPlayedSongs();
-        }, 300); // Délai de 300ms pour la recherche
-
-        return () => clearTimeout(timer);
-      } else {
-        // Chargement immédiat pour les filtres non-textuels
-        loadPlayedSongs();
-      }
+    if (error) {
+      toast.error(error);
     }
-  }, [cacheKey, songsCache, searchQuery, loadPlayedSongs]);
-
-  // Chargement initial unique
-  useEffect(() => {
-    if (!initialLoadRef.current) {
-      initialLoadRef.current = true;
-      loadPlayedSongs();
-    }
-  }, []);
+  }, [error]);
 
   // Fonction pour calculer la position du menu
   const calculateMenuPosition = (
@@ -262,16 +169,6 @@ export default function PlayedSongs() {
     songId: string,
     currentFavoriteState: boolean
   ) => {
-    // Mise à jour optimiste de l'état local
-    setPlayedSongsData((prevData) => ({
-      ...prevData,
-      songs: prevData.songs.map((song) =>
-        song.id === songId
-          ? { ...song, isFavorite: !currentFavoriteState }
-          : song
-      ),
-    }));
-
     // Appeler l'action serveur
     startTransition(async () => {
       try {
@@ -279,29 +176,13 @@ export default function PlayedSongs() {
 
         if (result.success) {
           toast.success(result.message);
+          // Recharger les données pour refléter le changement
+          refetch();
         } else {
-          // En cas d'échec, revenir à l'état précédent
-          setPlayedSongsData((prevData) => ({
-            ...prevData,
-            songs: prevData.songs.map((song) =>
-              song.id === songId
-                ? { ...song, isFavorite: currentFavoriteState }
-                : song
-            ),
-          }));
           toast.error(result.message);
         }
       } catch (error) {
         console.error('Erreur lors de la modification des favoris:', error);
-        // En cas d'erreur, revenir à l'état précédent
-        setPlayedSongsData((prevData) => ({
-          ...prevData,
-          songs: prevData.songs.map((song) =>
-            song.id === songId
-              ? { ...song, isFavorite: currentFavoriteState }
-              : song
-          ),
-        }));
         toast.error(
           'Une erreur est survenue lors de la modification des favoris'
         );
@@ -314,17 +195,17 @@ export default function PlayedSongs() {
   };
 
   // Les chansons sont déjà filtrées côté serveur
-  const filteredSongs = playedSongsData.songs;
+  const filteredSongs = safePlayedSongsData.songs;
 
   // Fonctions de navigation
   const goToNextPage = () => {
-    if (playedSongsData.pagination.hasNextPage) {
+    if (safePlayedSongsData.pagination.hasNextPage) {
       setCurrentPage(currentPage + 1);
     }
   };
 
   const goToPreviousPage = () => {
-    if (playedSongsData.pagination.hasPreviousPage) {
+    if (safePlayedSongsData.pagination.hasPreviousPage) {
       setCurrentPage(currentPage - 1);
     }
   };
@@ -425,11 +306,11 @@ export default function PlayedSongs() {
           className={`${styles.songCount} flex items-center justify-between`}
         >
           <div>
-            {playedSongsData.pagination.totalSongs} morceau
-            {playedSongsData.pagination.totalSongs !== 1 ? 'x' : ''} joué
-            {playedSongsData.pagination.totalSongs !== 1 ? 's' : ''}
+            {safePlayedSongsData.pagination.totalSongs} morceau
+            {safePlayedSongsData.pagination.totalSongs !== 1 ? 'x' : ''} joué
+            {safePlayedSongsData.pagination.totalSongs !== 1 ? 's' : ''}
             {/* Indicateur de cache */}
-            {songsCache.has(cacheKey) && (
+            {hasCache && (
               <span
                 className="ml-2 text-xs text-green-400 opacity-50"
                 title="Données en cache"
@@ -443,7 +324,7 @@ export default function PlayedSongs() {
           <button
             onClick={() => {
               clearCache();
-              loadPlayedSongs(true);
+              refetch();
             }}
             className="text-xs text-white/50 hover:text-white/70 transition-colors ml-4"
             title="Actualiser les données"
@@ -622,18 +503,18 @@ export default function PlayedSongs() {
         </div>
 
         {/* Pagination */}
-        {(playedSongsData.pagination.totalSongs > 0 || isLoading) && (
+        {(safePlayedSongsData.pagination.totalSongs > 0 || isLoading) && (
           <div className={styles.paginationContainer}>
             <div className={styles.paginationControls}>
               <button
                 className={`${styles.paginationButton} ${
-                  !playedSongsData.pagination.hasPreviousPage || isLoading
+                  !safePlayedSongsData.pagination.hasPreviousPage || isLoading
                     ? styles.paginationButtonDisabled
                     : ''
                 }`}
                 onClick={goToPreviousPage}
                 disabled={
-                  !playedSongsData.pagination.hasPreviousPage || isLoading
+                  !safePlayedSongsData.pagination.hasPreviousPage || isLoading
                 }
               >
                 <IconChevronLeft size={20} />
@@ -641,16 +522,18 @@ export default function PlayedSongs() {
               <div className={styles.paginationPageInfo}>
                 {isLoading
                   ? 'Chargement...'
-                  : `Page ${playedSongsData.pagination.currentPage} sur ${playedSongsData.pagination.totalPages}`}
+                  : `Page ${safePlayedSongsData.pagination.currentPage} sur ${safePlayedSongsData.pagination.totalPages}`}
               </div>
               <button
                 className={`${styles.paginationButton} ${
-                  !playedSongsData.pagination.hasNextPage || isLoading
+                  !safePlayedSongsData.pagination.hasNextPage || isLoading
                     ? styles.paginationButtonDisabled
                     : ''
                 }`}
                 onClick={goToNextPage}
-                disabled={!playedSongsData.pagination.hasNextPage || isLoading}
+                disabled={
+                  !safePlayedSongsData.pagination.hasNextPage || isLoading
+                }
               >
                 <IconChevronRight size={20} />
               </button>
@@ -659,7 +542,7 @@ export default function PlayedSongs() {
         )}
 
         {/* État vide */}
-        {!isLoading && playedSongsData.pagination.totalSongs === 0 && (
+        {!isLoading && safePlayedSongsData.pagination.totalSongs === 0 && (
           <div className={styles.emptyState}>
             <div className={styles.emptyIcon}>
               <IconMusic size={32} className={styles.emptyIconText} />
