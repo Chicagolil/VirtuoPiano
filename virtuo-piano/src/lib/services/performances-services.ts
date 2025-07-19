@@ -1,5 +1,7 @@
 import prisma from '@/lib/prisma';
 import { getLearnScores, getDifficultyRange } from '@/common/utils/function';
+import { SongType, SourceType } from '@prisma/client';
+import { JsonValue } from '@prisma/client/runtime/library';
 
 export type ScoreDurationData = {
   date: Date;
@@ -39,6 +41,23 @@ export interface ScoreSummaryService {
   sessionEndTime: Date;
   modeName: string;
 }
+
+export type PlayedSong = {
+  id: string;
+  title: string;
+  composer: string | null;
+  genre: string | null;
+  tempo: number;
+  duration_ms: number;
+  timeSignature: string;
+  SourceType: SourceType;
+  notes: JsonValue;
+  Level: number;
+  imageUrl: string | null;
+  SongType: SongType;
+  isFavorite: boolean;
+  lastPlayed: string;
+};
 
 export class PerformancesServices {
   // Méthodes utilitaires privées pour calculer les intervalles
@@ -700,5 +719,179 @@ export class PerformancesServices {
         total,
       };
     }
+  }
+
+  static async getPlayedSongs(
+    userId: string,
+    pagination?: {
+      page: number;
+      limit: number;
+    },
+    filters?: {
+      searchQuery?: string;
+      genreFilter?: string;
+      favoritesOnly?: boolean;
+      sortBy?:
+        | 'title'
+        | 'composer'
+        | 'lastPlayed'
+        | 'genre'
+        | 'duration'
+        | 'difficulty';
+      sortOrder?: 'asc' | 'desc';
+    }
+  ): Promise<{
+    songs: PlayedSong[];
+    pagination: {
+      currentPage: number;
+      totalPages: number;
+      totalSongs: number;
+      hasNextPage: boolean;
+      hasPreviousPage: boolean;
+    };
+  }> {
+    // Récupérer toutes les chansons distinctes jouées par l'utilisateur
+    const playedSongsData = await prisma.scores.groupBy({
+      by: ['song_id'],
+      where: {
+        user_id: userId,
+      },
+      _max: {
+        sessionStartTime: true,
+      },
+    });
+
+    // Récupérer les détails de chaque chanson
+    const songsWithDetails = await Promise.all(
+      playedSongsData.map(async (playedSong) => {
+        const song = await prisma.songs.findUnique({
+          where: {
+            id: playedSong.song_id,
+          },
+          include: {
+            userFavorites: {
+              where: {
+                user_id: userId,
+              },
+            },
+          },
+        });
+
+        if (!song) return null;
+
+        return {
+          id: song.id,
+          title: song.title,
+          composer: song.composer,
+          genre: song.genre,
+          tempo: song.tempo,
+          duration_ms: song.duration_ms,
+          timeSignature: song.timeSignature,
+          SourceType: song.SourceType,
+          notes: song.notes,
+          Level: song.Level,
+          imageUrl: song.imageUrl,
+          SongType: song.SongType,
+          isFavorite: song.userFavorites.length > 0,
+          lastPlayed: playedSong._max.sessionStartTime?.toISOString() || '',
+        };
+      })
+    );
+
+    // Filtrer les chansons nulles
+    let filteredSongs = songsWithDetails.filter(
+      (song): song is PlayedSong => song !== null
+    );
+
+    // Appliquer le filtrage par recherche
+    if (filters?.searchQuery && filters.searchQuery.trim()) {
+      const searchTerm = filters.searchQuery.toLowerCase().trim();
+      filteredSongs = filteredSongs.filter(
+        (song) =>
+          song.title.toLowerCase().includes(searchTerm) ||
+          (song.composer && song.composer.toLowerCase().includes(searchTerm)) ||
+          (song.genre && song.genre.toLowerCase().includes(searchTerm))
+      );
+    }
+
+    // Appliquer le filtrage par genre
+    if (filters?.genreFilter) {
+      filteredSongs = filteredSongs.filter(
+        (song) => song.genre === filters.genreFilter
+      );
+    }
+
+    // Appliquer le filtrage par favoris
+    if (filters?.favoritesOnly) {
+      filteredSongs = filteredSongs.filter((song) => song.isFavorite);
+    }
+
+    // Appliquer le tri
+    if (filters?.sortBy) {
+      filteredSongs.sort((a, b) => {
+        let aValue: string | number;
+        let bValue: string | number;
+
+        switch (filters.sortBy) {
+          case 'title':
+            aValue = a.title.toLowerCase();
+            bValue = b.title.toLowerCase();
+            break;
+          case 'composer':
+            aValue = (a.composer || '').toLowerCase();
+            bValue = (b.composer || '').toLowerCase();
+            break;
+          case 'lastPlayed':
+            aValue = new Date(a.lastPlayed).getTime();
+            bValue = new Date(b.lastPlayed).getTime();
+            break;
+          case 'genre':
+            aValue = (a.genre || '').toLowerCase();
+            bValue = (b.genre || '').toLowerCase();
+            break;
+          case 'duration':
+            aValue = a.duration_ms;
+            bValue = b.duration_ms;
+            break;
+          case 'difficulty':
+            aValue = a.Level;
+            bValue = b.Level;
+            break;
+          default:
+            return 0;
+        }
+
+        if (aValue < bValue) return filters.sortOrder === 'desc' ? 1 : -1;
+        if (aValue > bValue) return filters.sortOrder === 'desc' ? -1 : 1;
+        return 0;
+      });
+    } else {
+      // Tri par défaut : par dernière date de jeu (plus récent en premier)
+      filteredSongs.sort(
+        (a, b) =>
+          new Date(b.lastPlayed).getTime() - new Date(a.lastPlayed).getTime()
+      );
+    }
+
+    // Calculer la pagination
+    const totalSongs = filteredSongs.length;
+    const limit = pagination?.limit || 20;
+    const currentPage = pagination?.page || 1;
+    const totalPages = Math.ceil(totalSongs / limit);
+    const startIndex = (currentPage - 1) * limit;
+    const endIndex = startIndex + limit;
+
+    const paginatedSongs = filteredSongs.slice(startIndex, endIndex);
+
+    return {
+      songs: paginatedSongs,
+      pagination: {
+        currentPage,
+        totalPages,
+        totalSongs,
+        hasNextPage: currentPage < totalPages,
+        hasPreviousPage: currentPage > 1,
+      },
+    };
   }
 }

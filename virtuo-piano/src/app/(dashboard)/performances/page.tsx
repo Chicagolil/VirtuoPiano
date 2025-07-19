@@ -15,7 +15,7 @@ export default function PerformancesPage() {
 
   return (
     <div className="w-full p-4 pt-7">
-      <div className="bg-transparent shadow-md rounded-2xl p-6 border border-slate-200/30 dark:border-slate-700/30">
+      <div className="max-w-[98.5%] mx-auto bg-transparent shadow-md rounded-2xl p-6 border border-slate-200/20 dark:border-slate-700/20">
         <Tabs.Root
           className="w-full"
           value={activeTab}
