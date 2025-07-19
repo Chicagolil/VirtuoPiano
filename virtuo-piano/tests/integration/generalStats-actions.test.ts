@@ -113,7 +113,7 @@ describe('GeneralStats Actions', () => {
       const result = await getSongsPropertyRepertory();
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Utilisateur non connecté');
+      expect(result.error).toBe('Échec du chargement des données');
       expect(result.data).toEqual({
         genre: [],
         composer: [],
@@ -129,7 +129,7 @@ describe('GeneralStats Actions', () => {
       const result = await getSongsPropertyRepertory();
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Database connection failed');
+      expect(result.error).toBe('Échec du chargement des données');
       expect(result.data).toEqual({
         genre: [],
         composer: [],
@@ -254,7 +254,7 @@ describe('GeneralStats Actions', () => {
       const result = await getPracticeTimeComparison('week');
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Utilisateur non connecté');
+      expect(result.error).toBe('Échec du chargement des données');
     });
 
     it('should handle service errors', async () => {
@@ -265,7 +265,7 @@ describe('GeneralStats Actions', () => {
       const result = await getPracticeTimeComparison('week');
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Service error');
+      expect(result.error).toBe('Échec du chargement des données');
       expect(result.data.formattedCurrentTime).toBe('0H00');
     });
   });
@@ -358,7 +358,7 @@ describe('GeneralStats Actions', () => {
       const result = await getStartedSongsComparison('week');
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Utilisateur non connecté');
+      expect(result.error).toBe('Échec du chargement des données');
     });
 
     it('should handle service errors', async () => {
@@ -369,7 +369,7 @@ describe('GeneralStats Actions', () => {
       const result = await getStartedSongsComparison('week');
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Database error');
+      expect(result.error).toBe('Échec du chargement des données');
       expect(result.data.currentSongs).toBe(0);
     });
   });

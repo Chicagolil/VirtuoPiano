@@ -17,7 +17,7 @@ export async function getHeatmapData(year: number): Promise<{
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.id) {
-      throw new Error('Utilisateur non connecté');
+      throw new Error('Accès non autorisé');
     }
 
     const userId = session.user.id;
@@ -31,11 +31,11 @@ export async function getHeatmapData(year: number): Promise<{
       data,
     };
   } catch (error) {
-    console.error('Erreur lors de la récupération des données heatmap:', error);
+    console.error('Échec du chargement des données');
     return {
       success: false,
       data: [],
-      error: error instanceof Error ? error.message : 'Erreur inconnue',
+      error: 'Échec du chargement des données',
     };
   }
 }
@@ -49,7 +49,7 @@ export async function getSessionsByDate(date: string): Promise<{
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.id) {
-      throw new Error('Utilisateur non connecté');
+      throw new Error('Accès non autorisé');
     }
 
     const userId = session.user.id;
@@ -61,11 +61,11 @@ export async function getSessionsByDate(date: string): Promise<{
       data,
     };
   } catch (error) {
-    console.error('Erreur lors de la récupération des sessions:', error);
+    console.error('Échec du chargement des données');
     return {
       success: false,
       data: [],
-      error: error instanceof Error ? error.message : 'Erreur inconnue',
+      error: 'Échec du chargement des données',
     };
   }
 }

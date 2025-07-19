@@ -43,6 +43,7 @@ model User {
   password      String
   userName      String
   level         Int       @default(1)
+  xp            Int       @default(0) // Points d'expérience
   preferences   String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -50,6 +51,7 @@ model User {
   compositions  UsersCompositions[]
   favorites     UsersFavorites[]
   imports       UsersImports[]
+  challengeProgress UserChallengeProgress[]
 }
 
 model Key {
@@ -132,6 +134,59 @@ model UsersImports {
   user           User      @relation(fields: [user_id], references: [id])
   song           Songs     @relation(fields: [song_id], references: [id])
   @@id([user_id, song_id]) 
+}
+
+// Modèles pour le système de défis et niveaux
+model Challenge {
+  id          String    @id @default(uuid())
+  name        String
+  description String
+  category    String   
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  levels      ChallengeLevel[]
+  userProgress UserChallengeProgress[]
+}
+
+model ChallengeLevel {
+  id          String    @id @default(uuid())
+  challengeId String
+  challenge   Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  level       Int       
+  name        String    
+  description String
+  requirement Int       
+  requirementType String 
+  requirementFilter Json? 
+  reward      Json?     
+  isUnlocked  Boolean   @default(false) 
+  unlockCondition Json? 
+  autoReward  Boolean   @default(false) 
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  userProgress UserChallengeProgress[]
+  
+  @@unique([challengeId, level])
+}
+
+model UserChallengeProgress {
+  id              String          @id @default(uuid())
+  userId          String
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  challengeId     String
+  challenge       Challenge       @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  levelId         String
+  level           ChallengeLevel  @relation(fields: [levelId], references: [id], onDelete: Cascade)
+  currentProgress Int             @default(0)
+  isCompleted     Boolean         @default(false)
+  completedAt     DateTime?
+  isRewardClaimed Boolean         @default(false) 
+  claimedAt       DateTime?       
+  startedAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  @@unique([userId, challengeId, levelId])
 }
 
 

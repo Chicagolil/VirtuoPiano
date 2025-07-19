@@ -1,6 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { getServerSession } from 'next-auth';
-import { getRecentSessions } from '@/lib/actions/history-actions';
+import {
+  getRecentSessions,
+  getAllSessions,
+  getFilteredSessions,
+} from '@/lib/actions/history-actions';
 import { PerformancesServices } from '@/lib/services/performances-services';
 import * as functions from '@/common/utils/function';
 
@@ -16,6 +20,8 @@ vi.mock('@/lib/authoption', () => ({
 vi.mock('@/lib/services/performances-services', () => ({
   PerformancesServices: {
     getRecentSessionsData: vi.fn(),
+    getAllSessionsData: vi.fn(),
+    getFilteredSessionsData: vi.fn(),
   },
 }));
 
@@ -432,7 +438,7 @@ describe('History Actions', () => {
       const result = await getRecentSessions();
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Utilisateur non connecté');
+      expect(result.error).toBe('Échec du chargement des données');
       expect(result.data).toEqual([]);
     });
 
@@ -444,7 +450,7 @@ describe('History Actions', () => {
       const result = await getRecentSessions();
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Database connection failed');
+      expect(result.error).toBe('Échec du chargement des données');
       expect(result.data).toEqual([]);
     });
 
@@ -483,6 +489,270 @@ describe('History Actions', () => {
       await getRecentSessions();
 
       expect(mockGetLearnScores).toHaveBeenCalledWith(10, 85, 5);
+    });
+  });
+
+  describe('getAllSessions', () => {
+    it('should return all sessions successfully', async () => {
+      const mockSessionsData = [
+        {
+          id: 'session1',
+          songTitle: 'Song 1',
+          songComposer: 'Composer 1',
+          wrongNotes: 5,
+          correctNotes: 95,
+          missedNotes: 2,
+          totalPoints: 1250,
+          maxMultiplier: 3,
+          maxCombo: 25,
+          sessionStartTime: new Date('2025-01-15T14:30:00'),
+          sessionEndTime: new Date('2025-01-15T15:00:00'),
+          modeName: 'Apprentissage',
+          imageUrl: '/images/song1.jpg',
+        },
+        {
+          id: 'session2',
+          songTitle: 'Song 2',
+          songComposer: 'Composer 2',
+          wrongNotes: 10,
+          correctNotes: 80,
+          missedNotes: 5,
+          totalPoints: 950,
+          maxMultiplier: 2,
+          maxCombo: 15,
+          sessionStartTime: new Date('2025-01-14T16:00:00'),
+          sessionEndTime: new Date('2025-01-14T16:25:00'),
+          modeName: 'Jeu',
+          imageUrl: null,
+        },
+      ];
+
+      mockPerformancesServices.getAllSessionsData.mockResolvedValue(
+        mockSessionsData
+      );
+
+      const result = await getAllSessions();
+
+      expect(result.success).toBe(true);
+      expect(result.data).toHaveLength(2);
+      expect(result.data[0].id).toBe('session1');
+      expect(result.data[1].mode).toBe('game');
+
+      expect(mockPerformancesServices.getAllSessionsData).toHaveBeenCalledWith(
+        'user123'
+      );
+    });
+
+    it('should handle unauthenticated user', async () => {
+      mockGetServerSession.mockResolvedValue(null);
+
+      const result = await getAllSessions();
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Échec du chargement des données');
+      expect(result.data).toEqual([]);
+    });
+
+    it('should handle service errors', async () => {
+      mockPerformancesServices.getAllSessionsData.mockRejectedValue(
+        new Error('Database error')
+      );
+
+      const result = await getAllSessions();
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Échec du chargement des données');
+      expect(result.data).toEqual([]);
+    });
+  });
+
+  describe('getFilteredSessions', () => {
+    it('should return filtered sessions with pagination', async () => {
+      const mockSessionsData = [
+        {
+          id: 'session1',
+          songTitle: 'Filtered Song 1',
+          songComposer: 'Test Composer',
+          wrongNotes: 5,
+          correctNotes: 95,
+          missedNotes: 2,
+          totalPoints: 1250,
+          maxMultiplier: 3,
+          maxCombo: 25,
+          sessionStartTime: new Date('2025-01-15T14:30:00'),
+          sessionEndTime: new Date('2025-01-15T15:00:00'),
+          modeName: 'Apprentissage',
+          imageUrl: '/images/song1.jpg',
+        },
+      ];
+
+      mockPerformancesServices.getFilteredSessionsData.mockResolvedValue({
+        sessions: mockSessionsData,
+        hasMore: true,
+        total: 50,
+      });
+
+      const filters = {
+        searchQuery: 'test',
+        modeFilter: 'learning' as const,
+        onlyCompleted: true,
+        dateStart: '2025-01-01',
+        dateEnd: '2025-01-31',
+      };
+
+      const pagination = {
+        limit: 10,
+        offset: 0,
+      };
+
+      const result = await getFilteredSessions(filters, pagination);
+
+      expect(result.success).toBe(true);
+      expect(result.data).toHaveLength(1);
+      expect(result.hasMore).toBe(true);
+      expect(result.total).toBe(50);
+      expect(result.data[0].songTitle).toBe('Filtered Song 1');
+
+      expect(
+        mockPerformancesServices.getFilteredSessionsData
+      ).toHaveBeenCalledWith('user123', filters, pagination);
+    });
+
+    it('should handle empty filters', async () => {
+      mockPerformancesServices.getFilteredSessionsData.mockResolvedValue({
+        sessions: [],
+        hasMore: false,
+        total: 0,
+      });
+
+      const filters = {};
+      const pagination = { limit: 30, offset: 0 };
+
+      const result = await getFilteredSessions(filters, pagination);
+
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual([]);
+      expect(result.hasMore).toBe(false);
+      expect(result.total).toBe(0);
+
+      expect(
+        mockPerformancesServices.getFilteredSessionsData
+      ).toHaveBeenCalledWith('user123', {}, pagination);
+    });
+
+    it('should handle all filter types', async () => {
+      mockPerformancesServices.getFilteredSessionsData.mockResolvedValue({
+        sessions: [],
+        hasMore: false,
+        total: 0,
+      });
+
+      // Test with all filter types
+      const filters = {
+        searchQuery: 'moonlight',
+        modeFilter: 'game' as const,
+        onlyCompleted: false,
+        dateStart: '2025-01-01',
+        dateEnd: '2025-01-31',
+      };
+
+      const pagination = { limit: 20, offset: 40 };
+
+      await getFilteredSessions(filters, pagination);
+
+      expect(
+        mockPerformancesServices.getFilteredSessionsData
+      ).toHaveBeenCalledWith('user123', filters, pagination);
+    });
+
+    it('should transform sessions correctly', async () => {
+      const mockSessionsData = [
+        {
+          id: 'session1',
+          songTitle: 'Test Song',
+          songComposer: null,
+          wrongNotes: 10,
+          correctNotes: 90,
+          missedNotes: 5,
+          totalPoints: null,
+          maxMultiplier: null,
+          maxCombo: null,
+          sessionStartTime: new Date('2025-01-15T14:30:00'),
+          sessionEndTime: new Date('2025-01-15T16:00:00'), // 1h30
+          modeName: 'Jeu',
+          imageUrl: null,
+        },
+      ];
+
+      mockPerformancesServices.getFilteredSessionsData.mockResolvedValue({
+        sessions: mockSessionsData,
+        hasMore: false,
+        total: 1,
+      });
+
+      const result = await getFilteredSessions({}, { limit: 10, offset: 0 });
+
+      expect(result.success).toBe(true);
+      expect(result.data[0]).toEqual({
+        id: 'session1',
+        songTitle: 'Test Song',
+        songComposer: undefined,
+        totalPoints: 0,
+        maxMultiplier: 0,
+        maxCombo: 0,
+        playedAt: expect.any(String),
+        mode: 'game',
+        accuracy: 90,
+        duration: '1:30',
+        imageUrl: undefined,
+        performance: 85,
+      });
+    });
+
+    it('should handle unauthenticated user', async () => {
+      mockGetServerSession.mockResolvedValue(null);
+
+      const result = await getFilteredSessions({}, { limit: 10, offset: 0 });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Échec du chargement des données');
+      expect(result.data).toEqual([]);
+      expect(result.hasMore).toBe(false);
+      expect(result.total).toBe(0);
+    });
+
+    it('should handle service errors', async () => {
+      mockPerformancesServices.getFilteredSessionsData.mockRejectedValue(
+        new Error('Filter error')
+      );
+
+      const result = await getFilteredSessions({}, { limit: 10, offset: 0 });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Échec du chargement des données');
+      expect(result.data).toEqual([]);
+      expect(result.hasMore).toBe(false);
+      expect(result.total).toBe(0);
+    });
+
+    it('should handle pagination correctly', async () => {
+      mockPerformancesServices.getFilteredSessionsData.mockResolvedValue({
+        sessions: [],
+        hasMore: true,
+        total: 100,
+      });
+
+      const pagination = { limit: 30, offset: 60 };
+
+      const result = await getFilteredSessions({}, pagination);
+
+      expect(result.success).toBe(true);
+      expect(result.hasMore).toBe(true);
+      expect(result.total).toBe(100);
+
+      expect(
+        mockPerformancesServices.getFilteredSessionsData
+      ).toHaveBeenCalledWith('user123', {}, pagination);
     });
   });
 });
