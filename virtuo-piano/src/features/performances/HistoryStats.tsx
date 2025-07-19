@@ -47,6 +47,7 @@ export default function HistoryStats() {
     clearCache,
     refetch,
     hasCache,
+    updateCacheData,
   } = useSearchCache<SessionsResult>({
     filters: {
       search: searchQuery.trim(),
@@ -94,53 +95,18 @@ export default function HistoryStats() {
   // Mettre à jour les états locaux quand les données initiales changent
   useEffect(() => {
     if (initialSessionsData) {
-      // Vérifier si on a déjà des sessions chargées pour ce filtre
-      const currentCacheKey = JSON.stringify({
-        search: searchQuery.trim(),
-        mode: modeFilter,
-        completed: modeFilter === 'learning' ? onlyCompleted : false,
-        dateFilter,
-        startDate: dateFilter === 'custom' ? customStartDate : '',
-        endDate: dateFilter === 'custom' ? customEndDate : '',
-      });
-
-      // Si on a des sessions stockées localement pour cette combinaison de filtres, les garder
-      const storedKey = `sessions_${currentCacheKey}`;
-      const storedSessions = sessionStorage.getItem(storedKey);
-
-      if (storedSessions) {
-        const parsedData = JSON.parse(storedSessions);
-        setAllScores(parsedData.sessions);
-        setHasMore(parsedData.hasMore);
-        setTotal(parsedData.total);
-      } else {
-        setAllScores(initialSessionsData.sessions);
-        setHasMore(initialSessionsData.hasMore);
-        setTotal(initialSessionsData.total);
-
-        // Sauvegarder les données initiales dans sessionStorage
-        sessionStorage.setItem(
-          storedKey,
-          JSON.stringify({
-            sessions: initialSessionsData.sessions,
-            hasMore: initialSessionsData.hasMore,
-            total: initialSessionsData.total,
-          })
-        );
-      }
+      setAllScores(initialSessionsData.sessions);
+      setHasMore(initialSessionsData.hasMore);
+      setTotal(initialSessionsData.total);
       setError(null);
+    } else {
+      // Réinitialiser si pas de données
+      setAllScores([]);
+      setHasMore(true);
+      setTotal(0);
     }
     setLoading(initialLoading);
-  }, [
-    initialSessionsData,
-    initialLoading,
-    searchQuery,
-    modeFilter,
-    onlyCompleted,
-    dateFilter,
-    customStartDate,
-    customEndDate,
-  ]);
+  }, [initialSessionsData, initialLoading]);
 
   useEffect(() => {
     if (initialError) {
@@ -157,13 +123,6 @@ export default function HistoryStats() {
     setModeFilter('all');
     setOnlyCompleted(false);
     setShowDateFilters(false);
-
-    // Nettoyer le sessionStorage
-    Object.keys(sessionStorage).forEach((key) => {
-      if (key.startsWith('sessions_')) {
-        sessionStorage.removeItem(key);
-      }
-    });
   };
 
   // Fonction pour charger plus de sessions manuellement
@@ -192,32 +151,22 @@ export default function HistoryStats() {
         } = await getFilteredSessions(filters, pagination);
 
         if (success) {
-          // Ajouter les nouvelles sessions aux existantes
-          const newAllScores = [...allScores, ...data];
-          setAllScores(newAllScores);
+          // Créer les nouvelles données avec toutes les sessions
+          const updatedSessions = [...allScores, ...data];
+          const newSessionsData = {
+            sessions: updatedSessions,
+            hasMore: newHasMore,
+            total: newTotal,
+          };
+
+          // Mettre à jour le cache avec toutes les sessions
+          updateCacheData(newSessionsData);
+
+          // Mettre à jour les états locaux
+          setAllScores(updatedSessions);
           setHasMore(newHasMore);
           setTotal(newTotal);
           setError(null);
-
-          // Sauvegarder dans sessionStorage pour préserver lors des changements de filtres
-          const currentCacheKey = JSON.stringify({
-            search: searchQuery.trim(),
-            mode: modeFilter,
-            completed: modeFilter === 'learning' ? onlyCompleted : false,
-            dateFilter,
-            startDate: dateFilter === 'custom' ? customStartDate : '',
-            endDate: dateFilter === 'custom' ? customEndDate : '',
-          });
-
-          const storedKey = `sessions_${currentCacheKey}`;
-          sessionStorage.setItem(
-            storedKey,
-            JSON.stringify({
-              sessions: newAllScores,
-              hasMore: newHasMore,
-              total: newTotal,
-            })
-          );
         }
       } catch (error) {
         console.error('Erreur lors du chargement de plus de sessions:', error);

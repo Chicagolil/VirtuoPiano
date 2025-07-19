@@ -22,6 +22,7 @@ type UseSearchCacheReturn<T> = {
   clearCache: () => void;
   refetch: () => Promise<void>;
   hasCache: boolean;
+  updateCacheData: (newData: T) => void;
 };
 
 export function useSearchCache<T>({
@@ -103,6 +104,26 @@ export function useSearchCache<T>({
     return loadData(true);
   }, [loadData]);
 
+  // Fonction pour mettre à jour les données en cache
+  const updateCacheData = useCallback(
+    (newData: T) => {
+      setData(newData);
+
+      // Mettre à jour le cache avec les nouvelles données
+      const newCacheEntry: CacheEntry<T> = {
+        data: newData,
+        timestamp: new Date(),
+      };
+
+      setCache((prevCache) => {
+        const newCache = new Map(prevCache);
+        newCache.set(cacheKey, newCacheEntry);
+        return newCache;
+      });
+    },
+    [cacheKey]
+  );
+
   // Effet pour charger depuis le cache ou faire une nouvelle requête
   useEffect(() => {
     const currentCacheEntry = cache.get(cacheKey);
@@ -142,5 +163,6 @@ export function useSearchCache<T>({
     clearCache,
     refetch,
     hasCache: cache.has(cacheKey),
+    updateCacheData,
   };
 }
