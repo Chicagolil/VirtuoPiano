@@ -2,7 +2,6 @@ import { Suspense } from 'react';
 import { getListSongs } from '@/lib/services/songs';
 import { Spinner } from '@/components/ui/spinner';
 import SongsList from '@/features/library/SongsList';
-import BentoShadcnExample from '@/features/BentoGrid/BentoShadcnExample';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authoption';
 import { redirect } from 'next/navigation';
@@ -35,7 +34,6 @@ export default async function LibraryPage() {
       >
         {/* Utilisation du nouveau composant à l'intérieur de Suspense */}
         <LoadSongs userId={userId} />
-        {/* <BentoShadcnExample /> */}
       </Suspense>
     </div>
   );

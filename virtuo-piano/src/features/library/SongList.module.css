@@ -61,10 +61,15 @@
 
 .searchIcon {
   position: absolute;
-  top: 50%;
+  top: 0;
   left: 0.75rem;
-  transform: translateY(-50%);
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: rgba(255, 255, 255, 0.7);
+  pointer-events: none;
+  z-index: 10;
 }
 
 .searchInput {
@@ -187,7 +192,7 @@
 
 .tableContainer {
   overflow-x: auto;
-  margin: 0 -1.25rem;
+  margin: 0 -1.5rem;
 }
 
 .table {
