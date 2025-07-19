@@ -16,25 +16,28 @@ export const seedUserChallengeProgress = async (prisma: PrismaClient) => {
     for (const [challengeIndex, challenge] of challenges.entries()) {
       // Pour chaque niveau du challenge
       for (const [levelIndex, level] of challenge.levels.entries()) {
-        // Cas 1 : progression en cours (pour tous les utilisateurs)
-        await prisma.userChallengeProgress.create({
-          data: {
-            userId: user.id,
-            challengeId: challenge.id,
-            levelId: level.id,
-            currentProgress: Math.floor(Math.random() * level.requirement),
-            isCompleted: false,
-            startedAt: new Date(
-              Date.now() -
-                (userIndex + challengeIndex + levelIndex + 1) * 86400000
-            ),
-            updatedAt: new Date(),
-            isRewardClaimed: false,
-          },
-        });
+        // Détermine le type de progression selon l'utilisateur et le niveau
+        const progressType = (userIndex + levelIndex) % 3;
 
-        // Cas 2 : défi terminé mais récompense non réclamée (pour les utilisateurs pairs)
-        if (userIndex % 2 === 0) {
+        if (progressType === 0) {
+          // Cas 1 : progression en cours
+          await prisma.userChallengeProgress.create({
+            data: {
+              userId: user.id,
+              challengeId: challenge.id,
+              levelId: level.id,
+              currentProgress: Math.floor(Math.random() * level.requirement),
+              isCompleted: false,
+              startedAt: new Date(
+                Date.now() -
+                  (userIndex + challengeIndex + levelIndex + 1) * 86400000
+              ),
+              updatedAt: new Date(),
+              isRewardClaimed: false,
+            },
+          });
+        } else if (progressType === 1) {
+          // Cas 2 : défi terminé mais récompense non réclamée
           await prisma.userChallengeProgress.create({
             data: {
               userId: user.id,
@@ -53,10 +56,8 @@ export const seedUserChallengeProgress = async (prisma: PrismaClient) => {
               isRewardClaimed: false,
             },
           });
-        }
-
-        // Cas 3 : défi terminé et récompense réclamée (pour les utilisateurs impairs)
-        if (userIndex % 2 === 1) {
+        } else {
+          // Cas 3 : défi terminé et récompense réclamée
           await prisma.userChallengeProgress.create({
             data: {
               userId: user.id,
@@ -82,5 +83,4 @@ export const seedUserChallengeProgress = async (prisma: PrismaClient) => {
       }
     }
   }
-  console.log('✅ UserChallengeProgress seeded for all users!');
 };
