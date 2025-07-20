@@ -77,7 +77,6 @@ function transformScoreData(score: ScoreSummaryService): ScoreSummary {
     duration,
     imageUrl: score.imageUrl || undefined,
     performance,
-    hands: score.hands,
   };
 }
 
