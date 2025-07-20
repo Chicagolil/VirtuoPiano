@@ -3,6 +3,7 @@ import {
   IconClock,
   IconMusic,
   IconTrophy,
+  IconPointer,
 } from '@tabler/icons-react';
 import AccuracyBadge from '../badge/AccuracyBadge';
 import ProgressBar from '../ProgressBar';
@@ -21,9 +22,58 @@ export interface ScoreSummary {
   duration: string;
   imageUrl?: string;
   performance: number;
+  hands?: 'right' | 'left' | 'both'; // Nouvelles mains concernées
 }
 
+// Fonction pour afficher les mains concernées
+const getHandsDisplay = (hands?: 'right' | 'left' | 'both') => {
+  if (!hands) return null;
+
+  const getHandsText = () => {
+    switch (hands) {
+      case 'right':
+        return 'Main droite';
+      case 'left':
+        return 'Main gauche';
+      case 'both':
+        return 'Deux mains';
+      default:
+        return '';
+    }
+  };
+
+  const getHandsColor = () => {
+    switch (hands) {
+      case 'right':
+        return 'text-green-400 bg-green-400/10 border-green-400/20';
+      case 'left':
+        return 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20';
+      case 'both':
+        return 'text-blue-400 bg-blue-400/10 border-blue-400/20';
+      default:
+        return 'text-gray-400 bg-gray-400/10 border-gray-400/20';
+    }
+  };
+
+  return (
+    <div
+      className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getHandsColor()}`}
+    >
+      <IconPointer size={12} className="mr-1" />
+      {getHandsText()}
+    </div>
+  );
+};
+
 export default function ScoreCard({ score }: { score: ScoreSummary }) {
+  // Debug temporaire pour voir les données
+  console.log('ScoreCard data:', {
+    id: score.id,
+    mode: score.mode,
+    hands: score.hands,
+    songTitle: score.songTitle,
+  });
+
   return (
     <div
       className={`group bg-white/3 shadow-sm rounded-xl p-4 border ${
@@ -67,10 +117,21 @@ export default function ScoreCard({ score }: { score: ScoreSummary }) {
               <IconCalendar size={14} className="mr-1" />
               {score.playedAt}
             </span>
-            <span className="inline-flex items-center">
+            <span className="inline-flex items-center mr-3">
               <IconClock size={14} className="mr-1" />
               {score.duration}
             </span>
+            {score.mode === 'learning' && score.hands && (
+              <span className="inline-flex items-center">
+                {getHandsDisplay(score.hands)}
+              </span>
+            )}
+            {/* Debug temporaire */}
+            {score.mode === 'learning' && (
+              <span className="inline-flex items-center ml-2 text-red-400">
+                Hands: {score.hands || 'undefined'}
+              </span>
+            )}
           </div>
 
           <div className="flex items-center justify-between">

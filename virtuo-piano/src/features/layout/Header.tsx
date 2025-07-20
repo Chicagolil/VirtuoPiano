@@ -1,6 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import styles from './Header.module.css';
 import { getPageName } from '@/common/utils/function';
 import { useSong } from '@/contexts/SongContext';
@@ -8,9 +9,33 @@ import { useSong } from '@/contexts/SongContext';
 export default function Header() {
   const pathname = usePathname();
   const { currentSong } = useSong();
+  const [isLoadingSong, setIsLoadingSong] = useState(false);
 
-  // Utiliser le titre de la chanson si disponible, sinon utiliser le nom de la page
-  const pageTitle = currentSong ? currentSong.title : getPageName(pathname);
+  // Détecter si nous sommes sur une page de chanson
+  const isSongPage =
+    pathname.startsWith('/library/') && pathname !== '/library';
+  const isPerformancePage = pathname.startsWith('/performances/');
+
+  useEffect(() => {
+    if (isSongPage || isPerformancePage) {
+      // Si nous sommes sur une page de chanson mais qu'aucune chanson n'est chargée
+      if (!currentSong) {
+        setIsLoadingSong(true);
+      } else {
+        setIsLoadingSong(false);
+      }
+    } else {
+      setIsLoadingSong(false);
+    }
+  }, [currentSong, isSongPage, isPerformancePage]);
+
+  // Déterminer le titre à afficher
+  const getDisplayTitle = () => {
+    if ((isSongPage || isPerformancePage) && isLoadingSong) {
+      return 'Chargement...';
+    }
+    return currentSong ? currentSong.title : getPageName(pathname);
+  };
 
   // Afficher le compositeur si disponible
   const composer = currentSong?.composer || '';
@@ -18,8 +43,10 @@ export default function Header() {
   return (
     <div className={styles.header}>
       <h1 className={styles.pageTitle}>
-        {pageTitle}
-        {composer && <span className={styles.composer}> {composer}</span>}
+        {getDisplayTitle()}
+        {composer && !isLoadingSong && (
+          <span className={styles.composer}> {composer}</span>
+        )}
       </h1>
     </div>
   );

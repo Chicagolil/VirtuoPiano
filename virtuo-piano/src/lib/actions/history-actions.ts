@@ -77,6 +77,7 @@ function transformScoreData(score: ScoreSummaryService): ScoreSummary {
     duration,
     imageUrl: score.imageUrl || undefined,
     performance,
+    hands: score.hands,
   };
 }
 
@@ -116,7 +117,6 @@ export async function getRecentSessions(limit: number = 3): Promise<{
   }
 }
 
-// A TESTER
 export async function getAllSessions(): Promise<{
   success: boolean;
   data: ScoreSummary[];

@@ -3,6 +3,18 @@ import { getLearnScores, getDifficultyRange } from '@/common/utils/function';
 import { SongType, SourceType } from '@prisma/client';
 import { JsonValue } from '@prisma/client/runtime/library';
 
+export type SongBasicData = {
+  id: string;
+  title: string;
+  composer: string | null;
+  imageUrl: string | null;
+  duration_ms: number;
+  genre: string | null;
+  tempo: number;
+  Level: number;
+  isFavorite: boolean;
+};
+
 export type ScoreDurationData = {
   date: Date;
   durationInMinutes: number;
@@ -40,6 +52,7 @@ export interface ScoreSummaryService {
   sessionStartTime: Date;
   sessionEndTime: Date;
   modeName: string;
+  hands?: 'right' | 'left' | 'both';
 }
 
 export type PlayedSong = {
@@ -487,6 +500,7 @@ export class PerformancesServices {
       maxCombo: score.maxCombo,
       sessionStartTime: score.sessionStartTime,
       sessionEndTime: score.sessionEndTime,
+      hands: score.hands || undefined,
     }));
   }
 
@@ -532,6 +546,7 @@ export class PerformancesServices {
       maxCombo: score.maxCombo,
       sessionStartTime: score.sessionStartTime,
       sessionEndTime: score.sessionEndTime,
+      hands: score.hands || undefined,
     }));
   }
 
@@ -641,6 +656,7 @@ export class PerformancesServices {
           maxCombo: score.maxCombo,
           sessionStartTime: score.sessionStartTime,
           sessionEndTime: score.sessionEndTime,
+          hands: score.hands || undefined,
         }))
         .filter((score) => {
           const { performance } = getLearnScores(
@@ -709,6 +725,7 @@ export class PerformancesServices {
         maxCombo: score.maxCombo,
         sessionStartTime: score.sessionStartTime,
         sessionEndTime: score.sessionEndTime,
+        hands: score.hands || undefined,
       }));
 
       const hasMore = pagination.offset + mappedScores.length < total;
@@ -892,6 +909,41 @@ export class PerformancesServices {
         hasNextPage: currentPage < totalPages,
         hasPreviousPage: currentPage > 1,
       },
+    };
+  }
+
+  static async getSongBasicData(
+    songId: string,
+    userId: string
+  ): Promise<SongBasicData> {
+    const song = await prisma.songs.findUnique({
+      where: {
+        id: songId,
+      },
+      select: {
+        id: true,
+        title: true,
+        composer: true,
+        imageUrl: true,
+        duration_ms: true,
+        genre: true,
+        tempo: true,
+        Level: true,
+        userFavorites: {
+          where: {
+            user_id: userId,
+          },
+        },
+      },
+    });
+
+    if (!song) {
+      throw new Error('Chanson non trouvée');
+    }
+
+    return {
+      ...song,
+      isFavorite: song.userFavorites.length > 0,
     };
   }
 }

@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, Suspense, lazy } from 'react';
+import React, { useState, Suspense, lazy, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Spinner } from '@/components/ui/spinner';
 import * as Tabs from '@radix-ui/react-tabs';
 import { IconChartBar } from '@tabler/icons-react';
@@ -12,6 +13,14 @@ const PlayedSongs = lazy(() => import('@/features/performances/PlayedSongs'));
 
 export default function PerformancesPage() {
   const [activeTab, setActiveTab] = useState('overview');
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const initialTab = searchParams.get('tab');
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [searchParams]);
 
   return (
     <div className="w-full p-4 pt-7">
