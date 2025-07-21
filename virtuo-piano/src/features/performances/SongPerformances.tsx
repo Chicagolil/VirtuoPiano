@@ -1,6 +1,10 @@
 'use client';
 
-import { castMsToMin, getLearnScores } from '@/common/utils/function';
+import {
+  castMsToMin,
+  getLearnScores,
+  formatDuration,
+} from '@/common/utils/function';
 import { useEffect, useState, useTransition } from 'react';
 import { useSong } from '@/contexts/SongContext';
 import { useRouter } from 'next/navigation';
@@ -48,165 +52,134 @@ import * as Separator from '@radix-ui/react-separator';
 import UserAvatar from '@/components/badge/UserAvatar';
 import ProgressBar from '@/components/ProgressBar';
 
-const practiceData = [
+// --- TIMELINE ---
+// Séparation des records par mode
+const learningRecords = [
   {
-    name: 'Lun',
-    pratique: 25,
-    ecoute: 15,
-    theorie: 10,
-    total: 50,
+    id: 1,
+    date: '2023-12-15',
+    score: 0,
+    type: 'start',
+    description: "Début de l'apprentissage",
+    details:
+      "Première session d'apprentissage de ce morceau. Le voyage commence !",
   },
   {
-    name: 'Mar',
-    pratique: 40,
-    ecoute: 20,
-    theorie: 15,
-    total: 75,
+    id: 2,
+    date: '2023-12-15',
+    score: 60,
+    type: 'session',
+    description: 'Session marathon',
+    details: 'Session de 60 minutes non-stop, endurance remarquable !',
   },
   {
-    name: 'Mer',
-    pratique: 30,
-    ecoute: 12,
-    theorie: 8,
-    total: 50,
+    id: 3,
+    date: '2023-12-20',
+    score: 85,
+    type: 'accuracy_right',
+    description: 'Précision main droite',
+    details:
+      '85% de précision atteinte avec la main droite. Progression remarquable !',
   },
   {
-    name: 'Jeu',
-    pratique: 45,
-    ecoute: 25,
-    theorie: 20,
-    total: 90,
+    id: 4,
+    date: '2023-12-25',
+    score: 78,
+    type: 'accuracy_left',
+    description: 'Précision main gauche',
+    details:
+      "78% de précision avec la main gauche. La coordination s'améliore !",
   },
   {
-    name: 'Ven',
-    pratique: 20,
-    ecoute: 10,
-    theorie: 5,
-    total: 35,
+    id: 9,
+    date: '2024-01-10',
+    score: 95,
+    type: 'accuracy_both',
+    description: 'Précision parfaite',
+    details: '95% de précision avec les deux mains. Synchronisation parfaite !',
   },
   {
-    name: 'Sam',
-    pratique: 60,
-    ecoute: 30,
-    theorie: 25,
-    total: 115,
+    id: 6,
+    date: '2024-01-02',
+    score: 92,
+    type: 'performance_right',
+    description: 'Performance main droite',
+    details: '92% de performance globale avec la main droite. Niveau expert !',
   },
   {
-    name: 'Dim',
-    pratique: 35,
-    ecoute: 18,
-    theorie: 12,
-    total: 65,
+    id: 8,
+    date: '2024-01-08',
+    score: 88,
+    type: 'performance_left',
+    description: 'Performance main gauche',
+    details: '88% de performance avec la main gauche. Équilibre parfait !',
+  },
+  {
+    id: 10.1,
+    date: '2024-01-11',
+    score: 89,
+    type: 'performance_both',
+    description: 'Performance deux mains',
+    details:
+      '89% de performance globale avec les deux mains. La maîtrise approche !',
+  },
+  {
+    id: 10,
+    date: '2024-01-12',
+    score: 94,
+    type: 'finished',
+    description: 'Musique terminée !',
+    details:
+      "Plus de 90% de performance globale atteinte avec les deux mains. Félicitations, vous avez terminé l'apprentissage de ce morceau !",
   },
 ];
 
-// Composant de timeline des records
-const RecordsTimeline = () => {
+const gameRecords = [
+  {
+    id: 100,
+    date: '2023-12-16',
+    score: 0,
+    type: 'start_game',
+    description: 'Première session en mode Jeu',
+    details:
+      'Vous avez joué ce morceau pour la première fois en mode Jeu. Bonne chance pour battre des records !',
+  },
+  {
+    id: 5,
+    date: '2023-12-28',
+    score: 4.2,
+    type: 'multiplier',
+    description: 'Multiplicateur maximal',
+    details: 'Multiplicateur x4.2 atteint, performance exceptionnelle !',
+  },
+  {
+    id: 7,
+    date: '2024-01-05',
+    score: 847,
+    type: 'combo',
+    description: 'Combo record établi',
+    details:
+      '847 notes jouées consécutivement sans erreur, un combo historique !',
+  },
+  {
+    id: 11,
+    date: '2024-01-15',
+    score: 8750,
+    type: 'score',
+    description: 'Nouveau record de score !',
+    details:
+      'Score exceptionnel de 8750 points atteint après 3 semaines de pratique intensive.',
+  },
+];
+
+// Composant de timeline des records, reçoit les records en props
+const RecordsTimeline = ({ records }: { records: any[] }) => {
   const [selectedRecord, setSelectedRecord] = useState<number | null>(null);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  const records = [
-    {
-      id: 1,
-      date: '2023-12-15',
-      score: 0,
-      type: 'start',
-      description: "Début de l'apprentissage",
-      details:
-        "Première session d'apprentissage de ce morceau. Le voyage commence !",
-    },
-    {
-      id: 2,
-      date: '2023-12-15',
-      score: 60,
-      type: 'session',
-      description: 'Session marathon',
-      details: 'Session de 60 minutes non-stop, endurance remarquable !',
-    },
-    {
-      id: 3,
-      date: '2023-12-20',
-      score: 85,
-      type: 'accuracy_right',
-      description: 'Précision main droite',
-      details:
-        '85% de précision atteinte avec la main droite. Progression remarquable !',
-    },
-    {
-      id: 4,
-      date: '2023-12-25',
-      score: 78,
-      type: 'accuracy_left',
-      description: 'Précision main gauche',
-      details:
-        "78% de précision avec la main gauche. La coordination s'améliore !",
-    },
-    {
-      id: 5,
-      date: '2023-12-28',
-      score: 4.2,
-      type: 'multiplier',
-      description: 'Multiplicateur maximal',
-      details: 'Multiplicateur x4.2 atteint, performance exceptionnelle !',
-    },
-    {
-      id: 6,
-      date: '2024-01-02',
-      score: 92,
-      type: 'performance_right',
-      description: 'Performance main droite',
-      details:
-        '92% de performance globale avec la main droite. Niveau expert !',
-    },
-    {
-      id: 7,
-      date: '2024-01-05',
-      score: 847,
-      type: 'combo',
-      description: 'Combo record établi',
-      details:
-        '847 notes jouées consécutivement sans erreur, un combo historique !',
-    },
-    {
-      id: 8,
-      date: '2024-01-08',
-      score: 88,
-      type: 'performance_left',
-      description: 'Performance main gauche',
-      details: '88% de performance avec la main gauche. Équilibre parfait !',
-    },
-    {
-      id: 9,
-      date: '2024-01-10',
-      score: 95,
-      type: 'accuracy_both',
-      description: 'Précision parfaite',
-      details:
-        '95% de précision avec les deux mains. Synchronisation parfaite !',
-    },
-    {
-      id: 10,
-      date: '2024-01-12',
-      score: 94,
-      type: 'performance_both',
-      description: 'Performance exceptionnelle',
-      details:
-        '94% de performance globale avec les deux mains. Maîtrise totale !',
-    },
-    {
-      id: 11,
-      date: '2024-01-15',
-      score: 8750,
-      type: 'score',
-      description: 'Nouveau record de score !',
-      details:
-        'Score exceptionnel de 8750 points atteint après 3 semaines de pratique intensive.',
-    },
-  ];
 
   const getBubbleColor = (type: string) => {
     switch (type) {
@@ -236,6 +209,10 @@ const RecordsTimeline = () => {
         return 'from-rose-400 to-pink-500';
       case 'performance_both':
         return 'from-pink-500 to-rose-600';
+      case 'start_game':
+        return 'from-blue-400 to-cyan-500';
+      case 'finished':
+        return 'from-green-400 to-emerald-500';
       default:
         return 'from-indigo-500 to-purple-600';
     }
@@ -269,6 +246,10 @@ const RecordsTimeline = () => {
         return 'border-rose-300';
       case 'performance_both':
         return 'border-pink-400';
+      case 'start_game':
+        return 'border-blue-300';
+      case 'finished':
+        return 'border-green-300';
       default:
         return 'border-indigo-300';
     }
@@ -304,6 +285,10 @@ const RecordsTimeline = () => {
         return <IconStar size={24} className={iconColor} />;
       case 'performance_both':
         return <IconStar size={24} className={iconColor} />;
+      case 'start_game':
+        return <IconRocket size={24} className={iconColor} />;
+      case 'finished':
+        return <IconMedal size={24} className={iconColor} />;
       default:
         return <IconMedal size={24} className={iconColor} />;
     }
@@ -339,6 +324,10 @@ const RecordsTimeline = () => {
         return <IconStar size={20} className={iconColor} />;
       case 'performance_both':
         return <IconStar size={20} className={iconColor} />;
+      case 'start_game':
+        return <IconRocket size={20} className={iconColor} />;
+      case 'finished':
+        return <IconMedal size={20} className={iconColor} />;
       default:
         return <IconMedal size={20} className={iconColor} />;
     }
@@ -372,6 +361,10 @@ const RecordsTimeline = () => {
         return 'text-rose-500';
       case 'performance_both':
         return 'text-pink-600';
+      case 'start_game':
+        return 'text-blue-500';
+      case 'finished':
+        return 'text-green-500';
       default:
         return 'text-indigo-500';
     }
@@ -405,6 +398,10 @@ const RecordsTimeline = () => {
         return `${record.score}% main gauche`;
       case 'performance_both':
         return `${record.score}% deux mains`;
+      case 'start_game':
+        return 'Début de la session de jeu';
+      case 'finished':
+        return 'Musique terminée !';
       default:
         return record.score;
     }
@@ -424,7 +421,7 @@ const RecordsTimeline = () => {
             className={`relative z-10 ${
               mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-75'
             } animate-timeline-bubble`}
-            style={{ transitionDelay: mounted ? `${index * 80}ms` : '0ms' }}
+            style={{ transitionDelay: mounted ? `${index * 400}ms` : '0ms' }}
           >
             {/* Bulle cliquable */}
             <button
@@ -588,6 +585,16 @@ const RecordsTimeline = () => {
           <div className="w-3 h-3 bg-gradient-to-r from-pink-500 to-rose-600 rounded-full"></div>
           <span className="text-xs text-white/70">Performance deux mains</span>
         </div>
+        <div className="flex items-center space-x-2">
+          <div className="w-3 h-3 bg-gradient-to-r from-blue-400 to-cyan-500 rounded-full"></div>
+          <span className="text-xs text-white/70">
+            Démarrage de session de jeu
+          </span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <div className="w-3 h-3 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full"></div>
+          <span className="text-xs text-white/70">Musique terminée</span>
+        </div>
       </div>
     </div>
   );
@@ -649,7 +656,7 @@ const SongStatsOverview = ({ song }: { song: SongBasicData }) => {
           <IconTimeline size={20} className="mr-2 text-yellow-400" />
           Timeline des Records
         </h3>
-        <RecordsTimeline />
+        <RecordsTimeline records={learningRecords} />
       </div>
     </div>
   );
@@ -785,11 +792,34 @@ const gameBarData = [
   { mois: 'Juin', score: 9300, combo: 450, multi: 4.2 },
 ];
 
+// Données pour le graphique en ligne Score par session (score, combo, multi)
+const gameScoreLineData = [
+  { session: 1, score: 8200, combo: 320, multi: 3.2 },
+  { session: 2, score: 8450, combo: 350, multi: 3.5 },
+  { session: 3, score: 8700, combo: 370, multi: 3.8 },
+  { session: 4, score: 8900, combo: 400, multi: 4.0 },
+  { session: 5, score: 9100, combo: 420, multi: 4.1 },
+  { session: 6, score: 9300, combo: 450, multi: 4.2 },
+  { session: 7, score: 9500, combo: 470, multi: 4.3 },
+];
+
 export default function SongPerformances({ song }: { song: SongBasicData }) {
   const { setCurrentSong } = useSong();
   const router = useRouter();
   const [isFavorite, setIsFavorite] = useState(song.isFavorite || false);
   const [isPending, startTransition] = useTransition();
+  const [activeTab, setActiveTab] = useState<'apprentissage' | 'jeu'>(
+    'apprentissage'
+  );
+
+  const [precisionInterval, setPrecisionInterval] = useState(7);
+  const [precisionIndex, setPrecisionIndex] = useState(0);
+  const [performanceInterval, setPerformanceInterval] = useState(7);
+  const [performanceIndex, setPerformanceIndex] = useState(0);
+  const [scoreInterval, setScoreInterval] = useState(7);
+  const [scoreIndex, setScoreIndex] = useState(0);
+  const [practiceInterval, setPracticeInterval] = useState(7);
+  const [practiceIndex, setPracticeIndex] = useState(0);
 
   useEffect(() => {
     // Mettre à jour le contexte avec la chanson actuelle
@@ -886,6 +916,239 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
     },
   ];
 
+  // Étendre les données pour plus de sessions
+  const extendedLearningPrecisionData = [
+    // Sessions 1-7 (données existantes)
+    ...learningPrecisionData,
+    // Sessions 8-14
+    { session: 8, droite: 94, gauche: 89, deux: 93 },
+    { session: 9, droite: 95, gauche: 90, deux: 94 },
+    { session: 10, droite: 93, gauche: 91, deux: 93 },
+    { session: 11, droite: 96, gauche: 92, deux: 95 },
+    { session: 12, droite: 97, gauche: 93, deux: 96 },
+    { session: 13, droite: 95, gauche: 94, deux: 95 },
+    { session: 14, droite: 98, gauche: 95, deux: 97 },
+    // Sessions 15-21
+    { session: 15, droite: 96, gauche: 93, deux: 95 },
+    { session: 16, droite: 97, gauche: 94, deux: 96 },
+    { session: 17, droite: 98, gauche: 95, deux: 97 },
+    { session: 18, droite: 99, gauche: 96, deux: 98 },
+    { session: 19, droite: 97, gauche: 97, deux: 97 },
+    { session: 20, droite: 98, gauche: 98, deux: 98 },
+    { session: 21, droite: 99, gauche: 99, deux: 99 },
+  ];
+
+  const extendedLearningPerformanceData = [
+    // Sessions 1-7 (données existantes)
+    ...learningPerformanceData,
+    // Sessions 8-14
+    { session: 8, droite: 92, gauche: 83, deux: 89 },
+    { session: 9, droite: 93, gauche: 84, deux: 90 },
+    { session: 10, droite: 91, gauche: 85, deux: 89 },
+    { session: 11, droite: 94, gauche: 86, deux: 91 },
+    { session: 12, droite: 95, gauche: 87, deux: 92 },
+    { session: 13, droite: 93, gauche: 88, deux: 91 },
+    { session: 14, droite: 96, gauche: 89, deux: 93 },
+    // Sessions 15-21
+    { session: 15, droite: 94, gauche: 87, deux: 91 },
+    { session: 16, droite: 95, gauche: 88, deux: 92 },
+    { session: 17, droite: 96, gauche: 89, deux: 93 },
+    { session: 18, droite: 97, gauche: 90, deux: 94 },
+    { session: 19, droite: 95, gauche: 91, deux: 93 },
+    { session: 20, droite: 96, gauche: 92, deux: 94 },
+    { session: 21, droite: 97, gauche: 93, deux: 95 },
+  ];
+
+  const extendedGameScoreLineData = [
+    // Sessions 1-7 (données existantes)
+    ...gameScoreLineData,
+    // Sessions 8-14
+    { session: 8, score: 9600, combo: 480, multi: 4.4 },
+    { session: 9, score: 9700, combo: 490, multi: 4.5 },
+    { session: 10, score: 9550, combo: 485, multi: 4.3 },
+    { session: 11, score: 9800, combo: 500, multi: 4.6 },
+    { session: 12, score: 9900, combo: 510, multi: 4.7 },
+    { session: 13, score: 9750, combo: 495, multi: 4.4 },
+    { session: 14, score: 10000, combo: 520, multi: 4.8 },
+    // Sessions 15-21
+    { session: 15, score: 9850, combo: 505, multi: 4.5 },
+    { session: 16, score: 9950, combo: 515, multi: 4.6 },
+    { session: 17, score: 10100, combo: 525, multi: 4.9 },
+    { session: 18, score: 10200, combo: 535, multi: 5.0 },
+    { session: 19, score: 10050, combo: 530, multi: 4.8 },
+    { session: 20, score: 10150, combo: 540, multi: 4.9 },
+    { session: 21, score: 10300, combo: 550, multi: 5.1 },
+  ];
+
+  // Options d'intervalles pour la navigation
+  const intervalOptions = [
+    { value: 7, label: '7 sessions' },
+    { value: 15, label: '15 sessions' },
+    { value: 30, label: '30 sessions' },
+  ];
+
+  // Fonction pour calculer l'index par défaut (intervalle le plus récent)
+  const getDefaultIndex = (dataLength: number, interval: number = 7) => {
+    const numCompleteIntervals = Math.floor(dataLength / interval);
+    return Math.max(0, numCompleteIntervals - 1);
+  };
+
+  // Initialiser les index sur l'intervalle le plus récent au montage
+  useEffect(() => {
+    setPrecisionIndex(
+      getDefaultIndex(extendedLearningPrecisionData.length, precisionInterval)
+    );
+    setPerformanceIndex(
+      getDefaultIndex(
+        extendedLearningPerformanceData.length,
+        performanceInterval
+      )
+    );
+    setScoreIndex(
+      getDefaultIndex(extendedGameScoreLineData.length, scoreInterval)
+    );
+    setPracticeIndex(
+      getDefaultIndex(extendedPracticeData.length, practiceInterval)
+    );
+  }, []); // Uniquement au montage
+
+  // Fonctions pour obtenir les données par intervalles
+  const getPracticeData = () => {
+    const totalIntervals = Math.ceil(
+      extendedPracticeData.length / practiceInterval
+    );
+    const reverseIndex = totalIntervals - 1 - practiceIndex;
+    const endIndex =
+      extendedPracticeData.length - reverseIndex * practiceInterval;
+    const startIndex = Math.max(0, endIndex - practiceInterval);
+    return extendedPracticeData.slice(startIndex, endIndex);
+  };
+
+  const getPrecisionData = () => {
+    const totalIntervals = Math.ceil(
+      extendedLearningPrecisionData.length / precisionInterval
+    );
+    const reverseIndex = totalIntervals - 1 - precisionIndex;
+    const endIndex =
+      extendedLearningPrecisionData.length - reverseIndex * precisionInterval;
+    const startIndex = Math.max(0, endIndex - precisionInterval);
+    return extendedLearningPrecisionData.slice(startIndex, endIndex);
+  };
+
+  const getPerformanceData = () => {
+    const totalIntervals = Math.ceil(
+      extendedLearningPerformanceData.length / performanceInterval
+    );
+    const reverseIndex = totalIntervals - 1 - performanceIndex;
+    const endIndex =
+      extendedLearningPerformanceData.length -
+      reverseIndex * performanceInterval;
+    const startIndex = Math.max(0, endIndex - performanceInterval);
+    return extendedLearningPerformanceData.slice(startIndex, endIndex);
+  };
+
+  const getScoreData = () => {
+    const totalIntervals = Math.ceil(
+      extendedGameScoreLineData.length / scoreInterval
+    );
+    const reverseIndex = totalIntervals - 1 - scoreIndex;
+    const endIndex =
+      extendedGameScoreLineData.length - reverseIndex * scoreInterval;
+    const startIndex = Math.max(0, endIndex - scoreInterval);
+    return extendedGameScoreLineData.slice(startIndex, endIndex);
+  };
+
+  // Données de pratique
+  const extendedPracticeData = [
+    { name: 'J-29', pratique: 45, modeJeu: 20, modeApprentissage: 25 },
+    { name: 'J-28', pratique: 52, modeJeu: 25, modeApprentissage: 27 },
+    { name: 'J-27', pratique: 38, modeJeu: 15, modeApprentissage: 23 },
+    { name: 'J-26', pratique: 60, modeJeu: 30, modeApprentissage: 30 },
+    { name: 'J-25', pratique: 42, modeJeu: 18, modeApprentissage: 24 },
+    { name: 'J-24', pratique: 55, modeJeu: 28, modeApprentissage: 27 },
+    { name: 'J-23', pratique: 48, modeJeu: 22, modeApprentissage: 26 },
+    { name: 'J-22', pratique: 65, modeJeu: 35, modeApprentissage: 30 },
+    { name: 'J-21', pratique: 40, modeJeu: 16, modeApprentissage: 24 },
+    { name: 'J-20', pratique: 58, modeJeu: 30, modeApprentissage: 28 },
+    { name: 'J-19', pratique: 47, modeJeu: 20, modeApprentissage: 27 },
+    { name: 'J-18', pratique: 53, modeJeu: 26, modeApprentissage: 27 },
+    { name: 'J-17', pratique: 61, modeJeu: 32, modeApprentissage: 29 },
+    { name: 'J-16', pratique: 44, modeJeu: 19, modeApprentissage: 25 },
+    { name: 'J-15', pratique: 56, modeJeu: 28, modeApprentissage: 28 },
+    { name: 'J-14', pratique: 45, modeJeu: 20, modeApprentissage: 25 },
+    { name: 'J-13', pratique: 52, modeJeu: 25, modeApprentissage: 27 },
+    { name: 'J-12', pratique: 38, modeJeu: 15, modeApprentissage: 23 },
+    { name: 'J-11', pratique: 60, modeJeu: 30, modeApprentissage: 30 },
+    { name: 'J-10', pratique: 42, modeJeu: 18, modeApprentissage: 24 },
+    { name: 'J-9', pratique: 55, modeJeu: 28, modeApprentissage: 27 },
+    { name: 'J-8', pratique: 48, modeJeu: 22, modeApprentissage: 26 },
+    { name: 'J-7', pratique: 65, modeJeu: 35, modeApprentissage: 30 },
+    { name: 'J-6', pratique: 40, modeJeu: 16, modeApprentissage: 24 },
+    { name: 'J-5', pratique: 58, modeJeu: 30, modeApprentissage: 28 },
+    { name: 'J-4', pratique: 47, modeJeu: 20, modeApprentissage: 27 },
+    { name: 'J-3', pratique: 53, modeJeu: 26, modeApprentissage: 27 },
+    { name: 'J-2', pratique: 61, modeJeu: 32, modeApprentissage: 29 },
+    { name: 'J-1', pratique: 44, modeJeu: 19, modeApprentissage: 25 },
+    { name: "Aujourd'hui", pratique: 72, modeJeu: 38, modeApprentissage: 34 },
+  ];
+
+  // Calculs des totaux pour la première carte
+  const practiceData = getPracticeData();
+  const totalPratique = practiceData.reduce(
+    (sum, item) => sum + item.pratique,
+    0
+  );
+  const totalModeJeu = practiceData.reduce(
+    (sum, item) => sum + item.modeJeu,
+    0
+  );
+  const totalModeApprentissage = practiceData.reduce(
+    (sum, item) => sum + item.modeApprentissage,
+    0
+  );
+
+  // Calculs des moyennes basés sur les données filtrées
+  const avgPrecisionDroite = Math.round(
+    getPrecisionData().reduce((sum, item) => sum + item.droite, 0) /
+      getPrecisionData().length
+  );
+  const avgPrecisionGauche = Math.round(
+    getPrecisionData().reduce((sum, item) => sum + item.gauche, 0) /
+      getPrecisionData().length
+  );
+  const avgPrecisionDeux = Math.round(
+    getPrecisionData().reduce((sum, item) => sum + item.deux, 0) /
+      getPrecisionData().length
+  );
+
+  const avgPerformanceDroite = Math.round(
+    getPerformanceData().reduce((sum, item) => sum + item.droite, 0) /
+      getPerformanceData().length
+  );
+  const avgPerformanceGauche = Math.round(
+    getPerformanceData().reduce((sum, item) => sum + item.gauche, 0) /
+      getPerformanceData().length
+  );
+  const avgPerformanceDeux = Math.round(
+    getPerformanceData().reduce((sum, item) => sum + item.deux, 0) /
+      getPerformanceData().length
+  );
+
+  const avgScore = Math.round(
+    getScoreData().reduce((sum, item) => sum + item.score, 0) /
+      getScoreData().length
+  );
+  const avgCombo = Math.round(
+    getScoreData().reduce((sum, item) => sum + item.combo, 0) /
+      getScoreData().length
+  );
+  const avgMulti = Number(
+    (
+      getScoreData().reduce((sum, item) => sum + item.multi, 0) /
+      getScoreData().length
+    ).toFixed(2)
+  );
+
   return (
     <div className={styles.container}>
       {/* En-tête du morceau */}
@@ -970,21 +1233,65 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
       <div className={styles.tabContent}>
         <div className="grid grid-cols-1 pb-4 md:grid-cols-3 lg:grid-cols-6 gap-4 auto-rows-auto">
           {/* Carte principale avec graphique */}
-          <div className="bg-white dark:bg-slate-800 shadow-md rounded-2xl overflow-hidden col-span-1 md:col-span-2 lg:col-span-3 row-span-2 border border-slate-200 dark:border-slate-700">
-            <div className="p-6 h-full flex flex-col">
+          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 col-span-1 md:col-span-2 lg:col-span-3 row-span-2">
+            <div className="h-full flex flex-col">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                <h2 className="text-xl font-bold text-white">
                   Statistiques de pratique
                 </h2>
-                <span className="bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-xs font-medium px-2.5 py-1 rounded-full">
-                  Cette semaine
-                </span>
+                <div className="flex flex-col items-center mb-2">
+                  <div className="flex items-center justify-center space-x-4 mb-2">
+                    <button
+                      onClick={() =>
+                        setPracticeIndex(Math.max(0, practiceIndex - 1))
+                      }
+                      disabled={practiceIndex === 0}
+                      className="p-2 rounded-full hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <IconChevronLeft size={20} className="text-indigo-400" />
+                    </button>
+                    <select
+                      value={practiceInterval}
+                      onChange={(e) => {
+                        setPracticeInterval(Number(e.target.value));
+                        const newInterval = Number(e.target.value);
+                        setPracticeIndex(
+                          getDefaultIndex(
+                            extendedPracticeData.length,
+                            newInterval
+                          )
+                        );
+                      }}
+                      className="bg-white/10 text-white text-sm rounded px-3 py-2 border border-white/20 min-w-[140px]"
+                    >
+                      {intervalOptions.map((option) => (
+                        <option
+                          key={option.value}
+                          value={option.value}
+                          className="bg-slate-800"
+                        >
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={() => setPracticeIndex(practiceIndex + 1)}
+                      disabled={
+                        (practiceIndex + 1) * practiceInterval >=
+                        extendedPracticeData.length
+                      }
+                      className="p-2 rounded-full hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <IconChevronRight size={20} className="text-indigo-400" />
+                    </button>
+                  </div>
+                </div>
               </div>
 
               <div className="flex-grow">
-                <ResponsiveContainer width="100%" height={200}>
+                <ResponsiveContainer width="100%" height={250}>
                   <LineChart
-                    data={practiceData}
+                    data={getPracticeData()}
                     margin={{ top: 10, right: 30, left: -20, bottom: 0 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
@@ -1011,11 +1318,11 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
                       }}
                       formatter={(value, name) => {
                         if (name === 'pratique')
-                          return [`${value} min`, 'Temps de pratique'];
-                        if (name === 'ecoute')
-                          return [`${value} min`, "Temps d'écoute"];
-                        if (name === 'theorie')
-                          return [`${value} min`, 'Temps de théorie'];
+                          return [`${value} min`, 'Temps de pratique total'];
+                        if (name === 'modeJeu')
+                          return [`${value} min`, 'Mode jeu'];
+                        if (name === 'modeApprentissage')
+                          return [`${value} min`, 'Mode apprentissage'];
                         return [`${value} min`, name];
                       }}
                     />
@@ -1037,25 +1344,10 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
                     {/* Ligne 2 - Temps d'écoute */}
                     <Line
                       type="monotone"
-                      dataKey="ecoute"
-                      stroke="#10b981"
-                      strokeWidth={2}
-                      strokeDasharray="5 5"
-                      dot={{
-                        r: 3,
-                        fill: '#10b981',
-                        strokeWidth: 0,
-                      }}
-                      activeDot={{ r: 5, fill: '#34d399', strokeWidth: 0 }}
-                    />
-
-                    {/* Ligne 3 - Temps de théorie */}
-                    <Line
-                      type="monotone"
-                      dataKey="theorie"
+                      dataKey="modeJeu"
                       stroke="#f59e0b"
                       strokeWidth={2}
-                      strokeDasharray="10 5"
+                      strokeDasharray="5 5"
                       dot={{
                         r: 3,
                         fill: '#f59e0b',
@@ -1063,60 +1355,75 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
                       }}
                       activeDot={{ r: 5, fill: '#fbbf24', strokeWidth: 0 }}
                     />
+
+                    {/* Ligne 3 - Temps de théorie */}
+                    <Line
+                      type="monotone"
+                      dataKey="modeApprentissage"
+                      stroke="#10b981"
+                      strokeWidth={2}
+                      strokeDasharray="10 5"
+                      dot={{
+                        r: 3,
+                        fill: '#10b981',
+                        strokeWidth: 0,
+                      }}
+                      activeDot={{ r: 5, fill: '#34d399', strokeWidth: 0 }}
+                    />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
 
-              <Separator.Root className="h-px bg-slate-200 dark:bg-slate-700 my-4" />
+              <Separator.Root className="h-px bg-slate-500 dark:bg-slate-800 my-4" />
 
               {/* Légende des métriques */}
               <div className="flex items-center justify-between flex-wrap gap-4 mb-4">
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center">
-                    <div className="w-4 h-0.5 bg-indigo-500 mr-2"></div>
-                    <span className="text-xs text-slate-600 dark:text-slate-400">
+                    <div className="w-4 h-2 bg-indigo-500 mr-2 rounded"></div>
+                    <span className="text-xs text-slate-400 dark:text-slate-200">
                       Pratique
                     </span>
                   </div>
                   <div className="flex items-center">
-                    <div className="w-4 h-0.5 bg-green-500 border-dashed border-t mr-2"></div>
-                    <span className="text-xs text-slate-600 dark:text-slate-400">
-                      Écoute
+                    <div className="w-4 h-2 bg-amber-500 mr-2 rounded"></div>
+                    <span className="text-xs text-slate-400 dark:text-slate-200">
+                      Mode jeu
                     </span>
                   </div>
                   <div className="flex items-center">
-                    <div className="w-4 h-0.5 bg-amber-500 border-dashed border-t mr-2"></div>
-                    <span className="text-xs text-slate-600 dark:text-slate-400">
-                      Théorie
+                    <div className="w-4 h-2 bg-green-500 mr-2 rounded"></div>
+                    <span className="text-xs text-slate-400 dark:text-slate-200">
+                      Mode apprentissage
                     </span>
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">
+              <div className="flex items-center justify-between px-8">
+                <div className="flex flex-col items-center">
+                  <span className="text-xs text-slate-300 dark:text-slate-100">
                     Pratique totale
-                  </p>
-                  <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-                    4h 15min
-                  </p>
+                  </span>
+                  <span className="text-xl font-bold text-indigo-600 dark:text-indigo-400">
+                    {formatDuration(totalPratique, true)}
+                  </span>
                 </div>
-                <div>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">
-                    Écoute totale
-                  </p>
-                  <p className="text-xl font-bold text-green-600 dark:text-green-400">
-                    2h 10min
-                  </p>
+                <div className="flex flex-col items-center">
+                  <span className="text-xs text-slate-300 dark:text-slate-100">
+                    Mode jeu
+                  </span>
+                  <span className="text-xl font-bold text-amber-500 dark:text-amber-400">
+                    {formatDuration(totalModeJeu, true)}
+                  </span>
                 </div>
-                <div>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">
-                    Théorie totale
-                  </p>
-                  <p className="text-xl font-bold text-amber-600 dark:text-amber-400">
-                    1h 35min
-                  </p>
+                <div className="flex flex-col items-center">
+                  <span className="text-xs text-slate-300 dark:text-slate-100">
+                    Mode apprentissage
+                  </span>
+                  <span className="text-xl font-bold text-green-500 dark:text-green-400">
+                    {formatDuration(totalModeApprentissage, true)}
+                  </span>
                 </div>
               </div>
             </div>
@@ -1125,562 +1432,1062 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
           {/* Tuiles d'informations à droite */}
 
           {/* Score Record */}
-          <div className="bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 shadow-md rounded-xl p-4 border border-yellow-200 dark:border-yellow-800/30 col-span-1">
+          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10 col-span-1">
             <div className="flex items-center justify-between mb-2">
               <IconTrophy
                 size={20}
                 className="text-yellow-600 dark:text-yellow-400"
               />
-              <span className="text-xs bg-yellow-200 dark:bg-yellow-800/50 text-yellow-800 dark:text-yellow-200 px-2 py-1 rounded-full font-medium">
+              <span className="text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 px-2 py-1 rounded-full font-medium">
                 Record
               </span>
             </div>
-            <div className="text-2xl font-bold text-yellow-900 dark:text-yellow-100 mb-1">
-              8,750
-            </div>
-            <div className="text-sm text-yellow-700 dark:text-yellow-300">
+            <div className="text-2xl font-bold text-white mb-1">8,750</div>
+            <div className="text-sm text-slate-300 dark:text-slate-100">
               Meilleur score
             </div>
-            <div className="text-xs text-yellow-600 dark:text-yellow-400 mt-1">
+            <div className="text-xs text-yellow-500 dark:text-yellow-400 mt-1">
               +12% ce mois
             </div>
           </div>
 
           {/* Précision Moyenne */}
-          <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 shadow-md rounded-xl p-4 border border-green-200 dark:border-green-800/30 col-span-1">
+          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10 col-span-1">
             <div className="flex items-center justify-between mb-2">
               <IconTarget
                 size={20}
                 className="text-green-600 dark:text-green-400"
               />
-              <span className="text-xs bg-green-200 dark:bg-green-800/50 text-green-800 dark:text-green-200 px-2 py-1 rounded-full font-medium">
+              <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-1 rounded-full font-medium">
                 Précision
               </span>
             </div>
-            <div className="text-2xl font-bold text-green-900 dark:text-green-100 mb-1">
-              87%
-            </div>
-            <div className="text-sm text-green-700 dark:text-green-300">
+            <div className="text-2xl font-bold text-white mb-1">87%</div>
+            <div className="text-sm text-slate-300 dark:text-slate-100">
               Précision moyenne
             </div>
-            <div className="text-xs text-green-600 dark:text-green-400 mt-1">
+            <div className="text-xs text-green-500 dark:text-green-400 mt-1">
               +5% semaine
             </div>
           </div>
 
           {/* Sessions Totales */}
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 shadow-md rounded-xl p-4 border border-blue-200 dark:border-blue-800/30 col-span-1">
+          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10 col-span-1">
             <div className="flex items-center justify-between mb-2">
               <IconChartBar
                 size={20}
                 className="text-blue-600 dark:text-blue-400"
               />
-              <span className="text-xs bg-blue-200 dark:bg-blue-800/50 text-blue-800 dark:text-blue-200 px-2 py-1 rounded-full font-medium">
+              <span className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-full font-medium">
                 Sessions
               </span>
             </div>
-            <div className="text-2xl font-bold text-blue-900 dark:text-blue-100 mb-1">
-              23
-            </div>
-            <div className="text-sm text-blue-700 dark:text-blue-300">
+            <div className="text-2xl font-bold text-white mb-1">23</div>
+            <div className="text-sm text-slate-300 dark:text-slate-100">
               Sessions jouées
             </div>
-            <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+            <div className="text-xs text-blue-500 dark:text-blue-400 mt-1">
               Cette chanson
             </div>
           </div>
 
           {/* Temps de Pratique */}
-          <div className="bg-gradient-to-br from-purple-50 to-violet-50 dark:from-purple-900/20 dark:to-violet-900/20 shadow-md rounded-xl p-4 border border-purple-200 dark:border-purple-800/30 col-span-1">
+          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10 col-span-1">
             <div className="flex items-center justify-between mb-2">
               <IconClock
                 size={20}
                 className="text-purple-600 dark:text-purple-400"
               />
-              <span className="text-xs bg-purple-200 dark:bg-purple-800/50 text-purple-800 dark:text-purple-200 px-2 py-1 rounded-full font-medium">
+              <span className="text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-2 py-1 rounded-full font-medium">
                 Temps
               </span>
             </div>
-            <div className="text-2xl font-bold text-purple-900 dark:text-purple-100 mb-1">
-              4h 5m
-            </div>
-            <div className="text-sm text-purple-700 dark:text-purple-300">
+            <div className="text-2xl font-bold text-white mb-1">4h 5m</div>
+            <div className="text-sm text-slate-300 dark:text-slate-100">
               Temps total
             </div>
-            <div className="text-xs text-purple-600 dark:text-purple-400 mt-1">
+            <div className="text-xs text-purple-500 dark:text-purple-400 mt-1">
               Sur cette chanson
             </div>
           </div>
 
           {/* Streak Actuel */}
-          <div className="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 shadow-md rounded-xl p-4 border border-orange-200 dark:border-orange-800/30 col-span-1">
+          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10 col-span-1">
             <div className="flex items-center justify-between mb-2">
               <IconFlame
                 size={20}
                 className="text-orange-600 dark:text-orange-400"
               />
-              <span className="text-xs bg-orange-200 dark:bg-orange-800/50 text-orange-800 dark:text-orange-200 px-2 py-1 rounded-full font-medium">
+              <span className="text-xs bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 px-2 py-1 rounded-full font-medium">
                 Streak
               </span>
             </div>
-            <div className="text-2xl font-bold text-orange-900 dark:text-orange-100 mb-1">
-              5
-            </div>
-            <div className="text-sm text-orange-700 dark:text-orange-300">
+            <div className="text-2xl font-bold text-white mb-1">5</div>
+            <div className="text-sm text-slate-300 dark:text-slate-100">
               Jours consécutifs
             </div>
-            <div className="text-xs text-orange-600 dark:text-orange-400 mt-1">
+            <div className="text-xs text-orange-500 dark:text-orange-400 mt-1">
               Record: 12 jours
             </div>
           </div>
 
           {/* Rang Global */}
-          <div className="bg-gradient-to-br from-pink-50 to-rose-50 dark:from-pink-900/20 dark:to-rose-900/20 shadow-md rounded-xl p-4 border border-pink-200 dark:border-pink-800/30 col-span-1">
+          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10 col-span-1">
             <div className="flex items-center justify-between mb-2">
               <IconMedal
                 size={20}
                 className="text-pink-600 dark:text-pink-400"
               />
-              <span className="text-xs bg-pink-200 dark:bg-pink-800/50 text-pink-800 dark:text-pink-200 px-2 py-1 rounded-full font-medium">
+              <span className="text-xs bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 px-2 py-1 rounded-full font-medium">
                 Rang
               </span>
             </div>
-            <div className="text-2xl font-bold text-pink-900 dark:text-pink-100 mb-1">
-              #12
-            </div>
-            <div className="text-sm text-pink-700 dark:text-pink-300">
+            <div className="text-2xl font-bold text-white mb-1">#12</div>
+            <div className="text-sm text-slate-300 dark:text-slate-100">
               Classement global
             </div>
-            <div className="text-xs text-pink-600 dark:text-pink-400 mt-1">
+            <div className="text-xs text-pink-500 dark:text-pink-400 mt-1">
               Top 5%
             </div>
           </div>
         </div>
-        <SongStatsOverview song={song} />
-        {/* --- MODE APPRENTISSAGE --- */}
+        {/* --- ONGLETS MODES --- */}
         <div className="mt-12">
-          <h2 className="text-2xl font-bold text-indigo-600 dark:text-indigo-300 mb-6 flex items-center">
-            <IconBrain size={28} className="mr-2 text-indigo-400" />
-            Mode Apprentissage
-          </h2>
-
-          {/* Tuiles d'infos */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-            {learningTiles.map((tile, idx) => (
-              <div
-                key={idx}
-                className={`rounded-xl p-4 flex flex-col items-center shadow-sm border border-white/10 ${tile.color}`}
+          {/* Barre d'onglets */}
+          <div className="flex items-center mb-8">
+            <div className="bg-white/5 backdrop-blur-sm rounded-xl p-1 border border-white/10 flex">
+              <button
+                onClick={() => setActiveTab('apprentissage')}
+                className={`flex items-center px-6 py-3 rounded-lg transition-all duration-300 transform hover:scale-105 ${
+                  activeTab === 'apprentissage'
+                    ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 scale-105 shadow-lg shadow-indigo-500/20'
+                    : 'text-slate-400 hover:text-slate-300 hover:bg-white/10 hover:shadow-md'
+                }`}
               >
-                <div className="mb-2">{tile.icon}</div>
-                <div className="text-2xl font-bold text-slate-900 dark:text-white">
-                  {tile.value}
+                <IconBrain size={20} className="mr-2" />
+                Mode Apprentissage
+              </button>
+              <button
+                onClick={() => setActiveTab('jeu')}
+                className={`flex items-center px-6 py-3 rounded-lg transition-all duration-300 transform hover:scale-105 ${
+                  activeTab === 'jeu'
+                    ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30 scale-105 shadow-lg shadow-orange-500/20'
+                    : 'text-slate-400 hover:text-slate-300 hover:bg-white/10 hover:shadow-md'
+                }`}
+              >
+                <IconChartBar size={20} className="mr-2" />
+                Mode Jeu
+              </button>
+            </div>
+          </div>
+
+          {/* Contenu conditionnel */}
+          {activeTab === 'apprentissage' && (
+            <div className="animate-in fade-in slide-in-from-right-8 duration-500">
+              {/* Timeline Apprentissage */}
+              <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 mb-8">
+                <h3 className="text-lg font-semibold text-white flex items-center mb-4">
+                  <IconTimeline size={20} className="mr-2 text-yellow-400" />
+                  Timeline des Records (Apprentissage)
+                </h3>
+                <RecordsTimeline records={learningRecords} />
+              </div>
+
+              {/* Layout créatif - Graphiques et tuiles */}
+              <div className="grid grid-cols-12 gap-6 mb-8">
+                {/* Tuiles compactes à gauche */}
+                <div className="col-span-12 lg:col-span-5">
+                  <div className="grid grid-cols-2 gap-4 h-full">
+                    {learningTiles.map((tile, idx) => (
+                      <div
+                        key={idx}
+                        className="bg-white/5 backdrop-blur-sm rounded-xl p-4 flex flex-col items-center justify-center border border-white/10 min-h-[120px]"
+                      >
+                        <div className="mb-2">{tile.icon}</div>
+                        <div className="text-xl font-bold text-white">
+                          {tile.value}
+                        </div>
+                        <div className="text-xs text-slate-300 dark:text-slate-100 mt-1 text-center">
+                          {tile.label}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className="text-xs text-slate-500 dark:text-slate-300 mt-1">
-                  {tile.label}
+
+                {/* Graphique Précision à droite */}
+                <div className="col-span-12 lg:col-span-7">
+                  <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 h-full">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-white flex items-center">
+                        <IconTarget size={20} className="mr-2 text-green-400" />
+                        Précision par session
+                      </h3>
+                      <div className="flex flex-col items-center mb-2">
+                        <div className="flex items-center justify-center space-x-4 mb-2">
+                          <button
+                            onClick={() =>
+                              setPrecisionIndex(Math.max(0, precisionIndex - 1))
+                            }
+                            disabled={precisionIndex === 0}
+                            className="p-2 rounded-full hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <IconChevronLeft
+                              size={20}
+                              className="text-green-400"
+                            />
+                          </button>
+                          <select
+                            value={precisionInterval}
+                            onChange={(e) => {
+                              setPrecisionInterval(Number(e.target.value));
+                              const newInterval = Number(e.target.value);
+                              setPrecisionIndex(
+                                getDefaultIndex(
+                                  extendedLearningPrecisionData.length,
+                                  newInterval
+                                )
+                              );
+                            }}
+                            className="bg-white/10 text-white text-sm rounded px-3 py-2 border border-white/20 min-w-[140px]"
+                          >
+                            {intervalOptions.map((option) => (
+                              <option
+                                key={option.value}
+                                value={option.value}
+                                className="bg-slate-800"
+                              >
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            onClick={() =>
+                              setPrecisionIndex(precisionIndex + 1)
+                            }
+                            disabled={
+                              (precisionIndex + 1) * precisionInterval >=
+                              extendedLearningPrecisionData.length
+                            }
+                            className="p-2 rounded-full hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <IconChevronRight
+                              size={20}
+                              className="text-green-400"
+                            />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <ResponsiveContainer width="100%" height={250}>
+                      <LineChart
+                        data={getPrecisionData()}
+                        margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+                        <XAxis
+                          dataKey="session"
+                          tick={{ fontSize: 12, fill: '#94a3b8' }}
+                        />
+                        <YAxis
+                          domain={[60, 100]}
+                          tick={{ fontSize: 12, fill: '#94a3b8' }}
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: '#1e293b',
+                            border: 'none',
+                            borderRadius: '8px',
+                            fontSize: '12px',
+                          }}
+                          itemStyle={{ color: '#e2e8f0' }}
+                          labelStyle={{
+                            color: '#e2e8f0',
+                            fontWeight: 'bold',
+                            marginBottom: '4px',
+                          }}
+                          formatter={(value, name) => {
+                            if (name === 'droite')
+                              return [`${value}%`, 'Main droite'];
+                            if (name === 'gauche')
+                              return [`${value}%`, 'Main gauche'];
+                            if (name === 'deux')
+                              return [`${value}%`, 'Deux mains'];
+                            return [value, name];
+                          }}
+                        />
+
+                        <Line
+                          type="monotone"
+                          dataKey="droite"
+                          stroke="#6366f1"
+                          strokeWidth={3}
+                          dot={{ r: 4, fill: '#6366f1', strokeWidth: 0 }}
+                          activeDot={{ r: 6, fill: '#818cf8' }}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="gauche"
+                          stroke="#10b981"
+                          strokeWidth={2}
+                          strokeDasharray="5 5"
+                          dot={{ r: 3, fill: '#10b981', strokeWidth: 0 }}
+                          activeDot={{ r: 5, fill: '#34d399' }}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="deux"
+                          stroke="#f59e0b"
+                          strokeWidth={2}
+                          strokeDasharray="10 5"
+                          dot={{ r: 3, fill: '#f59e0b', strokeWidth: 0 }}
+                          activeDot={{ r: 5, fill: '#fbbf24' }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                    <Separator.Root className="h-px bg-slate-500 dark:bg-slate-800 my-4" />
+                    <div className="flex items-center justify-between flex-wrap gap-4 mt-4 mb-2">
+                      <div className="flex items-center space-x-4">
+                        <div className="flex items-center">
+                          <div className="w-4 h-2 bg-indigo-500 mr-2 rounded"></div>
+                          <span className="text-xs text-slate-400 dark:text-slate-200">
+                            Main droite
+                          </span>
+                        </div>
+                        <div className="flex items-center">
+                          <div className="w-4 h-2 bg-green-500 border-dashed border-t mr-2 rounded"></div>
+                          <span className="text-xs text-slate-400 dark:text-slate-200">
+                            Main gauche
+                          </span>
+                        </div>
+                        <div className="flex items-center">
+                          <div className="w-4 h-2 bg-amber-500 border-dashed border-t mr-2 rounded"></div>
+                          <span className="text-xs text-slate-400 dark:text-slate-200">
+                            Deux mains
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-6">
+                      <p className="text-base text-slate-300 dark:text-slate-100 mb-3">
+                        Précisions moyennes
+                      </p>
+                      <div className="flex items-center justify-between px-8">
+                        <div className="flex flex-col items-center">
+                          <span className="text-xs text-slate-300 dark:text-slate-100">
+                            Deux mains
+                          </span>
+                          <span className="text-xl font-bold text-amber-500 dark:text-amber-400">
+                            {avgPrecisionDeux}%
+                          </span>
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <span className="text-xs text-slate-300 dark:text-slate-100">
+                            Main droite
+                          </span>
+                          <span className="text-xl font-bold text-indigo-600 dark:text-indigo-400">
+                            {avgPrecisionDroite}%
+                          </span>
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <span className="text-xs text-slate-300 dark:text-slate-100">
+                            Main gauche
+                          </span>
+                          <span className="text-xl font-bold text-green-500 dark:text-green-400">
+                            {avgPrecisionGauche}%
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-            ))}
-          </div>
 
-          {/* Graphique Précision */}
-          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 mb-8">
-            <h3 className="text-lg font-semibold text-white flex items-center mb-4">
-              <IconTarget size={20} className="mr-2 text-green-400" />
-              Précision par session
-            </h3>
-            <ResponsiveContainer width="100%" height={240}>
-              <LineChart
-                data={learningPrecisionData}
-                margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                <XAxis
-                  dataKey="session"
-                  tick={{ fontSize: 12, fill: '#94a3b8' }}
-                />
-                <YAxis
-                  domain={[60, 100]}
-                  tick={{ fontSize: 12, fill: '#94a3b8' }}
-                />
-                <Tooltip
-                  formatter={(value, name) => [
-                    `${value}%`,
-                    name === 'droite'
-                      ? 'Main droite'
-                      : name === 'gauche'
-                      ? 'Main gauche'
-                      : 'Deux mains',
-                  ]}
-                />
-                <Legend
-                  formatter={(v) =>
-                    v === 'droite'
-                      ? 'Main droite'
-                      : v === 'gauche'
-                      ? 'Main gauche'
-                      : 'Deux mains'
-                  }
-                />
-                <Line
-                  type="monotone"
-                  dataKey="droite"
-                  stroke="#6366f1"
-                  strokeWidth={3}
-                  dot={{ r: 4, fill: '#6366f1' }}
-                  activeDot={{ r: 6, fill: '#818cf8' }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="gauche"
-                  stroke="#10b981"
-                  strokeWidth={2}
-                  strokeDasharray="5 5"
-                  dot={{ r: 3, fill: '#10b981' }}
-                  activeDot={{ r: 5, fill: '#34d399' }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="deux"
-                  stroke="#f59e0b"
-                  strokeWidth={2}
-                  strokeDasharray="10 5"
-                  dot={{ r: 3, fill: '#f59e0b' }}
-                  activeDot={{ r: 5, fill: '#fbbf24' }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+              {/* Layout inversé pour Performance */}
+              <div className="grid grid-cols-12 gap-6 mb-8">
+                {/* Graphique Performance à gauche */}
+                <div className="col-span-12 lg:col-span-7">
+                  <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 h-full">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-white flex items-center">
+                        <IconStar size={20} className="mr-2 text-pink-400" />
+                        Performance par session
+                      </h3>
+                      <div className="flex flex-col items-center mb-2">
+                        <div className="flex items-center justify-center space-x-4 mb-2">
+                          <button
+                            onClick={() =>
+                              setPerformanceIndex(
+                                Math.max(0, performanceIndex - 1)
+                              )
+                            }
+                            disabled={performanceIndex === 0}
+                            className="p-2 rounded-full hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <IconChevronLeft
+                              size={20}
+                              className="text-pink-400"
+                            />
+                          </button>
+                          <select
+                            value={performanceInterval}
+                            onChange={(e) => {
+                              setPerformanceInterval(Number(e.target.value));
+                              const newInterval = Number(e.target.value);
+                              setPerformanceIndex(
+                                getDefaultIndex(
+                                  extendedLearningPerformanceData.length,
+                                  newInterval
+                                )
+                              );
+                            }}
+                            className="bg-white/10 text-white text-sm rounded px-3 py-2 border border-white/20 min-w-[140px]"
+                          >
+                            {intervalOptions.map((option) => (
+                              <option
+                                key={option.value}
+                                value={option.value}
+                                className="bg-slate-800"
+                              >
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            onClick={() =>
+                              setPerformanceIndex(performanceIndex + 1)
+                            }
+                            disabled={
+                              (performanceIndex + 1) * performanceInterval >=
+                              extendedLearningPerformanceData.length
+                            }
+                            className="p-2 rounded-full hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <IconChevronRight
+                              size={20}
+                              className="text-pink-400"
+                            />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <ResponsiveContainer width="100%" height={250}>
+                      <LineChart
+                        data={getPerformanceData()}
+                        margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+                        <XAxis
+                          dataKey="session"
+                          tick={{ fontSize: 12, fill: '#94a3b8' }}
+                        />
+                        <YAxis
+                          domain={[60, 100]}
+                          tick={{ fontSize: 12, fill: '#94a3b8' }}
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: '#1e293b',
+                            border: 'none',
+                            borderRadius: '8px',
+                            fontSize: '12px',
+                          }}
+                          itemStyle={{ color: '#e2e8f0' }}
+                          labelStyle={{
+                            color: '#e2e8f0',
+                            fontWeight: 'bold',
+                            marginBottom: '4px',
+                          }}
+                          formatter={(value, name) => {
+                            if (name === 'droite')
+                              return [`${value}%`, 'Main droite'];
+                            if (name === 'gauche')
+                              return [`${value}%`, 'Main gauche'];
+                            if (name === 'deux')
+                              return [`${value}%`, 'Deux mains'];
+                            return [value, name];
+                          }}
+                        />
 
-          {/* Graphique Performance */}
-          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 mb-8">
-            <h3 className="text-lg font-semibold text-white flex items-center mb-4">
-              <IconStar size={20} className="mr-2 text-pink-400" />
-              Performance par session
-            </h3>
-            <ResponsiveContainer width="100%" height={240}>
-              <LineChart
-                data={learningPerformanceData}
-                margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                <XAxis
-                  dataKey="session"
-                  tick={{ fontSize: 12, fill: '#94a3b8' }}
-                />
-                <YAxis
-                  domain={[60, 100]}
-                  tick={{ fontSize: 12, fill: '#94a3b8' }}
-                />
-                <Tooltip
-                  formatter={(value, name) => [
-                    `${value}%`,
-                    name === 'droite'
-                      ? 'Main droite'
-                      : name === 'gauche'
-                      ? 'Main gauche'
-                      : 'Deux mains',
-                  ]}
-                />
-                <Legend
-                  formatter={(v) =>
-                    v === 'droite'
-                      ? 'Main droite'
-                      : v === 'gauche'
-                      ? 'Main gauche'
-                      : 'Deux mains'
-                  }
-                />
-                <Line
-                  type="monotone"
-                  dataKey="droite"
-                  stroke="#6366f1"
-                  strokeWidth={3}
-                  dot={{ r: 4, fill: '#6366f1' }}
-                  activeDot={{ r: 6, fill: '#818cf8' }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="gauche"
-                  stroke="#10b981"
-                  strokeWidth={2}
-                  strokeDasharray="5 5"
-                  dot={{ r: 3, fill: '#10b981' }}
-                  activeDot={{ r: 5, fill: '#34d399' }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="deux"
-                  stroke="#f59e0b"
-                  strokeWidth={2}
-                  strokeDasharray="10 5"
-                  dot={{ r: 3, fill: '#f59e0b' }}
-                  activeDot={{ r: 5, fill: '#fbbf24' }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+                        <Line
+                          type="monotone"
+                          dataKey="droite"
+                          stroke="#6366f1"
+                          strokeWidth={3}
+                          dot={{ r: 4, fill: '#6366f1', strokeWidth: 0 }}
+                          activeDot={{ r: 6, fill: '#818cf8' }}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="gauche"
+                          stroke="#10b981"
+                          strokeWidth={2}
+                          strokeDasharray="5 5"
+                          dot={{ r: 3, fill: '#10b981', strokeWidth: 0 }}
+                          activeDot={{ r: 5, fill: '#34d399' }}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="deux"
+                          stroke="#f59e0b"
+                          strokeWidth={2}
+                          strokeDasharray="10 5"
+                          dot={{ r: 3, fill: '#f59e0b', strokeWidth: 0 }}
+                          activeDot={{ r: 5, fill: '#fbbf24' }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                    <Separator.Root className="h-px bg-slate-500 dark:bg-slate-800 my-4" />
+                    <div className="flex items-center justify-between flex-wrap gap-4 mt-4 mb-2">
+                      <div className="flex items-center space-x-4">
+                        <div className="flex items-center">
+                          <div className="w-4 h-2 bg-indigo-500 mr-2 rounded"></div>
+                          <span className="text-xs text-slate-400 dark:text-slate-200">
+                            Main droite
+                          </span>
+                        </div>
+                        <div className="flex items-center">
+                          <div className="w-4 h-2 bg-green-500 border-dashed border-t mr-2 rounded"></div>
+                          <span className="text-xs text-slate-400 dark:text-slate-200">
+                            Main gauche
+                          </span>
+                        </div>
+                        <div className="flex items-center">
+                          <div className="w-4 h-2 bg-amber-500 border-dashed border-t mr-2 rounded"></div>
+                          <span className="text-xs text-slate-400 dark:text-slate-200">
+                            Deux mains
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-6">
+                      <p className="text-base text-slate-300 dark:text-slate-100 mb-3">
+                        Performances moyennes
+                      </p>
+                      <div className="flex items-center justify-between px-8">
+                        <div className="flex flex-col items-center">
+                          <span className="text-xs text-slate-300 dark:text-slate-100">
+                            Deux mains
+                          </span>
+                          <span className="text-xl font-bold text-amber-500 dark:text-amber-400">
+                            {avgPerformanceDeux}%
+                          </span>
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <span className="text-xs text-slate-300 dark:text-slate-100">
+                            Main droite
+                          </span>
+                          <span className="text-xl font-bold text-indigo-600 dark:text-indigo-400">
+                            {avgPerformanceDroite}%
+                          </span>
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <span className="text-xs text-slate-300 dark:text-slate-100">
+                            Main gauche
+                          </span>
+                          <span className="text-xl font-bold text-green-500 dark:text-green-400">
+                            {avgPerformanceGauche}%
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
-          {/* Graphique Précision & Performance moyennes par mois */}
-          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 mb-8">
-            <h3 className="text-lg font-semibold text-white flex items-center mb-4">
-              <IconChartBar size={20} className="mr-2 text-indigo-400" />
-              Précision & Performance moyennes par mois
-            </h3>
-            <div className="flex flex-col items-center mb-2">
-              <div className="flex items-center justify-center space-x-4 mb-2">
-                <button
-                  className="p-2 rounded-full hover:bg-white/10 transition-colors"
-                  onClick={() => setLearningBarIndex((i) => Math.max(0, i - 1))}
-                  aria-label="6 mois précédents"
-                >
-                  <IconChevronLeft size={24} className="text-indigo-400" />
-                </button>
-                <span className="text-base font-medium text-white/90">
-                  {learningBarIntervals[learningBarIndex].label}
-                </span>
-                <button
-                  className="p-2 rounded-full hover:bg-white/10 transition-colors"
-                  onClick={() =>
-                    setLearningBarIndex((i) =>
-                      Math.min(learningBarIntervals.length - 1, i + 1)
-                    )
-                  }
-                  aria-label="6 mois suivants"
-                >
-                  <IconChevronRight size={24} className="text-indigo-400" />
-                </button>
+                {/* Graphique en barres à droite */}
+                <div className="col-span-12 lg:col-span-5">
+                  <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 h-full">
+                    <h3 className="text-lg font-semibold text-white flex items-center mb-4">
+                      <IconChartBar
+                        size={20}
+                        className="mr-2 text-indigo-400"
+                      />
+                      Précision & Performance par mois
+                    </h3>
+                    <div className="flex flex-col items-center mb-2">
+                      <div className="flex items-center justify-center space-x-4 mb-2">
+                        <button
+                          className="p-2 rounded-full hover:bg-white/10 transition-colors"
+                          onClick={() =>
+                            setLearningBarIndex((i) => Math.max(0, i - 1))
+                          }
+                          aria-label="6 mois précédents"
+                        >
+                          <IconChevronLeft
+                            size={20}
+                            className="text-indigo-400"
+                          />
+                        </button>
+                        <span className="text-sm font-medium text-white/90">
+                          {learningBarIntervals[learningBarIndex].label}
+                        </span>
+                        <button
+                          className="p-2 rounded-full hover:bg-white/10 transition-colors"
+                          onClick={() =>
+                            setLearningBarIndex((i) =>
+                              Math.min(learningBarIntervals.length - 1, i + 1)
+                            )
+                          }
+                          aria-label="6 mois suivants"
+                        >
+                          <IconChevronRight
+                            size={20}
+                            className="text-indigo-400"
+                          />
+                        </button>
+                      </div>
+                    </div>
+                    <ResponsiveContainer width="100%" height={280}>
+                      <BarChart
+                        data={learningBarIntervals[learningBarIndex].data}
+                        margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+                        <XAxis
+                          dataKey="mois"
+                          tick={{ fontSize: 12, fill: '#94a3b8' }}
+                        />
+                        <YAxis
+                          domain={[70, 100]}
+                          tick={{ fontSize: 12, fill: '#94a3b8' }}
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: '#1e293b',
+                            border: 'none',
+                            borderRadius: '8px',
+                            fontSize: '12px',
+                          }}
+                          itemStyle={{ color: '#e2e8f0' }}
+                          labelStyle={{
+                            color: '#e2e8f0',
+                            fontWeight: 'bold',
+                            marginBottom: '4px',
+                          }}
+                          formatter={(value, name) => {
+                            if (name === 'precision')
+                              return [`${value}%`, 'Précision'];
+                            if (name === 'performance')
+                              return [`${value}%`, 'Performance'];
+                            return [value, name];
+                          }}
+                        />
+
+                        <Bar
+                          dataKey="precision"
+                          fill="#6366f1"
+                          radius={[4, 4, 0, 0]}
+                        />
+                        <Bar
+                          dataKey="performance"
+                          fill="#f59e0b"
+                          radius={[4, 4, 0, 0]}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                    <Separator.Root className="h-px bg-slate-500 dark:bg-slate-800 my-4" />
+                    <div className="flex items-center justify-between flex-wrap gap-4 mt-2 mb-2">
+                      <div className="flex items-center space-x-4">
+                        <div className="flex items-center">
+                          <div className="w-3 h-3 bg-indigo-500 rounded-full mr-2"></div>
+                          <span className="text-xs text-slate-400 dark:text-slate-200">
+                            Précision
+                          </span>
+                        </div>
+                        <div className="flex items-center">
+                          <div className="w-3 h-3 bg-amber-500 rounded-full mr-2"></div>
+                          <span className="text-xs text-slate-400 dark:text-slate-200">
+                            Performance
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-            <ResponsiveContainer width="100%" height={240}>
-              <BarChart
-                data={learningBarIntervals[learningBarIndex].data}
-                margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                <XAxis
-                  dataKey="mois"
-                  tick={{ fontSize: 12, fill: '#94a3b8' }}
-                />
-                <YAxis
-                  domain={[70, 100]}
-                  tick={{ fontSize: 12, fill: '#94a3b8' }}
-                />
-                <Tooltip
-                  formatter={(value, name) => [
-                    `${value}%`,
-                    name === 'precision' ? 'Précision' : 'Performance',
-                  ]}
-                />
-                <Legend
-                  formatter={(v) =>
-                    v === 'precision' ? 'Précision' : 'Performance'
-                  }
-                />
-                <Bar dataKey="precision" fill="#6366f1" radius={[4, 4, 0, 0]} />
-                <Bar
-                  dataKey="performance"
-                  fill="#f59e0b"
-                  radius={[4, 4, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-        {/* --- MODE JEU --- */}
-        <div className="mt-12">
-          <h2 className="text-2xl font-bold text-orange-600 dark:text-orange-300 mb-6 flex items-center">
-            <IconChartBar size={28} className="mr-2 text-orange-400" />
-            Mode Jeu
-          </h2>
+          )}
 
-          {/* Tuiles d'infos */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-            {gameTiles.map((tile, idx) => (
-              <div
-                key={idx}
-                className={`rounded-xl p-4 flex flex-col items-center shadow-sm border border-white/10 ${tile.color}`}
-              >
-                <div className="mb-2">{tile.icon}</div>
-                <div className="text-2xl font-bold text-slate-900 dark:text-white">
-                  {tile.value}
-                </div>
-                <div className="text-xs text-slate-500 dark:text-slate-300 mt-1">
-                  {tile.label}
-                </div>
+          {activeTab === 'jeu' && (
+            <div className="animate-in fade-in slide-in-from-left-8 duration-500">
+              {/* Timeline Jeu */}
+              <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 mb-8">
+                <h3 className="text-lg font-semibold text-white flex items-center mb-4">
+                  <IconTimeline size={20} className="mr-2 text-orange-400" />
+                  Timeline des Records (Jeu)
+                </h3>
+                <RecordsTimeline records={gameRecords} />
               </div>
-            ))}
-          </div>
 
-          {/* Graphique Score par session */}
-          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 mb-8">
-            <h3 className="text-lg font-semibold text-white flex items-center mb-4">
-              <IconTrophy size={20} className="mr-2 text-yellow-400" />
-              Score par session
-            </h3>
-            <ResponsiveContainer width="100%" height={240}>
-              <LineChart
-                data={gameScoreData}
-                margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                <XAxis
-                  dataKey="session"
-                  tick={{ fontSize: 12, fill: '#94a3b8' }}
-                />
-                <YAxis
-                  domain={[6000, 9500]}
-                  tick={{ fontSize: 12, fill: '#94a3b8' }}
-                />
-                <Tooltip
-                  formatter={(value, name) => [
-                    `${value}`,
-                    name === 'droite'
-                      ? 'Main droite'
-                      : name === 'gauche'
-                      ? 'Main gauche'
-                      : 'Deux mains',
-                  ]}
-                />
-                <Legend
-                  formatter={(v) =>
-                    v === 'droite'
-                      ? 'Main droite'
-                      : v === 'gauche'
-                      ? 'Main gauche'
-                      : 'Deux mains'
-                  }
-                />
-                <Line
-                  type="monotone"
-                  dataKey="droite"
-                  stroke="#6366f1"
-                  strokeWidth={3}
-                  dot={{ r: 4, fill: '#6366f1' }}
-                  activeDot={{ r: 6, fill: '#818cf8' }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="gauche"
-                  stroke="#10b981"
-                  strokeWidth={2}
-                  strokeDasharray="5 5"
-                  dot={{ r: 3, fill: '#10b981' }}
-                  activeDot={{ r: 5, fill: '#34d399' }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="deux"
-                  stroke="#f59e0b"
-                  strokeWidth={2}
-                  strokeDasharray="10 5"
-                  dot={{ r: 3, fill: '#f59e0b' }}
-                  activeDot={{ r: 5, fill: '#fbbf24' }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+              {/* Tuiles d'infos en ligne */}
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+                {gameTiles.map((tile, idx) => (
+                  <div
+                    key={idx}
+                    className="bg-white/5 backdrop-blur-sm rounded-xl p-4 flex flex-col items-center justify-center border border-white/10 min-h-[120px]"
+                  >
+                    <div className="mb-2">{tile.icon}</div>
+                    <div className="text-xl font-bold text-white">
+                      {tile.value}
+                    </div>
+                    <div className="text-xs text-slate-300 dark:text-slate-100 mt-1 text-center">
+                      {tile.label}
+                    </div>
+                  </div>
+                ))}
+              </div>
 
-          {/* Graphique Meilleur score, combo max & multiplicateur par mois */}
-          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 mb-8">
-            <h3 className="text-lg font-semibold text-white flex items-center mb-4">
-              <IconChartBar size={20} className="mr-2 text-orange-400" />
-              Meilleur score, combo max & multiplicateur par mois
-            </h3>
-            <div className="flex flex-col items-center mb-2">
-              <div className="flex items-center justify-center space-x-4 mb-2">
-                <button
-                  className="p-2 rounded-full hover:bg-white/10 transition-colors"
-                  onClick={() => setGameBarIndex((i) => Math.max(0, i - 1))}
-                  aria-label="6 mois précédents"
-                >
-                  <IconChevronLeft size={24} className="text-orange-400" />
-                </button>
-                <span className="text-base font-medium text-white/90">
-                  {gameBarIntervals[gameBarIndex].label}
-                </span>
-                <button
-                  className="p-2 rounded-full hover:bg-white/10 transition-colors"
-                  onClick={() =>
-                    setGameBarIndex((i) =>
-                      Math.min(gameBarIntervals.length - 1, i + 1)
-                    )
-                  }
-                  aria-label="6 mois suivants"
-                >
-                  <IconChevronRight size={24} className="text-orange-400" />
-                </button>
+              {/* Graphiques côte à côte */}
+              <div className="grid grid-cols-12 gap-6 mb-8">
+                {/* Graphique Score par session */}
+                <div className="col-span-12 lg:col-span-6">
+                  <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 h-full">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-white flex items-center">
+                        <IconTrophy
+                          size={20}
+                          className="mr-2 text-yellow-400"
+                        />
+                        Score par session
+                      </h3>
+                      <div className="flex flex-col items-center mb-2">
+                        <div className="flex items-center justify-center space-x-4 mb-2">
+                          <button
+                            onClick={() =>
+                              setScoreIndex(Math.max(0, scoreIndex - 1))
+                            }
+                            disabled={scoreIndex === 0}
+                            className="p-2 rounded-full hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <IconChevronLeft
+                              size={20}
+                              className="text-yellow-400"
+                            />
+                          </button>
+                          <select
+                            value={scoreInterval}
+                            onChange={(e) => {
+                              setScoreInterval(Number(e.target.value));
+                              const newInterval = Number(e.target.value);
+                              setScoreIndex(
+                                getDefaultIndex(
+                                  extendedGameScoreLineData.length,
+                                  newInterval
+                                )
+                              );
+                            }}
+                            className="bg-white/10 text-white text-sm rounded px-3 py-2 border border-white/20 min-w-[140px]"
+                          >
+                            {intervalOptions.map((option) => (
+                              <option
+                                key={option.value}
+                                value={option.value}
+                                className="bg-slate-800"
+                              >
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            onClick={() => setScoreIndex(scoreIndex + 1)}
+                            disabled={
+                              (scoreIndex + 1) * scoreInterval >=
+                              extendedGameScoreLineData.length
+                            }
+                            className="p-2 rounded-full hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <IconChevronRight
+                              size={20}
+                              className="text-yellow-400"
+                            />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <ResponsiveContainer width="100%" height={250}>
+                      <LineChart
+                        data={getScoreData()}
+                        margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+                        <XAxis
+                          dataKey="session"
+                          tick={{ fontSize: 12, fill: '#94a3b8' }}
+                        />
+                        {/* Axe principal : score */}
+                        <YAxis
+                          yAxisId="score"
+                          domain={[8000, 10000]}
+                          tick={{ fontSize: 12, fill: '#94a3b8' }}
+                        />
+                        {/* Axe secondaire : combo */}
+                        <YAxis
+                          yAxisId="combo"
+                          orientation="left"
+                          domain={[300, 600]}
+                          tick={{ fontSize: 12, fill: '#f59e0b' }}
+                        />
+                        {/* Axe secondaire : multi */}
+                        <YAxis
+                          yAxisId="multi"
+                          orientation="left"
+                          domain={[3, 5]}
+                          tick={{ fontSize: 12, fill: '#10b981' }}
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: '#1e293b',
+                            border: 'none',
+                            borderRadius: '8px',
+                            fontSize: '12px',
+                          }}
+                          itemStyle={{ color: '#e2e8f0' }}
+                          labelStyle={{
+                            color: '#e2e8f0',
+                            fontWeight: 'bold',
+                            marginBottom: '4px',
+                          }}
+                          formatter={(value, name) => {
+                            if (name === 'score')
+                              return [`${value} points`, 'Score'];
+                            if (name === 'combo')
+                              return [`${value} notes`, 'Combo max'];
+                            if (name === 'multi')
+                              return [`x${value}`, 'Multiplicateur max'];
+                            return [value, name];
+                          }}
+                        />
+                        <Line
+                          yAxisId="score"
+                          type="monotone"
+                          dataKey="score"
+                          stroke="#6366f1"
+                          strokeWidth={3}
+                          dot={{ r: 4, fill: '#6366f1', strokeWidth: 0 }}
+                          activeDot={{ r: 6, fill: '#818cf8' }}
+                        />
+                        <Line
+                          yAxisId="combo"
+                          type="monotone"
+                          dataKey="combo"
+                          stroke="#f59e0b"
+                          strokeWidth={2}
+                          strokeDasharray="10 5"
+                          dot={{ r: 3, fill: '#f59e0b', strokeWidth: 0 }}
+                          activeDot={{ r: 5, fill: '#fbbf24' }}
+                        />
+                        <Line
+                          yAxisId="multi"
+                          type="monotone"
+                          dataKey="multi"
+                          stroke="#10b981"
+                          strokeWidth={2}
+                          strokeDasharray="5 5"
+                          dot={{ r: 3, fill: '#10b981', strokeWidth: 0 }}
+                          activeDot={{ r: 5, fill: '#34d399' }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                    <Separator.Root className="h-px bg-slate-500 dark:bg-slate-800 my-4" />
+                    <div className="flex items-center justify-between flex-wrap gap-4 mt-4 mb-2">
+                      <div className="flex items-center space-x-4">
+                        <div className="flex items-center">
+                          <div className="w-4 h-2 bg-indigo-500 mr-2 rounded"></div>
+                          <span className="text-xs text-slate-400 dark:text-slate-200">
+                            Score
+                          </span>
+                        </div>
+                        <div className="flex items-center">
+                          <div className="w-4 h-2 bg-amber-500 mr-2 rounded"></div>
+                          <span className="text-xs text-slate-400 dark:text-slate-200">
+                            Combo max
+                          </span>
+                        </div>
+                        <div className="flex items-center">
+                          <div className="w-4 h-2 bg-green-500 mr-2 rounded"></div>
+                          <span className="text-xs text-slate-400 dark:text-slate-200">
+                            Multiplicateur max
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-6">
+                      <p className="text-base text-slate-300 dark:text-slate-100 mb-3">
+                        Moyennes sur la période
+                      </p>
+                      <div className="flex items-center justify-between px-8">
+                        <div className="flex flex-col items-center">
+                          <span className="text-xs text-slate-300 dark:text-slate-100">
+                            Score
+                          </span>
+                          <span className="text-xl font-bold text-indigo-600 dark:text-indigo-400">
+                            {avgScore}
+                          </span>
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <span className="text-xs text-slate-300 dark:text-slate-100">
+                            Combo
+                          </span>
+                          <span className="text-xl font-bold text-amber-500 dark:text-amber-400">
+                            {avgCombo}
+                          </span>
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <span className="text-xs text-slate-300 dark:text-slate-100">
+                            Multiplicateur
+                          </span>
+                          <span className="text-xl font-bold text-green-500 dark:text-green-400">
+                            x{avgMulti}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Graphique en barres à droite */}
+                <div className="col-span-12 lg:col-span-6">
+                  <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
+                    <h3 className="text-lg font-semibold text-white flex items-center mb-4">
+                      <IconChartBar
+                        size={20}
+                        className="mr-2 text-orange-400"
+                      />
+                      Score, combo & multiplicateur par mois
+                    </h3>
+                    <div className="flex flex-col items-center mb-2">
+                      <div className="flex items-center justify-center space-x-4 mb-2">
+                        <button
+                          className="p-2 rounded-full hover:bg-white/10 transition-colors"
+                          onClick={() =>
+                            setGameBarIndex((i) => Math.max(0, i - 1))
+                          }
+                          aria-label="6 mois précédents"
+                        >
+                          <IconChevronLeft
+                            size={20}
+                            className="text-orange-400"
+                          />
+                        </button>
+                        <span className="text-sm font-medium text-white/90">
+                          {gameBarIntervals[gameBarIndex].label}
+                        </span>
+                        <button
+                          className="p-2 rounded-full hover:bg-white/10 transition-colors"
+                          onClick={() =>
+                            setGameBarIndex((i) =>
+                              Math.min(gameBarIntervals.length - 1, i + 1)
+                            )
+                          }
+                          aria-label="6 mois suivants"
+                        >
+                          <IconChevronRight
+                            size={20}
+                            className="text-orange-400"
+                          />
+                        </button>
+                      </div>
+                    </div>
+                    <ResponsiveContainer width="100%" height={280}>
+                      <BarChart
+                        data={gameBarIntervals[gameBarIndex].data}
+                        margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+                        <XAxis
+                          dataKey="mois"
+                          tick={{ fontSize: 12, fill: '#94a3b8' }}
+                        />
+                        <YAxis
+                          yAxisId="score"
+                          domain={[8000, 10000]}
+                          tick={{ fontSize: 12, fill: '#94a3b8' }}
+                        />
+                        <YAxis
+                          yAxisId="combo"
+                          orientation="left"
+                          domain={[300, 600]}
+                          tick={{ fontSize: 12, fill: '#f59e0b' }}
+                        />
+                        <YAxis
+                          yAxisId="multi"
+                          orientation="left"
+                          domain={[3, 5]}
+                          tick={{ fontSize: 12, fill: '#10b981' }}
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: '#1e293b',
+                            border: 'none',
+                            borderRadius: '8px',
+                            fontSize: '12px',
+                          }}
+                          itemStyle={{ color: '#e2e8f0' }}
+                          labelStyle={{
+                            color: '#e2e8f0',
+                            fontWeight: 'bold',
+                            marginBottom: '4px',
+                          }}
+                          formatter={(value, name) => {
+                            if (name === 'score')
+                              return [`${value} points`, 'Meilleur score'];
+                            if (name === 'combo')
+                              return [`${value} notes`, 'Combo max'];
+                            if (name === 'multi')
+                              return [`x${value}`, 'Multiplicateur max'];
+                            return [value, name];
+                          }}
+                        />
+
+                        <Bar
+                          yAxisId="score"
+                          dataKey="score"
+                          fill="#6366f1"
+                          radius={[4, 4, 0, 0]}
+                        />
+                        <Bar
+                          yAxisId="combo"
+                          dataKey="combo"
+                          fill="#f59e0b"
+                          radius={[4, 4, 0, 0]}
+                        />
+                        <Bar
+                          yAxisId="multi"
+                          dataKey="multi"
+                          fill="#10b981"
+                          radius={[4, 4, 0, 0]}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                    <Separator.Root className="h-px bg-slate-500 dark:bg-slate-800 my-4" />
+                    <div className="flex items-center justify-between flex-wrap gap-4 mt-2 mb-2">
+                      <div className="flex items-center space-x-4">
+                        <div className="flex items-center">
+                          <div className="w-3 h-3 bg-indigo-500 rounded-full mr-2"></div>
+                          <span className="text-xs text-slate-400 dark:text-slate-200">
+                            Meilleur score
+                          </span>
+                        </div>
+                        <div className="flex items-center">
+                          <div className="w-3 h-3 bg-amber-500 rounded-full mr-2"></div>
+                          <span className="text-xs text-slate-400 dark:text-slate-200">
+                            Combo max
+                          </span>
+                        </div>
+                        <div className="flex items-center">
+                          <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                          <span className="text-xs text-slate-400 dark:text-slate-200">
+                            Multiplicateur max
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-            <ResponsiveContainer width="100%" height={240}>
-              <BarChart
-                data={gameBarIntervals[gameBarIndex].data}
-                margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                <XAxis
-                  dataKey="mois"
-                  tick={{ fontSize: 12, fill: '#94a3b8' }}
-                />
-                <YAxis
-                  yAxisId="score"
-                  domain={[8000, 10000]}
-                  tick={{ fontSize: 12, fill: '#94a3b8' }}
-                />
-                <YAxis
-                  yAxisId="combo"
-                  orientation="left"
-                  domain={[300, 600]}
-                  tick={{ fontSize: 12, fill: '#f59e0b' }}
-                />
-                <YAxis
-                  yAxisId="multi"
-                  orientation="left"
-                  domain={[3, 5]}
-                  tick={{ fontSize: 12, fill: '#10b981' }}
-                />
-                <Tooltip
-                  formatter={(value, name) => [
-                    name === 'score' ? value : name === 'combo' ? value : value,
-                    name === 'score'
-                      ? 'Meilleur score'
-                      : name === 'combo'
-                      ? 'Combo max'
-                      : 'Multiplicateur max',
-                  ]}
-                />
-                <Legend
-                  formatter={(v) =>
-                    v === 'score'
-                      ? 'Meilleur score'
-                      : v === 'combo'
-                      ? 'Combo max'
-                      : 'Multiplicateur max'
-                  }
-                />
-                <Bar
-                  yAxisId="score"
-                  dataKey="score"
-                  fill="#6366f1"
-                  radius={[4, 4, 0, 0]}
-                />
-                <Bar
-                  yAxisId="combo"
-                  dataKey="combo"
-                  fill="#f59e0b"
-                  radius={[4, 4, 0, 0]}
-                />
-                <Bar
-                  yAxisId="multi"
-                  dataKey="multi"
-                  fill="#10b981"
-                  radius={[4, 4, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          )}
         </div>
-        <PerformanceBento />
-        <BentoShadcnExample />
       </div>
     </div>
   );
