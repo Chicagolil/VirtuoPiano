@@ -21,6 +21,8 @@ import {
   IconBadge,
   IconRocket,
   IconStar,
+  IconBrain,
+  IconChevronLeft,
 } from '@tabler/icons-react';
 import {
   LineChart,
@@ -30,6 +32,9 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  Legend,
+  BarChart,
+  Bar,
 } from 'recharts';
 import React from 'react';
 import styles from '../library/Song.module.css';
@@ -98,6 +103,11 @@ const practiceData = [
 // Composant de timeline des records
 const RecordsTimeline = () => {
   const [selectedRecord, setSelectedRecord] = useState<number | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const records = [
     {
@@ -409,7 +419,13 @@ const RecordsTimeline = () => {
 
         {/* Bulles d'icônes */}
         {records.map((record, index) => (
-          <div key={record.id} className="relative z-10">
+          <div
+            key={record.id}
+            className={`relative z-10 ${
+              mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-75'
+            } animate-timeline-bubble`}
+            style={{ transitionDelay: mounted ? `${index * 80}ms` : '0ms' }}
+          >
             {/* Bulle cliquable */}
             <button
               onClick={() =>
@@ -417,7 +433,7 @@ const RecordsTimeline = () => {
                   selectedRecord === record.id ? null : record.id
                 )
               }
-              className={`group relative w-12 h-12 rounded-full border-2 transition-all duration-300 hover:scale-110 hover:shadow-lg ${
+              className={`group relative w-12 h-12 rounded-full border-2 transition-all duration-300 hover:scale-110 hover:shadow-lg cursor-pointer ${
                 selectedRecord === record.id
                   ? 'bg-white shadow-xl'
                   : `bg-gradient-to-br ${getBubbleColor(
@@ -577,128 +593,6 @@ const RecordsTimeline = () => {
   );
 };
 
-// Composant de badges et récompenses
-const BadgeSystem = ({ song }: { song: SongBasicData }) => {
-  const badges = [
-    {
-      id: 'perfectionist',
-      name: 'Perfectionniste',
-      description: '95% de précision atteinte',
-      icon: '🎯',
-      rarity: 'epic',
-      unlocked: true,
-      progress: 95,
-    },
-    {
-      id: 'speed_demon',
-      name: 'Démon de Vitesse',
-      description: `Joué à ${song.tempo + 20} BPM`,
-      icon: '⚡',
-      rarity: 'rare',
-      unlocked: false,
-      progress: 73,
-    },
-    {
-      id: 'combo_master',
-      name: 'Maître du Combo',
-      description: '500+ notes sans erreur',
-      icon: '🔥',
-      rarity: 'legendary',
-      unlocked: true,
-      progress: 100,
-    },
-    {
-      id: 'endurance',
-      name: 'Endurance',
-      description: '1h de pratique continue',
-      icon: '💪',
-      rarity: 'common',
-      unlocked: true,
-      progress: 100,
-    },
-    {
-      id: 'night_owl',
-      name: 'Oiseau de Nuit',
-      description: 'Session après minuit',
-      icon: '🦉',
-      rarity: 'rare',
-      unlocked: false,
-      progress: 0,
-    },
-    {
-      id: 'early_bird',
-      name: 'Lève-tôt',
-      description: 'Session avant 7h',
-      icon: '🌅',
-      rarity: 'rare',
-      unlocked: false,
-      progress: 0,
-    },
-  ];
-
-  const getRarityColor = (rarity: string) => {
-    switch (rarity) {
-      case 'common':
-        return 'from-gray-400 to-gray-600';
-      case 'rare':
-        return 'from-blue-400 to-blue-600';
-      case 'epic':
-        return 'from-purple-400 to-purple-600';
-      case 'legendary':
-        return 'from-yellow-400 to-orange-600';
-      default:
-        return 'from-gray-400 to-gray-600';
-    }
-  };
-
-  return (
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-      {badges.map((badge) => (
-        <div
-          key={badge.id}
-          className={`relative p-4 rounded-xl border transition-all duration-300 ${
-            badge.unlocked
-              ? 'bg-white/10 border-white/20 hover:bg-white/15'
-              : 'bg-white/5 border-white/10 opacity-60'
-          }`}
-        >
-          {badge.unlocked && (
-            <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-              <IconBadge size={12} className="text-white" />
-            </div>
-          )}
-
-          <div className="text-center space-y-2">
-            <div
-              className={`text-2xl p-2 rounded-lg bg-gradient-to-br ${getRarityColor(
-                badge.rarity
-              )} inline-block`}
-            >
-              {badge.icon}
-            </div>
-            <div>
-              <div className="font-medium text-white text-sm">{badge.name}</div>
-              <div className="text-xs text-white/70">{badge.description}</div>
-            </div>
-
-            {!badge.unlocked && badge.progress > 0 && (
-              <div className="space-y-1">
-                <div className="w-full bg-white/10 rounded-full h-1">
-                  <div
-                    className="bg-gradient-to-r from-blue-400 to-purple-400 h-1 rounded-full transition-all duration-1000"
-                    style={{ width: `${badge.progress}%` }}
-                  />
-                </div>
-                <div className="text-xs text-white/50">{badge.progress}%</div>
-              </div>
-            )}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-};
-
 // Composant de carte de statistiques
 const StatCard = ({
   icon,
@@ -747,55 +641,8 @@ const StatCard = ({
 
 // Composant principal des statistiques
 const SongStatsOverview = ({ song }: { song: SongBasicData }) => {
-  const mockStats = {
-    bestScore: 8750,
-    averageAccuracy: 87,
-    totalSessions: 23,
-    totalPracticeTime: 245, // en minutes
-    lastPlayed: '2024-01-15',
-    personalBest: 92,
-    globalRank: 12,
-    streak: 5,
-    completionRate: 78,
-    averageSessionTime: 12, // en minutes
-  };
-
-  const formatTime = (minutes: number) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
-  };
-
   return (
     <div className="space-y-6">
-      {/* Métriques principales */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard
-          icon={<IconTrophy size={20} />}
-          title="Meilleur Score"
-          value={mockStats.bestScore.toLocaleString()}
-          trend="up"
-        />
-        <StatCard
-          icon={<IconTarget size={20} />}
-          title="Précision Moy."
-          value={`${mockStats.averageAccuracy}%`}
-          trend="up"
-        />
-        <StatCard
-          icon={<IconClock size={20} />}
-          title="Temps Total"
-          value={formatTime(mockStats.totalPracticeTime)}
-          subtitle={`${mockStats.totalSessions} sessions`}
-        />
-        <StatCard
-          icon={<IconFlame size={20} />}
-          title="Série Actuelle"
-          value={`${mockStats.streak} jours`}
-          trend="up"
-        />
-      </div>
-
       {/* Timeline des Records */}
       <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
         <h3 className="text-lg font-semibold text-white flex items-center mb-4">
@@ -804,18 +651,139 @@ const SongStatsOverview = ({ song }: { song: SongBasicData }) => {
         </h3>
         <RecordsTimeline />
       </div>
-
-      {/* Système de Badges */}
-      <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
-        <h3 className="text-lg font-semibold text-white flex items-center mb-4">
-          <IconBadge size={20} className="mr-2 text-purple-400" />
-          Badges et Récompenses
-        </h3>
-        <BadgeSystem song={song} />
-      </div>
     </div>
   );
 };
+
+// --- SECTION MODE APPRENTISSAGE ---
+
+const learningTiles = [
+  {
+    label: 'Sessions',
+    value: 18,
+    icon: <IconClock size={20} className="text-blue-500" />,
+    color: 'bg-blue-50 dark:bg-blue-900/20',
+  },
+  {
+    label: 'Précision moyenne',
+    value: '87%',
+    icon: <IconTarget size={20} className="text-green-500" />,
+    color: 'bg-green-50 dark:bg-green-900/20',
+  },
+  {
+    label: 'Performance moyenne',
+    value: '84%',
+    icon: <IconStar size={20} className="text-pink-500" />,
+    color: 'bg-pink-50 dark:bg-pink-900/20',
+  },
+  {
+    label: 'Temps total',
+    value: '5h 20min',
+    icon: <IconClock size={20} className="text-purple-500" />,
+    color: 'bg-purple-50 dark:bg-purple-900/20',
+  },
+  {
+    label: 'Plus longue session',
+    value: '52min',
+    icon: <IconFlame size={20} className="text-orange-500" />,
+    color: 'bg-orange-50 dark:bg-orange-900/20',
+  },
+  {
+    label: 'Streak',
+    value: '7 jours',
+    icon: <IconFire size={20} className="text-red-500" />,
+    color: 'bg-red-50 dark:bg-red-900/20',
+  },
+];
+
+const learningPrecisionData = [
+  { session: 1, droite: 82, gauche: 75, deux: 80 },
+  { session: 2, droite: 85, gauche: 78, deux: 82 },
+  { session: 3, droite: 88, gauche: 80, deux: 85 },
+  { session: 4, droite: 90, gauche: 82, deux: 87 },
+  { session: 5, droite: 92, gauche: 85, deux: 89 },
+  { session: 6, droite: 91, gauche: 86, deux: 90 },
+  { session: 7, droite: 93, gauche: 88, deux: 92 },
+];
+
+const learningPerformanceData = [
+  { session: 1, droite: 78, gauche: 70, deux: 75 },
+  { session: 2, droite: 80, gauche: 72, deux: 77 },
+  { session: 3, droite: 83, gauche: 74, deux: 80 },
+  { session: 4, droite: 85, gauche: 76, deux: 82 },
+  { session: 5, droite: 87, gauche: 78, deux: 84 },
+  { session: 6, droite: 89, gauche: 80, deux: 86 },
+  { session: 7, droite: 91, gauche: 82, deux: 88 },
+];
+
+const learningBarData = [
+  { mois: 'Jan', precision: 87, performance: 84 },
+  { mois: 'Fév', precision: 89, performance: 86 },
+  { mois: 'Mar', precision: 91, performance: 88 },
+  { mois: 'Avr', precision: 92, performance: 90 },
+  { mois: 'Mai', precision: 93, performance: 91 },
+  { mois: 'Juin', precision: 94, performance: 92 },
+];
+
+// --- SECTION MODE JEU ---
+
+const gameTiles = [
+  {
+    label: 'Sessions',
+    value: 14,
+    icon: <IconClock size={20} className="text-blue-500" />,
+    color: 'bg-blue-50 dark:bg-blue-900/20',
+  },
+  {
+    label: 'Score moyen',
+    value: '7,850',
+    icon: <IconChartBar size={20} className="text-green-500" />,
+    color: 'bg-green-50 dark:bg-green-900/20',
+  },
+  {
+    label: 'Meilleur score',
+    value: '8,950',
+    icon: <IconTrophy size={20} className="text-yellow-500" />,
+    color: 'bg-yellow-50 dark:bg-yellow-900/20',
+  },
+  {
+    label: 'Temps total',
+    value: '3h 40min',
+    icon: <IconClock size={20} className="text-purple-500" />,
+    color: 'bg-purple-50 dark:bg-purple-900/20',
+  },
+  {
+    label: 'Plus longue session',
+    value: '38min',
+    icon: <IconFlame size={20} className="text-orange-500" />,
+    color: 'bg-orange-50 dark:bg-orange-900/20',
+  },
+  {
+    label: 'Streak',
+    value: '4 jours',
+    icon: <IconFire size={20} className="text-red-500" />,
+    color: 'bg-red-50 dark:bg-red-900/20',
+  },
+];
+
+const gameScoreData = [
+  { session: 1, droite: 7200, gauche: 6800, deux: 7000 },
+  { session: 2, droite: 7500, gauche: 6900, deux: 7200 },
+  { session: 3, droite: 7800, gauche: 7100, deux: 7400 },
+  { session: 4, droite: 8000, gauche: 7300, deux: 7600 },
+  { session: 5, droite: 8200, gauche: 7500, deux: 7800 },
+  { session: 6, droite: 8500, gauche: 7700, deux: 8000 },
+  { session: 7, droite: 8950, gauche: 7900, deux: 8200 },
+];
+
+const gameBarData = [
+  { mois: 'Jan', score: 8200, combo: 320, multi: 3.2 },
+  { mois: 'Fév', score: 8450, combo: 350, multi: 3.5 },
+  { mois: 'Mar', score: 8700, combo: 370, multi: 3.8 },
+  { mois: 'Avr', score: 8900, combo: 400, multi: 4.0 },
+  { mois: 'Mai', score: 9100, combo: 420, multi: 4.1 },
+  { mois: 'Juin', score: 9300, combo: 450, multi: 4.2 },
+];
 
 export default function SongPerformances({ song }: { song: SongBasicData }) {
   const { setCurrentSong } = useSong();
@@ -865,6 +833,58 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
       }
     });
   };
+
+  const [learningBarIndex, setLearningBarIndex] = useState(0);
+  const learningBarIntervals = [
+    {
+      label: 'Jan - Juin 2024',
+      data: [
+        { mois: 'Jan', precision: 87, performance: 84 },
+        { mois: 'Fév', precision: 89, performance: 86 },
+        { mois: 'Mar', precision: 91, performance: 88 },
+        { mois: 'Avr', precision: 92, performance: 90 },
+        { mois: 'Mai', precision: 93, performance: 91 },
+        { mois: 'Juin', precision: 94, performance: 92 },
+      ],
+    },
+    {
+      label: 'Juil - Déc 2024',
+      data: [
+        { mois: 'Juil', precision: 95, performance: 93 },
+        { mois: 'Août', precision: 96, performance: 94 },
+        { mois: 'Sept', precision: 97, performance: 95 },
+        { mois: 'Oct', precision: 98, performance: 96 },
+        { mois: 'Nov', precision: 99, performance: 97 },
+        { mois: 'Déc', precision: 99, performance: 98 },
+      ],
+    },
+  ];
+
+  const [gameBarIndex, setGameBarIndex] = useState(0);
+  const gameBarIntervals = [
+    {
+      label: 'Jan - Juin 2024',
+      data: [
+        { mois: 'Jan', score: 8200, combo: 320, multi: 3.2 },
+        { mois: 'Fév', score: 8450, combo: 350, multi: 3.5 },
+        { mois: 'Mar', score: 8700, combo: 370, multi: 3.8 },
+        { mois: 'Avr', score: 8900, combo: 400, multi: 4.0 },
+        { mois: 'Mai', score: 9100, combo: 420, multi: 4.1 },
+        { mois: 'Juin', score: 9300, combo: 450, multi: 4.2 },
+      ],
+    },
+    {
+      label: 'Juil - Déc 2024',
+      data: [
+        { mois: 'Juil', score: 9350, combo: 470, multi: 4.3 },
+        { mois: 'Août', score: 9400, combo: 480, multi: 4.4 },
+        { mois: 'Sept', score: 9450, combo: 490, multi: 4.5 },
+        { mois: 'Oct', score: 9500, combo: 500, multi: 4.6 },
+        { mois: 'Nov', score: 9550, combo: 510, multi: 4.7 },
+        { mois: 'Déc', score: 9600, combo: 520, multi: 4.8 },
+      ],
+    },
+  ];
 
   return (
     <div className={styles.container}>
@@ -974,14 +994,7 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
                     />
 
                     {/* Un seul axe Y - Minutes */}
-                    <YAxis
-                      tick={{ fontSize: 12, fill: '#94a3b8' }}
-                      label={{
-                        value: 'Minutes',
-                        angle: -90,
-                        position: 'insideLeft',
-                      }}
-                    />
+                    <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} />
 
                     <Tooltip
                       contentStyle={{
@@ -1244,6 +1257,428 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
           </div>
         </div>
         <SongStatsOverview song={song} />
+        {/* --- MODE APPRENTISSAGE --- */}
+        <div className="mt-12">
+          <h2 className="text-2xl font-bold text-indigo-600 dark:text-indigo-300 mb-6 flex items-center">
+            <IconBrain size={28} className="mr-2 text-indigo-400" />
+            Mode Apprentissage
+          </h2>
+
+          {/* Tuiles d'infos */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+            {learningTiles.map((tile, idx) => (
+              <div
+                key={idx}
+                className={`rounded-xl p-4 flex flex-col items-center shadow-sm border border-white/10 ${tile.color}`}
+              >
+                <div className="mb-2">{tile.icon}</div>
+                <div className="text-2xl font-bold text-slate-900 dark:text-white">
+                  {tile.value}
+                </div>
+                <div className="text-xs text-slate-500 dark:text-slate-300 mt-1">
+                  {tile.label}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Graphique Précision */}
+          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 mb-8">
+            <h3 className="text-lg font-semibold text-white flex items-center mb-4">
+              <IconTarget size={20} className="mr-2 text-green-400" />
+              Précision par session
+            </h3>
+            <ResponsiveContainer width="100%" height={240}>
+              <LineChart
+                data={learningPrecisionData}
+                margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+                <XAxis
+                  dataKey="session"
+                  tick={{ fontSize: 12, fill: '#94a3b8' }}
+                />
+                <YAxis
+                  domain={[60, 100]}
+                  tick={{ fontSize: 12, fill: '#94a3b8' }}
+                />
+                <Tooltip
+                  formatter={(value, name) => [
+                    `${value}%`,
+                    name === 'droite'
+                      ? 'Main droite'
+                      : name === 'gauche'
+                      ? 'Main gauche'
+                      : 'Deux mains',
+                  ]}
+                />
+                <Legend
+                  formatter={(v) =>
+                    v === 'droite'
+                      ? 'Main droite'
+                      : v === 'gauche'
+                      ? 'Main gauche'
+                      : 'Deux mains'
+                  }
+                />
+                <Line
+                  type="monotone"
+                  dataKey="droite"
+                  stroke="#6366f1"
+                  strokeWidth={3}
+                  dot={{ r: 4, fill: '#6366f1' }}
+                  activeDot={{ r: 6, fill: '#818cf8' }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="gauche"
+                  stroke="#10b981"
+                  strokeWidth={2}
+                  strokeDasharray="5 5"
+                  dot={{ r: 3, fill: '#10b981' }}
+                  activeDot={{ r: 5, fill: '#34d399' }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="deux"
+                  stroke="#f59e0b"
+                  strokeWidth={2}
+                  strokeDasharray="10 5"
+                  dot={{ r: 3, fill: '#f59e0b' }}
+                  activeDot={{ r: 5, fill: '#fbbf24' }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Graphique Performance */}
+          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 mb-8">
+            <h3 className="text-lg font-semibold text-white flex items-center mb-4">
+              <IconStar size={20} className="mr-2 text-pink-400" />
+              Performance par session
+            </h3>
+            <ResponsiveContainer width="100%" height={240}>
+              <LineChart
+                data={learningPerformanceData}
+                margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+                <XAxis
+                  dataKey="session"
+                  tick={{ fontSize: 12, fill: '#94a3b8' }}
+                />
+                <YAxis
+                  domain={[60, 100]}
+                  tick={{ fontSize: 12, fill: '#94a3b8' }}
+                />
+                <Tooltip
+                  formatter={(value, name) => [
+                    `${value}%`,
+                    name === 'droite'
+                      ? 'Main droite'
+                      : name === 'gauche'
+                      ? 'Main gauche'
+                      : 'Deux mains',
+                  ]}
+                />
+                <Legend
+                  formatter={(v) =>
+                    v === 'droite'
+                      ? 'Main droite'
+                      : v === 'gauche'
+                      ? 'Main gauche'
+                      : 'Deux mains'
+                  }
+                />
+                <Line
+                  type="monotone"
+                  dataKey="droite"
+                  stroke="#6366f1"
+                  strokeWidth={3}
+                  dot={{ r: 4, fill: '#6366f1' }}
+                  activeDot={{ r: 6, fill: '#818cf8' }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="gauche"
+                  stroke="#10b981"
+                  strokeWidth={2}
+                  strokeDasharray="5 5"
+                  dot={{ r: 3, fill: '#10b981' }}
+                  activeDot={{ r: 5, fill: '#34d399' }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="deux"
+                  stroke="#f59e0b"
+                  strokeWidth={2}
+                  strokeDasharray="10 5"
+                  dot={{ r: 3, fill: '#f59e0b' }}
+                  activeDot={{ r: 5, fill: '#fbbf24' }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Graphique Précision & Performance moyennes par mois */}
+          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 mb-8">
+            <h3 className="text-lg font-semibold text-white flex items-center mb-4">
+              <IconChartBar size={20} className="mr-2 text-indigo-400" />
+              Précision & Performance moyennes par mois
+            </h3>
+            <div className="flex flex-col items-center mb-2">
+              <div className="flex items-center justify-center space-x-4 mb-2">
+                <button
+                  className="p-2 rounded-full hover:bg-white/10 transition-colors"
+                  onClick={() => setLearningBarIndex((i) => Math.max(0, i - 1))}
+                  aria-label="6 mois précédents"
+                >
+                  <IconChevronLeft size={24} className="text-indigo-400" />
+                </button>
+                <span className="text-base font-medium text-white/90">
+                  {learningBarIntervals[learningBarIndex].label}
+                </span>
+                <button
+                  className="p-2 rounded-full hover:bg-white/10 transition-colors"
+                  onClick={() =>
+                    setLearningBarIndex((i) =>
+                      Math.min(learningBarIntervals.length - 1, i + 1)
+                    )
+                  }
+                  aria-label="6 mois suivants"
+                >
+                  <IconChevronRight size={24} className="text-indigo-400" />
+                </button>
+              </div>
+            </div>
+            <ResponsiveContainer width="100%" height={240}>
+              <BarChart
+                data={learningBarIntervals[learningBarIndex].data}
+                margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+                <XAxis
+                  dataKey="mois"
+                  tick={{ fontSize: 12, fill: '#94a3b8' }}
+                />
+                <YAxis
+                  domain={[70, 100]}
+                  tick={{ fontSize: 12, fill: '#94a3b8' }}
+                />
+                <Tooltip
+                  formatter={(value, name) => [
+                    `${value}%`,
+                    name === 'precision' ? 'Précision' : 'Performance',
+                  ]}
+                />
+                <Legend
+                  formatter={(v) =>
+                    v === 'precision' ? 'Précision' : 'Performance'
+                  }
+                />
+                <Bar dataKey="precision" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                <Bar
+                  dataKey="performance"
+                  fill="#f59e0b"
+                  radius={[4, 4, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+        {/* --- MODE JEU --- */}
+        <div className="mt-12">
+          <h2 className="text-2xl font-bold text-orange-600 dark:text-orange-300 mb-6 flex items-center">
+            <IconChartBar size={28} className="mr-2 text-orange-400" />
+            Mode Jeu
+          </h2>
+
+          {/* Tuiles d'infos */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+            {gameTiles.map((tile, idx) => (
+              <div
+                key={idx}
+                className={`rounded-xl p-4 flex flex-col items-center shadow-sm border border-white/10 ${tile.color}`}
+              >
+                <div className="mb-2">{tile.icon}</div>
+                <div className="text-2xl font-bold text-slate-900 dark:text-white">
+                  {tile.value}
+                </div>
+                <div className="text-xs text-slate-500 dark:text-slate-300 mt-1">
+                  {tile.label}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Graphique Score par session */}
+          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 mb-8">
+            <h3 className="text-lg font-semibold text-white flex items-center mb-4">
+              <IconTrophy size={20} className="mr-2 text-yellow-400" />
+              Score par session
+            </h3>
+            <ResponsiveContainer width="100%" height={240}>
+              <LineChart
+                data={gameScoreData}
+                margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+                <XAxis
+                  dataKey="session"
+                  tick={{ fontSize: 12, fill: '#94a3b8' }}
+                />
+                <YAxis
+                  domain={[6000, 9500]}
+                  tick={{ fontSize: 12, fill: '#94a3b8' }}
+                />
+                <Tooltip
+                  formatter={(value, name) => [
+                    `${value}`,
+                    name === 'droite'
+                      ? 'Main droite'
+                      : name === 'gauche'
+                      ? 'Main gauche'
+                      : 'Deux mains',
+                  ]}
+                />
+                <Legend
+                  formatter={(v) =>
+                    v === 'droite'
+                      ? 'Main droite'
+                      : v === 'gauche'
+                      ? 'Main gauche'
+                      : 'Deux mains'
+                  }
+                />
+                <Line
+                  type="monotone"
+                  dataKey="droite"
+                  stroke="#6366f1"
+                  strokeWidth={3}
+                  dot={{ r: 4, fill: '#6366f1' }}
+                  activeDot={{ r: 6, fill: '#818cf8' }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="gauche"
+                  stroke="#10b981"
+                  strokeWidth={2}
+                  strokeDasharray="5 5"
+                  dot={{ r: 3, fill: '#10b981' }}
+                  activeDot={{ r: 5, fill: '#34d399' }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="deux"
+                  stroke="#f59e0b"
+                  strokeWidth={2}
+                  strokeDasharray="10 5"
+                  dot={{ r: 3, fill: '#f59e0b' }}
+                  activeDot={{ r: 5, fill: '#fbbf24' }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Graphique Meilleur score, combo max & multiplicateur par mois */}
+          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 mb-8">
+            <h3 className="text-lg font-semibold text-white flex items-center mb-4">
+              <IconChartBar size={20} className="mr-2 text-orange-400" />
+              Meilleur score, combo max & multiplicateur par mois
+            </h3>
+            <div className="flex flex-col items-center mb-2">
+              <div className="flex items-center justify-center space-x-4 mb-2">
+                <button
+                  className="p-2 rounded-full hover:bg-white/10 transition-colors"
+                  onClick={() => setGameBarIndex((i) => Math.max(0, i - 1))}
+                  aria-label="6 mois précédents"
+                >
+                  <IconChevronLeft size={24} className="text-orange-400" />
+                </button>
+                <span className="text-base font-medium text-white/90">
+                  {gameBarIntervals[gameBarIndex].label}
+                </span>
+                <button
+                  className="p-2 rounded-full hover:bg-white/10 transition-colors"
+                  onClick={() =>
+                    setGameBarIndex((i) =>
+                      Math.min(gameBarIntervals.length - 1, i + 1)
+                    )
+                  }
+                  aria-label="6 mois suivants"
+                >
+                  <IconChevronRight size={24} className="text-orange-400" />
+                </button>
+              </div>
+            </div>
+            <ResponsiveContainer width="100%" height={240}>
+              <BarChart
+                data={gameBarIntervals[gameBarIndex].data}
+                margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+                <XAxis
+                  dataKey="mois"
+                  tick={{ fontSize: 12, fill: '#94a3b8' }}
+                />
+                <YAxis
+                  yAxisId="score"
+                  domain={[8000, 10000]}
+                  tick={{ fontSize: 12, fill: '#94a3b8' }}
+                />
+                <YAxis
+                  yAxisId="combo"
+                  orientation="left"
+                  domain={[300, 600]}
+                  tick={{ fontSize: 12, fill: '#f59e0b' }}
+                />
+                <YAxis
+                  yAxisId="multi"
+                  orientation="left"
+                  domain={[3, 5]}
+                  tick={{ fontSize: 12, fill: '#10b981' }}
+                />
+                <Tooltip
+                  formatter={(value, name) => [
+                    name === 'score' ? value : name === 'combo' ? value : value,
+                    name === 'score'
+                      ? 'Meilleur score'
+                      : name === 'combo'
+                      ? 'Combo max'
+                      : 'Multiplicateur max',
+                  ]}
+                />
+                <Legend
+                  formatter={(v) =>
+                    v === 'score'
+                      ? 'Meilleur score'
+                      : v === 'combo'
+                      ? 'Combo max'
+                      : 'Multiplicateur max'
+                  }
+                />
+                <Bar
+                  yAxisId="score"
+                  dataKey="score"
+                  fill="#6366f1"
+                  radius={[4, 4, 0, 0]}
+                />
+                <Bar
+                  yAxisId="combo"
+                  dataKey="combo"
+                  fill="#f59e0b"
+                  radius={[4, 4, 0, 0]}
+                />
+                <Bar
+                  yAxisId="multi"
+                  dataKey="multi"
+                  fill="#10b981"
+                  radius={[4, 4, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
         <PerformanceBento />
         <BentoShadcnExample />
       </div>
