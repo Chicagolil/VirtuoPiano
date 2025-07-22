@@ -3,6 +3,7 @@ import ScoreCard, { ScoreSummary } from '@/components/cards/ScoreCard';
 import { getFilteredSessions } from '@/lib/actions/history-actions';
 import { Spinner } from '@/components/ui/spinner';
 import { IconClock, IconChevronRight } from '@tabler/icons-react';
+import { useRouter } from 'next/navigation';
 
 interface RecentSessionsByModeProps {
   songTitle: string;
@@ -26,6 +27,16 @@ export default function RecentSessionsByMode({
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState<number>(0);
+  const router = useRouter();
+
+  // Fonction pour aller vers l'historique avec filtres préremplis
+  const handleViewAllSessions = () => {
+    const params = new URLSearchParams();
+    params.set('search', songTitle);
+    params.set('composer', songComposer);
+    params.set('mode', mode);
+    router.push(`/performances?tab=history&${params.toString()}`);
+  };
 
   // Fonction pour charger les sessions (page 1 = 3, page 2 = 6, etc)
   const fetchSessions = async (newPage: number) => {
@@ -83,17 +94,30 @@ export default function RecentSessionsByMode({
 
   return (
     <div className="bg-white/3 shadow-md rounded-2xl mb-6 p-5 border border-slate-200/10 dark:border-slate-700/10 mt-8">
-      <div className="flex items-center mb-4">
-        <IconClock
-          size={20}
-          className={
-            mode === 'learning' ? 'text-indigo-400' : 'text-orange-400'
-          }
-        />
-        <h2 className="text-lg font-semibold text-white ml-2">
-          Sessions récentes{' '}
-          {mode === 'learning' ? 'en apprentissage' : 'en mode jeu'}
-        </h2>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center">
+          <IconClock
+            size={20}
+            className={
+              mode === 'learning' ? 'text-indigo-400' : 'text-orange-400'
+            }
+          />
+          <h2 className="text-lg font-semibold text-white ml-2">
+            Sessions récentes{' '}
+            {mode === 'learning' ? 'en apprentissage' : 'en mode jeu'}
+          </h2>
+        </div>
+        <button
+          onClick={handleViewAllSessions}
+          className={`text-xs cursor-pointer ${
+            mode === 'learning'
+              ? 'text-indigo-400 hover:text-indigo-300'
+              : 'text-orange-400 hover:text-orange-300'
+          } font-medium flex items-center relative hover:after:w-[calc(100%-1rem)] after:absolute after:bottom-0 after:left-0 after:h-px after:bg-current after:transition-all after:duration-300 after:ease-out after:w-0`}
+        >
+          Voir toutes les sessions
+          <IconChevronRight size={14} className="ml-1" />
+        </button>
       </div>
       {loading ? (
         <div className="flex justify-center items-center py-8">

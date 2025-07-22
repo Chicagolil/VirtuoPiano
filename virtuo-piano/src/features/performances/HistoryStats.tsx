@@ -12,6 +12,7 @@ import { ScoreSummary } from '@/components/cards/ScoreCard';
 import { getFilteredSessions } from '@/lib/actions/history-actions';
 import { Spinner } from '@/components/ui/spinner';
 import { useSearchCache } from '@/customHooks/useSearchCache';
+import { useSearchParams } from 'next/navigation';
 
 const SESSIONS_PER_PAGE = 30;
 
@@ -23,18 +24,27 @@ type SessionsResult = {
 };
 
 export default function HistoryStats() {
+  const searchParams = useSearchParams();
+
+  // Initialiser les filtres depuis les paramètres URL
+  const [searchQuery, setSearchQuery] = useState(
+    searchParams.get('search') || ''
+  );
+  const [composerFilter, setComposerFilter] = useState(
+    searchParams.get('composer') || ''
+  );
+  const [modeFilter, setModeFilter] = useState<'all' | 'learning' | 'game'>(
+    (searchParams.get('mode') as 'all' | 'learning' | 'game') || 'all'
+  );
+
   const [allScores, setAllScores] = useState<ScoreSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
   const [dateFilter, setDateFilter] = useState('all');
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
   const [showDateFilters, setShowDateFilters] = useState(false);
-  const [modeFilter, setModeFilter] = useState<'all' | 'learning' | 'game'>(
-    'all'
-  );
   const [onlyCompleted, setOnlyCompleted] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [total, setTotal] = useState(0);
@@ -51,6 +61,7 @@ export default function HistoryStats() {
   } = useSearchCache<SessionsResult>({
     filters: {
       search: searchQuery.trim(),
+      composer: composerFilter.trim(),
       mode: modeFilter,
       completed: modeFilter === 'learning' ? onlyCompleted : false,
       dateFilter,
@@ -81,8 +92,22 @@ export default function HistoryStats() {
       } = await getFilteredSessions(filters, pagination);
 
       if (success) {
+        // Filtrage côté client pour titre ET compositeur si spécifiés
+        let filteredData = data;
+        if (searchQuery.trim() && composerFilter.trim()) {
+          filteredData = data.filter(
+            (session) =>
+              session.songTitle
+                .toLowerCase()
+                .includes(searchQuery.toLowerCase()) &&
+              (session.songComposer || '')
+                .toLowerCase()
+                .includes(composerFilter.toLowerCase())
+          );
+        }
+
         return {
-          sessions: data,
+          sessions: filteredData,
           hasMore: newHasMore,
           total: newTotal,
         };
@@ -117,6 +142,7 @@ export default function HistoryStats() {
   // Fonction pour réinitialiser tous les filtres
   const resetAllFilters = () => {
     setSearchQuery('');
+    setComposerFilter('');
     setDateFilter('all');
     setCustomStartDate('');
     setCustomEndDate('');
@@ -151,8 +177,22 @@ export default function HistoryStats() {
         } = await getFilteredSessions(filters, pagination);
 
         if (success) {
+          // Filtrage côté client pour titre ET compositeur si spécifiés
+          let filteredData = data;
+          if (searchQuery.trim() && composerFilter.trim()) {
+            filteredData = data.filter(
+              (session) =>
+                session.songTitle
+                  .toLowerCase()
+                  .includes(searchQuery.toLowerCase()) &&
+                (session.songComposer || '')
+                  .toLowerCase()
+                  .includes(composerFilter.toLowerCase())
+            );
+          }
+
           // Créer les nouvelles données avec toutes les sessions
-          const updatedSessions = [...allScores, ...data];
+          const updatedSessions = [...allScores, ...filteredData];
           const newSessionsData = {
             sessions: updatedSessions,
             hasMore: newHasMore,
