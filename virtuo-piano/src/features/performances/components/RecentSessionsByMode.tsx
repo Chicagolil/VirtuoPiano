@@ -31,11 +31,16 @@ export default function RecentSessionsByMode({
 
   // Fonction pour aller vers l'historique avec filtres préremplis
   const handleViewAllSessions = () => {
-    const params = new URLSearchParams();
-    params.set('search', songTitle);
-    params.set('composer', songComposer);
-    params.set('mode', mode);
-    router.push(`/performances?tab=history&${params.toString()}`);
+    // Sauvegarder les filtres dans sessionStorage
+    sessionStorage.setItem(
+      'historyFilters',
+      JSON.stringify({
+        searchQuery: songTitle,
+        composerFilter: songComposer,
+        modeFilter: mode,
+      })
+    );
+    router.push('/performances?tab=history');
   };
 
   // Fonction pour charger les sessions (page 1 = 3, page 2 = 6, etc)

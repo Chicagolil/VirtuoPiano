@@ -12,7 +12,6 @@ import { ScoreSummary } from '@/components/cards/ScoreCard';
 import { getFilteredSessions } from '@/lib/actions/history-actions';
 import { Spinner } from '@/components/ui/spinner';
 import { useSearchCache } from '@/customHooks/useSearchCache';
-import { useSearchParams } from 'next/navigation';
 
 const SESSIONS_PER_PAGE = 30;
 
@@ -24,17 +23,27 @@ type SessionsResult = {
 };
 
 export default function HistoryStats() {
-  const searchParams = useSearchParams();
+  // Lire les filtres depuis sessionStorage au mount
+  const getInitialFilters = () => {
+    if (typeof window !== 'undefined') {
+      const savedFilters = sessionStorage.getItem('historyFilters');
+      if (savedFilters) {
+        sessionStorage.removeItem('historyFilters'); // Nettoyer après lecture
+        return JSON.parse(savedFilters);
+      }
+    }
+    return { searchQuery: '', composerFilter: '', modeFilter: 'all' };
+  };
 
-  // Initialiser les filtres depuis les paramètres URL
-  const [searchQuery, setSearchQuery] = useState(
-    searchParams.get('search') || ''
-  );
+  const initialFilters = getInitialFilters();
+
+  // Initialiser les filtres
+  const [searchQuery, setSearchQuery] = useState(initialFilters.searchQuery);
   const [composerFilter, setComposerFilter] = useState(
-    searchParams.get('composer') || ''
+    initialFilters.composerFilter
   );
   const [modeFilter, setModeFilter] = useState<'all' | 'learning' | 'game'>(
-    (searchParams.get('mode') as 'all' | 'learning' | 'game') || 'all'
+    initialFilters.modeFilter || 'all'
   );
 
   const [allScores, setAllScores] = useState<ScoreSummary[]>([]);
