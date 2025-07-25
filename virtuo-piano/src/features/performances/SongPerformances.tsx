@@ -34,6 +34,11 @@ import { toggleFavorite } from '@/lib/actions/songs';
 import DifficultyBadge from '@/components/DifficultyBadge';
 import { toast } from 'react-hot-toast';
 import { SongBasicData } from '@/lib/services/performances-services';
+import {
+  getSongPerformanceGeneralTilesAction,
+  SongGeneralTilesActionResponse,
+} from '@/lib/actions/songPerformances-actions';
+import { Spinner } from '@/components/ui/spinner';
 import * as Separator from '@radix-ui/react-separator';
 
 // Composants extraits
@@ -89,6 +94,18 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
   const [learningBarIndex, setLearningBarIndex] = useState(0);
   const [gameBarIndex, setGameBarIndex] = useState(0);
 
+  // États pour les données des tuiles générales
+  const [generalTilesData, setGeneralTilesData] = useState<{
+    totalSessions: number;
+    totalTimeInMinutes: number;
+    consecutiveDays: number;
+    globalRanking: number;
+  } | null>(null);
+  const [generalTilesLoading, setGeneralTilesLoading] = useState(true);
+  const [generalTilesError, setGeneralTilesError] = useState<string | null>(
+    null
+  );
+
   // Données étendues
   const extendedPrecisionData = generateExtendedPrecisionData();
   const extendedPerformanceData = generateExtendedPerformanceData();
@@ -99,6 +116,33 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
     setCurrentSong(song);
     return () => setCurrentSong(null);
   }, [song, setCurrentSong]);
+
+  // Charger les données des tuiles générales
+  useEffect(() => {
+    const loadGeneralTilesData = async () => {
+      try {
+        setGeneralTilesLoading(true);
+        setGeneralTilesError(null);
+
+        const result = await getSongPerformanceGeneralTilesAction(song.id);
+
+        if (result.success && result.data) {
+          setGeneralTilesData(result.data);
+        } else {
+          setGeneralTilesError(
+            result.error || 'Erreur lors du chargement des données'
+          );
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement des tuiles générales');
+        setGeneralTilesError('Erreur lors du chargement des données');
+      } finally {
+        setGeneralTilesLoading(false);
+      }
+    };
+
+    loadGeneralTilesData();
+  }, [song.id]);
 
   // Initialiser les indices par défaut
   useEffect(() => {
@@ -355,9 +399,9 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
 
       <div className={styles.tabContent}>
         {/* Première section avec graphique principal et tuiles */}
-        <div className="grid grid-cols-1 pb-4 md:grid-cols-3 lg:grid-cols-6 gap-4 auto-rows-auto">
+        <div className="grid grid-cols-1 pb-4 md:grid-cols-3 lg:grid-cols-4 gap-4 auto-rows-auto">
           {/* Graphique principal de pratique */}
-          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 col-span-1 md:col-span-2 lg:col-span-3 row-span-2">
+          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 col-span-1 md:col-span-2 lg:col-span-2 row-span-2">
             <div className="h-full flex flex-col">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold text-white">
@@ -528,62 +572,86 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
           {/* Tuiles d'informations */}
           <InfoTile
             icon={
-              <IconTrophy
-                size={20}
-                className="text-yellow-600 dark:text-yellow-400"
-              />
+              generalTilesLoading ? (
+                <Spinner variant="bars" size={20} className="text-white" />
+              ) : (
+                <IconChartBar
+                  size={20}
+                  className="text-blue-600 dark:text-blue-400"
+                />
+              )
             }
-            value="8,750"
-            label="Meilleur score"
-          />
-          <InfoTile
-            icon={
-              <IconTarget
-                size={20}
-                className="text-green-600 dark:text-green-400"
-              />
+            value={
+              generalTilesLoading
+                ? ''
+                : generalTilesError
+                ? 'Erreur'
+                : generalTilesData?.totalSessions.toString() || '0'
             }
-            value="87%"
-            label="Précision moyenne"
-          />
-          <InfoTile
-            icon={
-              <IconChartBar
-                size={20}
-                className="text-blue-600 dark:text-blue-400"
-              />
-            }
-            value="23"
             label="Sessions jouées"
           />
           <InfoTile
             icon={
-              <IconClock
-                size={20}
-                className="text-purple-600 dark:text-purple-400"
-              />
+              generalTilesLoading ? (
+                <Spinner variant="bars" size={20} className="text-white" />
+              ) : (
+                <IconClock
+                  size={20}
+                  className="text-purple-600 dark:text-purple-400"
+                />
+              )
             }
-            value="4h 5m"
+            value={
+              generalTilesLoading
+                ? ''
+                : generalTilesError
+                ? 'Erreur'
+                : generalTilesData
+                ? formatDuration(generalTilesData.totalTimeInMinutes, true)
+                : '0 min'
+            }
             label="Temps total"
           />
           <InfoTile
             icon={
-              <IconFlame
-                size={20}
-                className="text-orange-600 dark:text-orange-400"
-              />
+              generalTilesLoading ? (
+                <Spinner variant="bars" size={20} className="text-white" />
+              ) : (
+                <IconFlame
+                  size={20}
+                  className="text-orange-600 dark:text-orange-400"
+                />
+              )
             }
-            value="5"
+            value={
+              generalTilesLoading
+                ? ''
+                : generalTilesError
+                ? 'Erreur'
+                : generalTilesData?.consecutiveDays.toString() || '0'
+            }
             label="Jours consécutifs"
           />
           <InfoTile
             icon={
-              <IconMedal
-                size={20}
-                className="text-pink-600 dark:text-pink-400"
-              />
+              generalTilesLoading ? (
+                <Spinner variant="bars" size={20} className="text-white" />
+              ) : (
+                <IconMedal
+                  size={20}
+                  className="text-pink-600 dark:text-pink-400"
+                />
+              )
             }
-            value="#12"
+            value={
+              generalTilesLoading
+                ? ''
+                : generalTilesError
+                ? 'Erreur'
+                : generalTilesData
+                ? `#${generalTilesData.globalRanking}`
+                : '#-'
+            }
             label="Classement global"
           />
         </div>
