@@ -74,8 +74,8 @@ export type PlayedSong = {
 export interface SongPerformanceGeneralTiles {
   totalSessions: number;
   totalTimeInMinutes: number;
-  consecutiveDays: number;
-  globalRanking: number;
+  currentStreak: number;
+  globalRanking: number | null;
 }
 
 export class PerformancesServices {
@@ -987,82 +987,99 @@ export class PerformancesServices {
       )}-${String(date.getDate()).padStart(2, '0')}`;
     });
 
-    const uniqueDates = [...new Set(sessionDates)].sort();
-    let consecutiveDays = 0;
-    let maxConsecutiveDays = 0;
-    let currentDate = new Date();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
+    const uniqueDates = [...new Set(sessionDates)]
+      .map((d) => new Date(d))
+      .sort((a, b) => a.getTime() - b.getTime());
+
+    let currentStreak = 0;
+
+    // On part du dernier jour et on remonte tant que les jours sont consécutifs
     for (let i = uniqueDates.length - 1; i >= 0; i--) {
-      const sessionDate = new Date(uniqueDates[i]);
-      const diffDays = Math.floor(
-        (currentDate.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24)
-      );
+      const date = uniqueDates[i];
+      const expectedDate = new Date(today);
+      expectedDate.setDate(today.getDate() - currentStreak);
 
-      if (diffDays === consecutiveDays + 1) {
-        consecutiveDays++;
+      if (date.getTime() === expectedDate.getTime()) {
+        currentStreak++;
       } else {
-        consecutiveDays = 1;
+        break;
       }
-
-      maxConsecutiveDays = Math.max(maxConsecutiveDays, consecutiveDays);
-      currentDate = sessionDate;
     }
 
-    // Calculer le classement global basé sur les meilleurs scores
-    const allUsersScores = await prisma.scores.groupBy({
-      by: ['user_id'],
+    // Vérifier d'abord si l'utilisateur actuel a des sessions de jeu
+    const currentUserGameSessions = await prisma.scores.findMany({
       where: {
         song_id: songId,
+        user_id: userId,
         mode: {
-          name: 'Jeu', // Seulement les scores du mode jeu
+          name: 'Jeu',
         },
+      },
+      select: {
+        totalPoints: true,
       },
     });
 
-    // Calculer le meilleur score pour chaque utilisateur
-    const userBestScores = await Promise.all(
-      allUsersScores.map(async (userScore) => {
-        const userSessions = await prisma.scores.findMany({
-          where: {
-            song_id: songId,
-            user_id: userScore.user_id,
-            mode: {
-              name: 'Jeu',
+    let globalRanking: number | null = null;
+
+    // Si l'utilisateur a des sessions de jeu, calculer son classement
+    if (currentUserGameSessions.length > 0) {
+      // Calculer le classement global basé sur les meilleurs scores
+      const allUsersScores = await prisma.scores.groupBy({
+        by: ['user_id'],
+        where: {
+          song_id: songId,
+          mode: {
+            name: 'Jeu', // Seulement les scores du mode jeu
+          },
+        },
+      });
+
+      // Calculer le meilleur score pour chaque utilisateur
+      const userBestScores = await Promise.all(
+        allUsersScores.map(async (userScore) => {
+          const userSessions = await prisma.scores.findMany({
+            where: {
+              song_id: songId,
+              user_id: userScore.user_id,
+              mode: {
+                name: 'Jeu',
+              },
             },
-          },
-          select: {
-            totalPoints: true,
-          },
-        });
+            select: {
+              totalPoints: true,
+            },
+          });
 
-        // Trouver le meilleur score de l'utilisateur
-        const bestScore = userSessions.reduce((max, session) => {
-          return Math.max(max, session.totalPoints || 0);
-        }, 0);
+          // Trouver le meilleur score de l'utilisateur
+          const bestScore = userSessions.reduce((max, session) => {
+            return Math.max(max, session.totalPoints || 0);
+          }, 0);
 
-        return {
-          userId: userScore.user_id,
-          bestScore,
-        };
-      })
-    );
+          return {
+            userId: userScore.user_id,
+            bestScore,
+          };
+        })
+      );
 
-    // Trier par meilleur score décroissant
-    userBestScores.sort((a, b) => b.bestScore - a.bestScore);
+      // Trier par meilleur score décroissant
+      userBestScores.sort((a, b) => b.bestScore - a.bestScore);
 
-    // Trouver la position de l'utilisateur actuel
-    const currentUserIndex = userBestScores.findIndex(
-      (user) => user.userId === userId
-    );
-    const globalRanking =
-      currentUserIndex !== -1
-        ? currentUserIndex + 1
-        : userBestScores.length + 1;
+      // Trouver la position de l'utilisateur actuel
+      const currentUserIndex = userBestScores.findIndex(
+        (user) => user.userId === userId
+      );
+      globalRanking = currentUserIndex !== -1 ? currentUserIndex + 1 : null;
+    }
 
     return {
       totalSessions,
       totalTimeInMinutes,
-      consecutiveDays: maxConsecutiveDays,
+      currentStreak,
       globalRanking,
     };
   }

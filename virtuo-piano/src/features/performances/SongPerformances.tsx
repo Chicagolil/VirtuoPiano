@@ -98,8 +98,8 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
   const [generalTilesData, setGeneralTilesData] = useState<{
     totalSessions: number;
     totalTimeInMinutes: number;
-    consecutiveDays: number;
-    globalRanking: number;
+    currentStreak: number;
+    globalRanking: number | null;
   } | null>(null);
   const [generalTilesLoading, setGeneralTilesLoading] = useState(true);
   const [generalTilesError, setGeneralTilesError] = useState<string | null>(
@@ -628,7 +628,7 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
                 ? ''
                 : generalTilesError
                 ? 'Erreur'
-                : generalTilesData?.consecutiveDays.toString() || '0'
+                : generalTilesData?.currentStreak.toString() || '0'
             }
             label="Jours consécutifs"
           />
@@ -648,9 +648,9 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
                 ? ''
                 : generalTilesError
                 ? 'Erreur'
-                : generalTilesData
+                : generalTilesData?.globalRanking
                 ? `#${generalTilesData.globalRanking}`
-                : '#-'
+                : 'N/A'
             }
             label="Classement global"
           />

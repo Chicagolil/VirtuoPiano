@@ -355,36 +355,37 @@ export const generateExtendedScoreData = () => {
 };
 
 export const generateExtendedPracticeData = () => {
-  return [
-    { name: 'J-29', pratique: 45, modeJeu: 20, modeApprentissage: 25 },
-    { name: 'J-28', pratique: 52, modeJeu: 25, modeApprentissage: 27 },
-    { name: 'J-27', pratique: 38, modeJeu: 15, modeApprentissage: 23 },
-    { name: 'J-26', pratique: 60, modeJeu: 30, modeApprentissage: 30 },
-    { name: 'J-25', pratique: 42, modeJeu: 18, modeApprentissage: 24 },
-    { name: 'J-24', pratique: 55, modeJeu: 28, modeApprentissage: 27 },
-    { name: 'J-23', pratique: 48, modeJeu: 22, modeApprentissage: 26 },
-    { name: 'J-22', pratique: 65, modeJeu: 35, modeApprentissage: 30 },
-    { name: 'J-21', pratique: 40, modeJeu: 16, modeApprentissage: 24 },
-    { name: 'J-20', pratique: 58, modeJeu: 30, modeApprentissage: 28 },
-    { name: 'J-19', pratique: 47, modeJeu: 20, modeApprentissage: 27 },
-    { name: 'J-18', pratique: 53, modeJeu: 26, modeApprentissage: 27 },
-    { name: 'J-17', pratique: 61, modeJeu: 32, modeApprentissage: 29 },
-    { name: 'J-16', pratique: 44, modeJeu: 19, modeApprentissage: 25 },
-    { name: 'J-15', pratique: 56, modeJeu: 28, modeApprentissage: 28 },
-    { name: 'J-14', pratique: 45, modeJeu: 20, modeApprentissage: 25 },
-    { name: 'J-13', pratique: 52, modeJeu: 25, modeApprentissage: 27 },
-    { name: 'J-12', pratique: 38, modeJeu: 15, modeApprentissage: 23 },
-    { name: 'J-11', pratique: 60, modeJeu: 30, modeApprentissage: 30 },
-    { name: 'J-10', pratique: 42, modeJeu: 18, modeApprentissage: 24 },
-    { name: 'J-9', pratique: 55, modeJeu: 28, modeApprentissage: 27 },
-    { name: 'J-8', pratique: 48, modeJeu: 22, modeApprentissage: 26 },
-    { name: 'J-7', pratique: 65, modeJeu: 35, modeApprentissage: 30 },
-    { name: 'J-6', pratique: 40, modeJeu: 16, modeApprentissage: 24 },
-    { name: 'J-5', pratique: 58, modeJeu: 30, modeApprentissage: 28 },
-    { name: 'J-4', pratique: 47, modeJeu: 20, modeApprentissage: 27 },
-    { name: 'J-3', pratique: 53, modeJeu: 26, modeApprentissage: 27 },
-    { name: 'J-2', pratique: 61, modeJeu: 32, modeApprentissage: 29 },
-    { name: 'J-1', pratique: 44, modeJeu: 19, modeApprentissage: 25 },
-    { name: "Aujourd'hui", pratique: 72, modeJeu: 38, modeApprentissage: 34 },
-  ];
+  const today = new Date();
+  const data = [];
+
+  // Générer 30 jours de données (du plus ancien au plus récent)
+  for (let i = 29; i >= 0; i--) {
+    const date = new Date(today);
+    date.setDate(today.getDate() - i);
+
+    // Formater la date
+    let displayName;
+    if (i === 0) {
+      displayName = "Aujourd'hui";
+    } else {
+      // Format DD/MM pour les autres jours
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      displayName = `${day}/${month}`;
+    }
+
+    // Générer des données factices (on peut les remplacer plus tard par de vraies données)
+    const pratique = Math.floor(Math.random() * 40) + 30; // 30-70 minutes
+    const modeJeu = Math.floor(pratique * (0.3 + Math.random() * 0.4)); // 30-70% du total
+    const modeApprentissage = pratique - modeJeu;
+
+    data.push({
+      name: displayName,
+      pratique,
+      modeJeu,
+      modeApprentissage,
+    });
+  }
+
+  return data;
 };
