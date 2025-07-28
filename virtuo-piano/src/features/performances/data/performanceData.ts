@@ -353,39 +353,3 @@ export const generateExtendedScoreData = () => {
     { session: 21, score: 10300, combo: 550, multi: 5.1 },
   ];
 };
-
-export const generateExtendedPracticeData = () => {
-  const today = new Date();
-  const data = [];
-
-  // Générer 30 jours de données (du plus ancien au plus récent)
-  for (let i = 29; i >= 0; i--) {
-    const date = new Date(today);
-    date.setDate(today.getDate() - i);
-
-    // Formater la date
-    let displayName;
-    if (i === 0) {
-      displayName = "Aujourd'hui";
-    } else {
-      // Format DD/MM pour les autres jours
-      const day = String(date.getDate()).padStart(2, '0');
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      displayName = `${day}/${month}`;
-    }
-
-    // Générer des données factices (on peut les remplacer plus tard par de vraies données)
-    const pratique = Math.floor(Math.random() * 40) + 30; // 30-70 minutes
-    const modeJeu = Math.floor(pratique * (0.3 + Math.random() * 0.4)); // 30-70% du total
-    const modeApprentissage = pratique - modeJeu;
-
-    data.push({
-      name: displayName,
-      pratique,
-      modeJeu,
-      modeApprentissage,
-    });
-  }
-
-  return data;
-};

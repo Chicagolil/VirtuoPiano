@@ -34,11 +34,13 @@ import { toggleFavorite } from '@/lib/actions/songs';
 import DifficultyBadge from '@/components/DifficultyBadge';
 import { toast } from 'react-hot-toast';
 import { SongBasicData } from '@/lib/services/performances-services';
-import {
-  getSongPerformanceGeneralTilesAction,
-  SongGeneralTilesActionResponse,
-} from '@/lib/actions/songPerformances-actions';
 import { Spinner } from '@/components/ui/spinner';
+import {
+  useSongPerformanceGeneralTiles,
+  useSongPracticeData,
+  usePrefetchAdjacentData,
+  useInvalidatePracticeCache,
+} from '@/customHooks/useSongPerformances';
 import * as Separator from '@radix-ui/react-separator';
 
 // Composants extraits
@@ -59,7 +61,6 @@ import {
   generateExtendedPrecisionData,
   generateExtendedPerformanceData,
   generateExtendedScoreData,
-  generateExtendedPracticeData,
   learningBarIntervals,
   gameBarIntervals,
 } from './data/performanceData';
@@ -94,55 +95,43 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
   const [learningBarIndex, setLearningBarIndex] = useState(0);
   const [gameBarIndex, setGameBarIndex] = useState(0);
 
-  // États pour les données des tuiles générales
-  const [generalTilesData, setGeneralTilesData] = useState<{
-    totalSessions: number;
-    totalTimeInMinutes: number;
-    currentStreak: number;
-    globalRanking: number | null;
-  } | null>(null);
-  const [generalTilesLoading, setGeneralTilesLoading] = useState(true);
-  const [generalTilesError, setGeneralTilesError] = useState<string | null>(
-    null
+  // Hooks React Query
+  const {
+    data: generalTilesResult,
+    isLoading: generalTilesLoading,
+    error: generalTilesError,
+  } = useSongPerformanceGeneralTiles(song.id);
+
+  const {
+    data: practiceResult,
+    isLoading: practiceLoading,
+    error: practiceError,
+  } = useSongPracticeData(song.id, practiceInterval, practiceIndex);
+
+  const { prefetchAdjacent } = usePrefetchAdjacentData(
+    song.id,
+    practiceInterval,
+    practiceIndex
   );
+
+  const { invalidateCache } = useInvalidatePracticeCache();
 
   // Données étendues
   const extendedPrecisionData = generateExtendedPrecisionData();
   const extendedPerformanceData = generateExtendedPerformanceData();
   const extendedScoreData = generateExtendedScoreData();
-  const extendedPracticeData = generateExtendedPracticeData();
 
   useEffect(() => {
     setCurrentSong(song);
     return () => setCurrentSong(null);
   }, [song, setCurrentSong]);
 
-  // Charger les données des tuiles générales
+  // Précharger les données adjacentes quand les données changent
   useEffect(() => {
-    const loadGeneralTilesData = async () => {
-      try {
-        setGeneralTilesLoading(true);
-        setGeneralTilesError(null);
-
-        const result = await getSongPerformanceGeneralTilesAction(song.id);
-
-        if (result.success && result.data) {
-          setGeneralTilesData(result.data);
-        } else {
-          setGeneralTilesError(
-            result.error || 'Erreur lors du chargement des données'
-          );
-        }
-      } catch (error) {
-        console.error('Erreur lors du chargement des tuiles générales');
-        setGeneralTilesError('Erreur lors du chargement des données');
-      } finally {
-        setGeneralTilesLoading(false);
-      }
-    };
-
-    loadGeneralTilesData();
-  }, [song.id]);
+    if (practiceResult?.data) {
+      prefetchAdjacent();
+    }
+  }, [practiceResult?.data, prefetchAdjacent]);
 
   // Initialiser les indices par défaut
   useEffect(() => {
@@ -153,14 +142,16 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
       getDefaultIndex(extendedPerformanceData.length, performanceInterval)
     );
     setScoreIndex(getDefaultIndex(extendedScoreData.length, scoreInterval));
-    setPracticeIndex(
-      getDefaultIndex(extendedPracticeData.length, practiceInterval)
-    );
+    // Pas besoin d'initialiser practiceIndex car il est géré par le serveur
   }, []);
 
   // Fonctions pour obtenir les données par intervalles
-  const getPracticeData = () =>
-    sliceDataByInterval(extendedPracticeData, practiceIndex, practiceInterval);
+  const getPracticeData = () => {
+    if (!practiceResult?.data?.current?.data) {
+      return [];
+    }
+    return practiceResult.data.current.data;
+  };
   const getPrecisionData = () =>
     sliceDataByInterval(
       extendedPrecisionData,
@@ -178,18 +169,26 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
 
   // Calculs des totaux et moyennes
   const practiceData = getPracticeData();
-  const totalPratique = practiceData.reduce(
-    (sum, item) => sum + item.pratique,
-    0
-  );
-  const totalModeJeu = practiceData.reduce(
-    (sum, item) => sum + item.modeJeu,
-    0
-  );
-  const totalModeApprentissage = practiceData.reduce(
-    (sum, item) => sum + item.modeApprentissage,
-    0
-  );
+  const currentData = practiceResult?.data?.current;
+
+  const totalPratique =
+    currentData?.totalPratique ||
+    practiceData.reduce(
+      (sum: number, item: any) => sum + (item.pratique || 0),
+      0
+    );
+  const totalModeJeu =
+    currentData?.totalModeJeu ||
+    practiceData.reduce(
+      (sum: number, item: any) => sum + (item.modeJeu || 0),
+      0
+    );
+  const totalModeApprentissage =
+    currentData?.totalModeApprentissage ||
+    practiceData.reduce(
+      (sum: number, item: any) => sum + (item.modeApprentissage || 0),
+      0
+    );
 
   const avgPrecisionDeux = calculateAverage(getPrecisionData(), 'deux');
   const avgPrecisionDroite = calculateAverage(getPrecisionData(), 'droite');
@@ -410,10 +409,8 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
                 <div className="flex flex-col items-center mb-2">
                   <div className="flex items-center justify-center space-x-4 mb-2">
                     <button
-                      onClick={() =>
-                        setPracticeIndex(Math.max(0, practiceIndex - 1))
-                      }
-                      disabled={practiceIndex === 0}
+                      onClick={() => setPracticeIndex(practiceIndex + 1)}
+                      disabled={practiceLoading || practiceIndex >= 10} // Limite à 10 intervalles en arrière
                       className="p-2 rounded-full hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <IconChevronRight
@@ -424,15 +421,14 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
                     <select
                       value={practiceInterval}
                       onChange={(e) => {
-                        setPracticeInterval(Number(e.target.value));
-                        setPracticeIndex(
-                          getDefaultIndex(
-                            extendedPracticeData.length,
-                            Number(e.target.value)
-                          )
-                        );
+                        const newInterval = Number(e.target.value);
+                        setPracticeInterval(newInterval);
+                        setPracticeIndex(0); // Reset à l'index 0 quand on change l'intervalle
+                        // Invalider le cache pour forcer le rechargement avec le nouvel intervalle
+                        invalidateCache(song.id);
                       }}
-                      className="bg-white/10 text-white text-sm rounded px-3 py-2 border border-white/20 min-w-[140px]"
+                      disabled={practiceLoading}
+                      className="bg-white/10 text-white text-sm rounded px-3 py-2 border border-white/20 min-w-[140px] disabled:opacity-50"
                     >
                       {defaultIntervalOptions.map((option) => (
                         <option
@@ -445,11 +441,10 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
                       ))}
                     </select>
                     <button
-                      onClick={() => setPracticeIndex(practiceIndex + 1)}
-                      disabled={
-                        (practiceIndex + 1) * practiceInterval >=
-                        extendedPracticeData.length
+                      onClick={() =>
+                        setPracticeIndex(Math.max(0, practiceIndex - 1))
                       }
+                      disabled={practiceIndex === 0}
                       className="p-2 rounded-full hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <IconChevronRight size={20} className="text-indigo-400" />
@@ -458,67 +453,82 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
                 </div>
               </div>
 
-              <ResponsiveContainer width="100%" height={250}>
-                <LineChart
-                  data={practiceData}
-                  margin={{ top: 10, right: 30, left: -20, bottom: 0 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                  <XAxis
-                    dataKey="name"
-                    tick={{ fontSize: 12, fill: '#94a3b8' }}
-                  />
-                  <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#1e293b',
-                      border: 'none',
-                      borderRadius: '8px',
-                      fontSize: '12px',
-                    }}
-                    itemStyle={{ color: '#e2e8f0' }}
-                    labelStyle={{
-                      color: '#e2e8f0',
-                      fontWeight: 'bold',
-                      marginBottom: '4px',
-                    }}
-                    formatter={(value, name) => {
-                      const nameMap: Record<string, string> = {
-                        pratique: 'Temps de pratique total',
-                        modeJeu: 'Mode jeu',
-                        modeApprentissage: 'Mode apprentissage',
-                      };
-                      return [`${value} min`, nameMap[name as string] || name];
-                    }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="pratique"
-                    stroke="#6366f1"
-                    strokeWidth={3}
-                    dot={{ r: 4, fill: '#6366f1', strokeWidth: 0 }}
-                    activeDot={{ r: 6, fill: '#818cf8', strokeWidth: 0 }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="modeJeu"
-                    stroke="#f59e0b"
-                    strokeWidth={2}
-                    strokeDasharray="5 5"
-                    dot={{ r: 3, fill: '#f59e0b', strokeWidth: 0 }}
-                    activeDot={{ r: 5, fill: '#fbbf24', strokeWidth: 0 }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="modeApprentissage"
-                    stroke="#10b981"
-                    strokeWidth={2}
-                    strokeDasharray="10 5"
-                    dot={{ r: 3, fill: '#10b981', strokeWidth: 0 }}
-                    activeDot={{ r: 5, fill: '#34d399', strokeWidth: 0 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+              {practiceLoading ? (
+                <div className="flex items-center justify-center h-[250px]">
+                  <Spinner variant="bars" size={32} className="text-white" />
+                </div>
+              ) : practiceError ? (
+                <div className="flex items-center justify-center h-[250px]">
+                  <div className="text-center text-red-400 text-sm">
+                    {practiceError.message || 'Erreur lors du chargement'}
+                  </div>
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height={250}>
+                  <LineChart
+                    data={practiceData}
+                    margin={{ top: 10, right: 30, left: -20, bottom: 0 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                    <XAxis
+                      dataKey="name"
+                      tick={{ fontSize: 12, fill: '#94a3b8' }}
+                    />
+                    <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: '#1e293b',
+                        border: 'none',
+                        borderRadius: '8px',
+                        fontSize: '12px',
+                      }}
+                      itemStyle={{ color: '#e2e8f0' }}
+                      labelStyle={{
+                        color: '#e2e8f0',
+                        fontWeight: 'bold',
+                        marginBottom: '4px',
+                      }}
+                      formatter={(value, name) => {
+                        const nameMap: Record<string, string> = {
+                          pratique: 'Temps de pratique total',
+                          modeJeu: 'Mode jeu',
+                          modeApprentissage: 'Mode apprentissage',
+                        };
+                        return [
+                          `${value} min`,
+                          nameMap[name as string] || name,
+                        ];
+                      }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="pratique"
+                      stroke="#6366f1"
+                      strokeWidth={3}
+                      dot={{ r: 4, fill: '#6366f1', strokeWidth: 0 }}
+                      activeDot={{ r: 6, fill: '#818cf8', strokeWidth: 0 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="modeJeu"
+                      stroke="#f59e0b"
+                      strokeWidth={2}
+                      strokeDasharray="5 5"
+                      dot={{ r: 3, fill: '#f59e0b', strokeWidth: 0 }}
+                      activeDot={{ r: 5, fill: '#fbbf24', strokeWidth: 0 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="modeApprentissage"
+                      stroke="#10b981"
+                      strokeWidth={2}
+                      strokeDasharray="10 5"
+                      dot={{ r: 3, fill: '#10b981', strokeWidth: 0 }}
+                      activeDot={{ r: 5, fill: '#34d399', strokeWidth: 0 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
 
               <Separator.Root className="h-px bg-slate-500 dark:bg-slate-800 my-4" />
 
@@ -586,7 +596,7 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
                 ? ''
                 : generalTilesError
                 ? 'Erreur'
-                : generalTilesData?.totalSessions.toString() || '0'
+                : generalTilesResult?.data?.totalSessions.toString() || '0'
             }
             label="Sessions jouées"
           />
@@ -606,8 +616,11 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
                 ? ''
                 : generalTilesError
                 ? 'Erreur'
-                : generalTilesData
-                ? formatDuration(generalTilesData.totalTimeInMinutes, true)
+                : generalTilesResult?.data
+                ? formatDuration(
+                    generalTilesResult.data.totalTimeInMinutes,
+                    true
+                  )
                 : '0 min'
             }
             label="Temps total"
@@ -628,7 +641,7 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
                 ? ''
                 : generalTilesError
                 ? 'Erreur'
-                : generalTilesData?.currentStreak.toString() || '0'
+                : generalTilesResult?.data?.currentStreak.toString() || '0'
             }
             label="Jours consécutifs"
           />
@@ -648,8 +661,8 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
                 ? ''
                 : generalTilesError
                 ? 'Erreur'
-                : generalTilesData?.globalRanking
-                ? `#${generalTilesData.globalRanking}`
+                : generalTilesResult?.data?.globalRanking
+                ? `#${generalTilesResult.data.globalRanking}`
                 : 'N/A'
             }
             label="Classement global"

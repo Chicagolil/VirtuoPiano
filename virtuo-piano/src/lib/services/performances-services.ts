@@ -78,6 +78,20 @@ export interface SongPerformanceGeneralTiles {
   globalRanking: number | null;
 }
 
+export interface PracticeDataPoint {
+  name: string;
+  pratique: number;
+  modeJeu: number;
+  modeApprentissage: number;
+}
+
+export interface SongPracticeData {
+  data: PracticeDataPoint[];
+  totalPratique: number;
+  totalModeJeu: number;
+  totalModeApprentissage: number;
+}
+
 export class PerformancesServices {
   // Méthodes utilitaires privées pour calculer les intervalles
   private static getCurrentIntervalDates(
@@ -1081,6 +1095,125 @@ export class PerformancesServices {
       totalTimeInMinutes,
       currentStreak,
       globalRanking,
+    };
+  }
+
+  static async getSongPracticeData(
+    songId: string,
+    userId: string,
+    interval: number,
+    index: number
+  ): Promise<SongPracticeData> {
+    // Calculer la date de début et de fin pour l'intervalle
+    const endDate = new Date();
+    endDate.setHours(23, 59, 59, 999);
+
+    const startDate = new Date();
+    startDate.setDate(endDate.getDate() - interval * (index + 1) + 1);
+    startDate.setHours(0, 0, 0, 0);
+
+    // Récupérer toutes les sessions pour cette chanson dans l'intervalle
+    const sessions = await prisma.scores.findMany({
+      where: {
+        song_id: songId,
+        user_id: userId,
+        sessionStartTime: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+      include: {
+        mode: {
+          select: {
+            name: true,
+          },
+        },
+      },
+      orderBy: {
+        sessionStartTime: 'asc',
+      },
+    });
+
+    // Grouper les sessions par jour
+    const dailyData = new Map<
+      string,
+      {
+        pratique: number;
+        modeJeu: number;
+        modeApprentissage: number;
+      }
+    >();
+
+    sessions.forEach((session) => {
+      const dateKey = session.sessionStartTime.toISOString().split('T')[0];
+      const durationMs =
+        session.sessionEndTime.getTime() - session.sessionStartTime.getTime();
+      const durationMinutes = Math.round(durationMs / (1000 * 60));
+
+      if (!dailyData.has(dateKey)) {
+        dailyData.set(dateKey, {
+          pratique: 0,
+          modeJeu: 0,
+          modeApprentissage: 0,
+        });
+      }
+
+      const dayData = dailyData.get(dateKey)!;
+      dayData.pratique += durationMinutes;
+
+      if (session.mode.name === 'Jeu') {
+        dayData.modeJeu += durationMinutes;
+      } else if (session.mode.name === 'Apprentissage') {
+        dayData.modeApprentissage += durationMinutes;
+      }
+    });
+
+    // Créer les points de données avec les bonnes dates
+    const data: PracticeDataPoint[] = [];
+    const today = new Date();
+
+    for (let i = interval - 1; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(today.getDate() - index * interval - i);
+      const dateKey = date.toISOString().split('T')[0];
+
+      const dayData = dailyData.get(dateKey) || {
+        pratique: 0,
+        modeJeu: 0,
+        modeApprentissage: 0,
+      };
+
+      // Formater le nom de la date
+      let displayName: string;
+      if (i === 0 && index === 0) {
+        displayName = "Aujourd'hui";
+      } else {
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        displayName = `${day}/${month}`;
+      }
+
+      data.push({
+        name: displayName,
+        pratique: dayData.pratique,
+        modeJeu: dayData.modeJeu,
+        modeApprentissage: dayData.modeApprentissage,
+      });
+    }
+
+    // Calculer les totaux
+    const totalPratique = data.reduce((sum, point) => sum + point.pratique, 0);
+    const totalModeJeu = data.reduce((sum, point) => sum + point.modeJeu, 0);
+    const totalModeApprentissage = data.reduce(
+      (sum, point) => sum + point.modeApprentissage,
+      0
+    );
+
+    return {
+      data,
+      totalPratique,
+      totalModeJeu,
+      totalModeApprentissage,
     };
   }
 }

@@ -3,6 +3,7 @@
 import {
   PerformancesServices,
   SongPerformanceGeneralTiles,
+  SongPracticeData,
 } from '@/lib/services/performances-services';
 
 import { getAuthenticatedUser } from '../auth/get-authenticated-user';
@@ -32,6 +33,74 @@ export async function getSongPerformanceGeneralTilesAction(
   } catch (error) {
     console.error(
       'Erreur lors de la récupération des tuiles générales:',
+      error
+    );
+    return {
+      success: false,
+      error: 'Erreur lors de la récupération des données',
+    };
+  }
+}
+
+export interface SongPracticeDataActionResponse {
+  success: boolean;
+  data?: SongPracticeData;
+  error?: string;
+}
+
+export interface SongPracticeDataMultipleActionResponse {
+  success: boolean;
+  data?: {
+    current: SongPracticeData;
+    previous?: SongPracticeData;
+    next?: SongPracticeData;
+  };
+  error?: string;
+}
+
+export async function getSongPracticeDataMultipleAction(
+  songId: string,
+  interval: number,
+  index: number
+): Promise<SongPracticeDataMultipleActionResponse> {
+  try {
+    const user = await getAuthenticatedUser();
+
+    // Récupérer les données actuelles, précédentes et suivantes en parallèle
+    const [current, previous, next] = await Promise.all([
+      PerformancesServices.getSongPracticeData(
+        songId,
+        user.id,
+        interval,
+        index
+      ),
+      index > 0
+        ? PerformancesServices.getSongPracticeData(
+            songId,
+            user.id,
+            interval,
+            index - 1
+          )
+        : Promise.resolve(null),
+      PerformancesServices.getSongPracticeData(
+        songId,
+        user.id,
+        interval,
+        index + 1
+      ),
+    ]);
+
+    return {
+      success: true,
+      data: {
+        current,
+        previous: previous || undefined,
+        next: next || undefined,
+      },
+    };
+  } catch (error) {
+    console.error(
+      'Erreur lors de la récupération des données de pratique multiples:',
       error
     );
     return {
