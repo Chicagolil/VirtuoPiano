@@ -5,7 +5,6 @@ import { AuroraBackground } from '@/components/ui/aurora-background';
 import { Toaster } from 'react-hot-toast';
 import { SongProvider } from '@/contexts/SongContext';
 import QueryProvider from '@/lib/providers/QueryProvider';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -30,7 +29,6 @@ export default function RootLayout({
               </div>
             </AuroraBackground>
             <Toaster position="top-right" />
-            <ReactQueryDevtools initialIsOpen={true} />
           </SongProvider>
         </QueryProvider>
       </body>

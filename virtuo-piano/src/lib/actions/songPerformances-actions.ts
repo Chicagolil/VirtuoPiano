@@ -2,6 +2,7 @@
 
 import {
   PerformancesServices,
+  SongLearningModeTiles,
   SongPerformanceGeneralTiles,
   SongPracticeData,
 } from '@/lib/services/performances-services';
@@ -40,12 +41,6 @@ export async function getSongPerformanceGeneralTilesAction(
       error: 'Erreur lors de la récupération des données',
     };
   }
-}
-
-export interface SongPracticeDataActionResponse {
-  success: boolean;
-  data?: SongPracticeData;
-  error?: string;
 }
 
 export interface SongPracticeDataMultipleActionResponse {
@@ -101,6 +96,39 @@ export async function getSongPracticeDataMultipleAction(
   } catch (error) {
     console.error(
       'Erreur lors de la récupération des données de pratique multiples:',
+      error
+    );
+    return {
+      success: false,
+      error: 'Erreur lors de la récupération des données',
+    };
+  }
+}
+
+export interface SongLearningModeTilesActionResponse {
+  success: boolean;
+  data?: SongLearningModeTiles;
+  error?: string;
+}
+
+export async function getSongLearningModeTilesAction(
+  songId: string
+): Promise<SongLearningModeTilesActionResponse> {
+  try {
+    const user = await getAuthenticatedUser();
+
+    const data = await PerformancesServices.getSongLearningModeTilesData(
+      songId,
+      user.id
+    );
+
+    return {
+      success: true,
+      data,
+    };
+  } catch (error) {
+    console.error(
+      "Erreur lors de la récupération des tuiles d'apprentissage:",
       error
     );
     return {

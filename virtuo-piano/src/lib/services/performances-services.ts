@@ -92,6 +92,17 @@ export interface SongPracticeData {
   totalModeApprentissage: number;
 }
 
+export interface SongPerformanceLearningTiles {}
+
+export interface SongLearningModeTiles {
+  totalSessions: number;
+  averageAccuracy: number;
+  averagePerformance: number;
+  totalTimeInMinutes: number;
+  longestSessionInMinutes: number;
+  currentStreak: number;
+}
+
 export class PerformancesServices {
   // Méthodes utilitaires privées pour calculer les intervalles
   private static getCurrentIntervalDates(
@@ -179,6 +190,60 @@ export class PerformancesServices {
     }
 
     return { startDate, endDate };
+  }
+
+  private static async calculateCurrentStreak(
+    songId: string,
+    userId: string,
+    modeName: string
+  ): Promise<number> {
+    const whereClause: any = {
+      song_id: songId,
+      user_id: userId,
+    };
+
+    // Si modeName n'est pas 'all', filtrer par mode
+    if (modeName !== 'all') {
+      whereClause.mode = {
+        name: modeName,
+      };
+    }
+
+    const sessions = await prisma.scores.findMany({
+      where: whereClause,
+      select: {
+        sessionStartTime: true,
+      },
+      orderBy: {
+        sessionStartTime: 'desc',
+      },
+    });
+
+    if (sessions.length === 0) return 0;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    let streak = 0;
+    let currentDate = new Date(today);
+
+    for (let i = 0; i < 365; i++) {
+      // Limite à 1 an
+      const sessionsForDate = sessions.filter((session) => {
+        const sessionDate = new Date(session.sessionStartTime);
+        sessionDate.setHours(0, 0, 0, 0);
+        return sessionDate.getTime() === currentDate.getTime();
+      });
+
+      if (sessionsForDate.length > 0) {
+        streak++;
+        currentDate.setDate(currentDate.getDate() - 1);
+      } else {
+        break;
+      }
+    }
+
+    return streak;
   }
 
   static async getPracticeDataForHeatmap(
@@ -992,36 +1057,12 @@ export class PerformancesServices {
       return total + Math.round(durationMs / (1000 * 60));
     }, 0);
 
-    // Calculer les jours consécutifs
-    const sessionDates = sessions.map((session) => {
-      const date = new Date(session.sessionStartTime);
-      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
-        2,
-        '0'
-      )}-${String(date.getDate()).padStart(2, '0')}`;
-    });
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const uniqueDates = [...new Set(sessionDates)]
-      .map((d) => new Date(d))
-      .sort((a, b) => a.getTime() - b.getTime());
-
-    let currentStreak = 0;
-
-    // On part du dernier jour et on remonte tant que les jours sont consécutifs
-    for (let i = uniqueDates.length - 1; i >= 0; i--) {
-      const date = uniqueDates[i];
-      const expectedDate = new Date(today);
-      expectedDate.setDate(today.getDate() - currentStreak);
-
-      if (date.getTime() === expectedDate.getTime()) {
-        currentStreak++;
-      } else {
-        break;
-      }
-    }
+    // Calculer les jours consécutifs (toutes sessions confondues)
+    const currentStreak = await this.calculateCurrentStreak(
+      songId,
+      userId,
+      'all'
+    );
 
     // Vérifier d'abord si l'utilisateur actuel a des sessions de jeu
     const currentUserGameSessions = await prisma.scores.findMany({
@@ -1214,6 +1255,84 @@ export class PerformancesServices {
       totalPratique,
       totalModeJeu,
       totalModeApprentissage,
+    };
+  }
+
+  static async getSongLearningModeTilesData(
+    songId: string,
+    userId: string
+  ): Promise<SongLearningModeTiles> {
+    const sessions = await prisma.scores.findMany({
+      where: {
+        song_id: songId,
+        user_id: userId,
+        mode: {
+          name: 'Apprentissage',
+        },
+      },
+      orderBy: {
+        sessionStartTime: 'desc',
+      },
+    });
+
+    const totalSessions = sessions.length;
+
+    if (totalSessions === 0) {
+      return {
+        totalSessions: 0,
+        averageAccuracy: 0,
+        averagePerformance: 0,
+        totalTimeInMinutes: 0,
+        longestSessionInMinutes: 0,
+        currentStreak: 0,
+      };
+    }
+
+    const sessionsScores = sessions.map((session) => {
+      const { performance, accuracy } = getLearnScores(
+        session.wrongNotes || 0,
+        session.correctNotes || 0,
+        session.missedNotes || 0
+      );
+      return { performance, accuracy };
+    });
+
+    const averageAccuracy = Math.round(
+      sessionsScores.reduce((sum, session) => sum + session.accuracy, 0) /
+        totalSessions
+    );
+
+    const averagePerformance = Math.round(
+      sessionsScores.reduce((sum, session) => sum + session.performance, 0) /
+        totalSessions
+    );
+
+    const totalTimeInMinutes = sessions.reduce((sum, session) => {
+      const durationMs =
+        session.sessionEndTime.getTime() - session.sessionStartTime.getTime();
+      return sum + Math.round(durationMs / (1000 * 60));
+    }, 0);
+
+    const longestSessionInMinutes = sessions.reduce((max, session) => {
+      const durationMs =
+        session.sessionEndTime.getTime() - session.sessionStartTime.getTime();
+      return Math.max(max, Math.round(durationMs / (1000 * 60)));
+    }, 0);
+
+    // Calculer le streak (jours consécutifs)
+    const currentStreak = await this.calculateCurrentStreak(
+      songId,
+      userId,
+      'Apprentissage'
+    );
+
+    return {
+      totalSessions,
+      averageAccuracy,
+      averagePerformance,
+      totalTimeInMinutes,
+      longestSessionInMinutes,
+      currentStreak,
     };
   }
 }
