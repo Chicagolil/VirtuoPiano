@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
+  getSongLearningModeTilesAction,
   getSongPerformanceGeneralTilesAction,
   getSongPracticeDataMultipleAction,
 } from '@/lib/actions/songPerformances-actions';
@@ -10,7 +11,6 @@ export function useSongPerformanceGeneralTiles(songId: string) {
     queryKey: ['songPerformanceGeneralTiles', songId],
     queryFn: () => getSongPerformanceGeneralTilesAction(songId),
     enabled: !!songId,
-    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 }
 
@@ -73,6 +73,9 @@ export function useInvalidatePracticeCache() {
       queryClient.invalidateQueries({
         queryKey: ['songPerformanceGeneralTiles', songId],
       });
+      queryClient.invalidateQueries({
+        queryKey: ['songLearningModeTiles', songId],
+      });
     } else {
       // Invalider tout le cache de pratique
       queryClient.invalidateQueries({
@@ -81,8 +84,33 @@ export function useInvalidatePracticeCache() {
       queryClient.invalidateQueries({
         queryKey: ['songPerformanceGeneralTiles'],
       });
+      queryClient.invalidateQueries({
+        queryKey: ['songLearningModeTiles'],
+      });
     }
   };
 
-  return { invalidateCache };
+  const invalidatePracticeDataOnly = (songId?: string) => {
+    if (songId) {
+      // Invalider seulement les données de pratique (graphiques)
+      queryClient.invalidateQueries({
+        queryKey: ['songPracticeData', songId],
+      });
+    } else {
+      queryClient.invalidateQueries({
+        queryKey: ['songPracticeData'],
+      });
+    }
+  };
+
+  return { invalidateCache, invalidatePracticeDataOnly };
+}
+
+// Hook pour les tuiles d'apprentissage
+export function useSongLearningModeTiles(songId: string) {
+  return useQuery({
+    queryKey: ['songLearningModeTiles', songId],
+    queryFn: () => getSongLearningModeTilesAction(songId),
+    enabled: !!songId,
+  });
 }

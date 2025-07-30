@@ -127,45 +127,6 @@ interface TileData {
   iconColor: string;
 }
 
-export const learningTiles: TileData[] = [
-  {
-    label: 'Sessions',
-    value: 18,
-    iconName: 'IconClock',
-    iconColor: 'text-blue-500',
-  },
-  {
-    label: 'Précision moyenne',
-    value: '87%',
-    iconName: 'IconTarget',
-    iconColor: 'text-green-500',
-  },
-  {
-    label: 'Performance moyenne',
-    value: '84%',
-    iconName: 'IconStar',
-    iconColor: 'text-pink-500',
-  },
-  {
-    label: 'Temps total',
-    value: '5h 20min',
-    iconName: 'IconClock',
-    iconColor: 'text-purple-500',
-  },
-  {
-    label: 'Plus longue session',
-    value: '52min',
-    iconName: 'IconFlame',
-    iconColor: 'text-orange-500',
-  },
-  {
-    label: 'Streak',
-    value: '7 jours',
-    iconName: 'IconFire',
-    iconColor: 'text-red-500',
-  },
-];
-
 export const gameTiles: TileData[] = [
   {
     label: 'Sessions',
