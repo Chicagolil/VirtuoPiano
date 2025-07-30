@@ -4,6 +4,7 @@ import {
   PerformancesServices,
   SongLearningModeTiles,
   SongPerformanceGeneralTiles,
+  SongPlayModeTiles,
   SongPracticeData,
 } from '@/lib/services/performances-services';
 
@@ -12,6 +13,27 @@ import { getAuthenticatedUser } from '../auth/get-authenticated-user';
 export interface SongGeneralTilesActionResponse {
   success: boolean;
   data?: SongPerformanceGeneralTiles;
+  error?: string;
+}
+
+export interface SongPracticeDataMultipleActionResponse {
+  success: boolean;
+  data?: {
+    current: SongPracticeData;
+    previous?: SongPracticeData;
+    next?: SongPracticeData;
+  };
+  error?: string;
+}
+export interface SongLearningModeTilesActionResponse {
+  success: boolean;
+  data?: SongLearningModeTiles;
+  error?: string;
+}
+
+export interface SongPlayModeTilesActionResponse {
+  success: boolean;
+  data?: SongPlayModeTiles;
   error?: string;
 }
 
@@ -41,16 +63,6 @@ export async function getSongPerformanceGeneralTilesAction(
       error: 'Erreur lors de la récupération des données',
     };
   }
-}
-
-export interface SongPracticeDataMultipleActionResponse {
-  success: boolean;
-  data?: {
-    current: SongPracticeData;
-    previous?: SongPracticeData;
-    next?: SongPracticeData;
-  };
-  error?: string;
 }
 
 export async function getSongPracticeDataMultipleAction(
@@ -105,12 +117,6 @@ export async function getSongPracticeDataMultipleAction(
   }
 }
 
-export interface SongLearningModeTilesActionResponse {
-  success: boolean;
-  data?: SongLearningModeTiles;
-  error?: string;
-}
-
 export async function getSongLearningModeTilesAction(
   songId: string
 ): Promise<SongLearningModeTilesActionResponse> {
@@ -131,6 +137,30 @@ export async function getSongLearningModeTilesAction(
       "Erreur lors de la récupération des tuiles d'apprentissage:",
       error
     );
+    return {
+      success: false,
+      error: 'Erreur lors de la récupération des données',
+    };
+  }
+}
+
+export async function getSongPlayModeTilesAction(
+  songId: string
+): Promise<SongPlayModeTilesActionResponse> {
+  try {
+    const user = await getAuthenticatedUser();
+
+    const data = await PerformancesServices.getSongPlayModeTilesData(
+      songId,
+      user.id
+    );
+
+    return {
+      success: true,
+      data,
+    };
+  } catch (error) {
+    console.error('Erreur lors de la récupération des tuiles de jeu:', error);
     return {
       success: false,
       error: 'Erreur lors de la récupération des données',

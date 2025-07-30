@@ -92,12 +92,19 @@ export interface SongPracticeData {
   totalModeApprentissage: number;
 }
 
-export interface SongPerformanceLearningTiles {}
-
 export interface SongLearningModeTiles {
   totalSessions: number;
   averageAccuracy: number;
   averagePerformance: number;
+  totalTimeInMinutes: number;
+  longestSessionInMinutes: number;
+  currentStreak: number;
+}
+
+export interface SongPlayModeTiles {
+  totalSessions: number;
+  averageScore: number;
+  bestScore: number;
   totalTimeInMinutes: number;
   longestSessionInMinutes: number;
   currentStreak: number;
@@ -244,6 +251,22 @@ export class PerformancesServices {
     }
 
     return streak;
+  }
+
+  private static calculateTotalTimeInMinutes(sessions: any[]): number {
+    return sessions.reduce((sum, session) => {
+      const durationMs =
+        session.sessionEndTime.getTime() - session.sessionStartTime.getTime();
+      return sum + Math.round(durationMs / (1000 * 60));
+    }, 0);
+  }
+
+  private static calculateLongestSessionInMinutes(sessions: any[]): number {
+    return sessions.reduce((max, session) => {
+      const durationMs =
+        session.sessionEndTime.getTime() - session.sessionStartTime.getTime();
+      return Math.max(max, Math.round(durationMs / (1000 * 60)));
+    }, 0);
   }
 
   static async getPracticeDataForHeatmap(
@@ -1307,17 +1330,9 @@ export class PerformancesServices {
         totalSessions
     );
 
-    const totalTimeInMinutes = sessions.reduce((sum, session) => {
-      const durationMs =
-        session.sessionEndTime.getTime() - session.sessionStartTime.getTime();
-      return sum + Math.round(durationMs / (1000 * 60));
-    }, 0);
-
-    const longestSessionInMinutes = sessions.reduce((max, session) => {
-      const durationMs =
-        session.sessionEndTime.getTime() - session.sessionStartTime.getTime();
-      return Math.max(max, Math.round(durationMs / (1000 * 60)));
-    }, 0);
+    const totalTimeInMinutes = this.calculateTotalTimeInMinutes(sessions);
+    const longestSessionInMinutes =
+      this.calculateLongestSessionInMinutes(sessions);
 
     // Calculer le streak (jours consécutifs)
     const currentStreak = await this.calculateCurrentStreak(
@@ -1330,6 +1345,66 @@ export class PerformancesServices {
       totalSessions,
       averageAccuracy,
       averagePerformance,
+      totalTimeInMinutes,
+      longestSessionInMinutes,
+      currentStreak,
+    };
+  }
+
+  static async getSongPlayModeTilesData(
+    songId: string,
+    userId: string
+  ): Promise<SongPlayModeTiles> {
+    const sessions = await prisma.scores.findMany({
+      where: {
+        song_id: songId,
+        user_id: userId,
+        mode: {
+          name: 'Jeu',
+        },
+      },
+      orderBy: {
+        sessionStartTime: 'desc',
+      },
+    });
+
+    const totalSessions = sessions.length;
+
+    if (totalSessions === 0) {
+      return {
+        totalSessions: 0,
+        averageScore: 0,
+        bestScore: 0,
+        totalTimeInMinutes: 0,
+        longestSessionInMinutes: 0,
+        currentStreak: 0,
+      };
+    }
+
+    const averageScore = Math.round(
+      sessions.reduce((sum, session) => sum + (session.totalPoints || 0), 0) /
+        totalSessions
+    );
+
+    const bestScore = Math.max(
+      ...sessions.map((session) => session.totalPoints || 0)
+    );
+
+    const totalTimeInMinutes = this.calculateTotalTimeInMinutes(sessions);
+    const longestSessionInMinutes =
+      this.calculateLongestSessionInMinutes(sessions);
+
+    // Calculer le streak (jours consécutifs)
+    const currentStreak = await this.calculateCurrentStreak(
+      songId,
+      userId,
+      'Jeu'
+    );
+
+    return {
+      totalSessions,
+      averageScore,
+      bestScore,
       totalTimeInMinutes,
       longestSessionInMinutes,
       currentStreak,
