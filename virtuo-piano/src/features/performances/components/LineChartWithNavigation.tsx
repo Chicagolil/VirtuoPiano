@@ -10,6 +10,7 @@ import {
 } from 'recharts';
 import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 import * as Separator from '@radix-ui/react-separator';
+import { Spinner } from '@/components/ui/spinner';
 
 interface LineConfig {
   dataKey: string;
@@ -25,6 +26,8 @@ interface IntervalOption {
 }
 
 interface LineChartWithNavigationProps {
+  isLoading: boolean;
+  error: Error | null;
   title: string;
   icon: React.ReactNode;
   data: any[];
@@ -42,6 +45,8 @@ interface LineChartWithNavigationProps {
 }
 
 export default function LineChartWithNavigation({
+  isLoading,
+  error,
   title,
   icon,
   data,
@@ -108,58 +113,69 @@ export default function LineChartWithNavigation({
           </div>
         </div>
       </div>
-
-      <ResponsiveContainer width="100%" height={height}>
-        <LineChart
-          data={data}
-          margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-        >
-          <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-          <XAxis dataKey="session" tick={{ fontSize: 12, fill: '#94a3b8' }} />
-          <YAxis
-            domain={yAxisDomain}
-            tick={{ fontSize: 12, fill: '#94a3b8' }}
-          />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: '#1e293b',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '12px',
-            }}
-            itemStyle={{ color: '#e2e8f0' }}
-            labelStyle={{
-              color: '#e2e8f0',
-              fontWeight: 'bold',
-              marginBottom: '4px',
-            }}
-            formatter={(value, name) => {
-              const line = lines.find((l) => l.dataKey === name);
-              return [`${value}%`, line?.name || name];
-            }}
-          />
-
-          {lines.map((line, idx) => (
-            <Line
-              key={line.dataKey}
-              type="monotone"
-              dataKey={line.dataKey}
-              stroke={line.color}
-              strokeWidth={line.strokeWidth || (idx === 0 ? 3 : 2)}
-              strokeDasharray={line.strokeDasharray}
-              dot={{
-                r: idx === 0 ? 4 : 3,
-                fill: line.color,
-                strokeWidth: 0,
+      {isLoading ? (
+        <div className="flex items-center justify-center h-[250px]">
+          <Spinner variant="bars" size={32} className="text-white" />
+        </div>
+      ) : error ? (
+        <div className="flex items-center justify-center h-[250px]">
+          <div className="text-center text-red-400 text-sm">
+            {error.message || 'Erreur lors du chargement'}
+          </div>
+        </div>
+      ) : (
+        <ResponsiveContainer width="100%" height={height}>
+          <LineChart
+            data={data}
+            margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+            <XAxis dataKey="session" tick={{ fontSize: 12, fill: '#94a3b8' }} />
+            <YAxis
+              domain={yAxisDomain}
+              tick={{ fontSize: 12, fill: '#94a3b8' }}
+            />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: '#1e293b',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '12px',
               }}
-              activeDot={{
-                r: idx === 0 ? 6 : 5,
-                fill: line.color.replace('500', '400'),
+              itemStyle={{ color: '#e2e8f0' }}
+              labelStyle={{
+                color: '#e2e8f0',
+                fontWeight: 'bold',
+                marginBottom: '4px',
+              }}
+              formatter={(value, name) => {
+                const line = lines.find((l) => l.dataKey === name);
+                return [`${value}%`, line?.name || name];
               }}
             />
-          ))}
-        </LineChart>
-      </ResponsiveContainer>
+
+            {lines.map((line, idx) => (
+              <Line
+                key={line.dataKey}
+                type="monotone"
+                dataKey={line.dataKey}
+                stroke={line.color}
+                strokeWidth={line.strokeWidth || (idx === 0 ? 3 : 2)}
+                strokeDasharray={line.strokeDasharray}
+                dot={{
+                  r: idx === 0 ? 4 : 3,
+                  fill: line.color,
+                  strokeWidth: 0,
+                }}
+                activeDot={{
+                  r: idx === 0 ? 6 : 5,
+                  fill: line.color.replace('500', '400'),
+                }}
+              />
+            ))}
+          </LineChart>
+        </ResponsiveContainer>
+      )}
 
       <Separator.Root className="h-px bg-slate-500 dark:bg-slate-800 my-4" />
 

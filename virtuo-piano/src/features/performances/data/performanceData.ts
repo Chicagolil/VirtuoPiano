@@ -249,27 +249,6 @@ export const gameBarIntervals = [
 ];
 
 // --- EXTENDED DATA ---
-export const generateExtendedPrecisionData = () => {
-  return [
-    ...learningPrecisionData,
-    // Sessions 8-14
-    { session: 8, droite: 94, gauche: 89, deux: 93 },
-    { session: 9, droite: 95, gauche: 90, deux: 94 },
-    { session: 10, droite: 93, gauche: 91, deux: 93 },
-    { session: 11, droite: 96, gauche: 92, deux: 95 },
-    { session: 12, droite: 97, gauche: 93, deux: 96 },
-    { session: 13, droite: 95, gauche: 94, deux: 95 },
-    { session: 14, droite: 98, gauche: 95, deux: 97 },
-    // Sessions 15-21
-    { session: 15, droite: 96, gauche: 93, deux: 95 },
-    { session: 16, droite: 97, gauche: 94, deux: 96 },
-    { session: 17, droite: 98, gauche: 95, deux: 97 },
-    { session: 18, droite: 99, gauche: 96, deux: 98 },
-    { session: 19, droite: 97, gauche: 97, deux: 97 },
-    { session: 20, droite: 98, gauche: 98, deux: 98 },
-    { session: 21, droite: 99, gauche: 99, deux: 99 },
-  ];
-};
 
 export const generateExtendedPerformanceData = () => {
   return [

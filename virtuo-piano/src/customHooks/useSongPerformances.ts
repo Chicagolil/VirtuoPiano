@@ -4,6 +4,7 @@ import {
   getSongPerformanceGeneralTilesAction,
   getSongPlayModeTilesAction,
   getSongPracticeDataMultipleAction,
+  getSongLearningPrecisionDataMultipleAction,
 } from '@/lib/actions/songPerformances-actions';
 
 // Hook pour les tuiles générales
@@ -25,7 +26,7 @@ export function useSongPracticeData(
     queryKey: ['songPracticeData', songId, interval, index],
     queryFn: () => getSongPracticeDataMultipleAction(songId, interval, index),
     enabled: !!songId,
-    staleTime: 1 * 60 * 1000, // 1 minute
+    staleTime: 2 * 60 * 1000, // 2 minutes
     placeholderData: (previousData) => previousData, // Garde les anciennes données pendant le chargement
   });
 }
@@ -45,7 +46,7 @@ export function usePrefetchAdjacentData(
         queryKey: ['songPracticeData', songId, interval, currentIndex - 1],
         queryFn: () =>
           getSongPracticeDataMultipleAction(songId, interval, currentIndex - 1),
-        staleTime: 1 * 60 * 1000,
+        staleTime: 2 * 60 * 1000,
       });
     }
 
@@ -80,6 +81,9 @@ export function useInvalidatePracticeCache() {
       queryClient.invalidateQueries({
         queryKey: ['songPlayModeTiles', songId],
       });
+      queryClient.invalidateQueries({
+        queryKey: ['songLearningPrecisionData', songId],
+      });
     } else {
       // Invalider tout le cache de pratique
       queryClient.invalidateQueries({
@@ -93,6 +97,9 @@ export function useInvalidatePracticeCache() {
       });
       queryClient.invalidateQueries({
         queryKey: ['songPlayModeTiles'],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['songLearningPrecisionData'],
       });
     }
   };
@@ -110,7 +117,24 @@ export function useInvalidatePracticeCache() {
     }
   };
 
-  return { invalidateCache, invalidatePracticeDataOnly };
+  const invalidatePrecisionDataOnly = (songId?: string) => {
+    if (songId) {
+      // Invalider seulement les données de précision
+      queryClient.invalidateQueries({
+        queryKey: ['songLearningPrecisionData', songId],
+      });
+    } else {
+      queryClient.invalidateQueries({
+        queryKey: ['songLearningPrecisionData'],
+      });
+    }
+  };
+
+  return {
+    invalidateCache,
+    invalidatePracticeDataOnly,
+    invalidatePrecisionDataOnly,
+  };
 }
 
 // Hook pour les tuiles d'apprentissage
@@ -129,4 +153,69 @@ export function useSongPlayModeTiles(songId: string) {
     queryFn: () => getSongPlayModeTilesAction(songId),
     enabled: !!songId,
   });
+}
+
+// Hook pour les données de précision d'apprentissage
+export function useSongLearningPrecisionData(
+  songId: string,
+  interval: number,
+  index: number
+) {
+  return useQuery({
+    queryKey: ['songLearningPrecisionData', songId, interval, index],
+    queryFn: () =>
+      getSongLearningPrecisionDataMultipleAction(songId, interval, index),
+    enabled: !!songId,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    placeholderData: (previousData) => previousData, // Garde les anciennes données pendant le chargement
+  });
+}
+
+// Hook pour précharger les données de précision adjacentes
+export function usePrefetchLearningPrecisionData(
+  songId: string,
+  interval: number,
+  currentIndex: number
+) {
+  const queryClient = useQueryClient();
+
+  const prefetchAdjacent = () => {
+    // Précharger l'index précédent
+    if (currentIndex > 0) {
+      queryClient.prefetchQuery({
+        queryKey: [
+          'songLearningPrecisionData',
+          songId,
+          interval,
+          currentIndex - 1,
+        ],
+        queryFn: () =>
+          getSongLearningPrecisionDataMultipleAction(
+            songId,
+            interval,
+            currentIndex - 1
+          ),
+        staleTime: 1 * 60 * 1000,
+      });
+    }
+
+    // Précharger l'index suivant
+    queryClient.prefetchQuery({
+      queryKey: [
+        'songLearningPrecisionData',
+        songId,
+        interval,
+        currentIndex + 1,
+      ],
+      queryFn: () =>
+        getSongLearningPrecisionDataMultipleAction(
+          songId,
+          interval,
+          currentIndex + 1
+        ),
+      staleTime: 1 * 60 * 1000,
+    });
+  };
+
+  return { prefetchAdjacent };
 }

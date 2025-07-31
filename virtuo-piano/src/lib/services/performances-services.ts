@@ -86,7 +86,7 @@ export interface PracticeDataPoint {
 }
 
 export interface PrecisionDataPoint {
-  name: string;
+  session: string;
   precisionRightHand: number;
   precisionLeftHand: number;
   precisionBothHands: number;
@@ -1483,7 +1483,8 @@ export class PerformancesServices {
       } else {
         const day = String(sessionDate.getDate()).padStart(2, '0');
         const month = String(sessionDate.getMonth() + 1).padStart(2, '0');
-        displayName = `${day}/${month}`;
+        const year = sessionDate.getFullYear();
+        displayName = `${day}/${month}/${year}`;
       }
 
       // Déterminer quelle main a été utilisée et assigner la précision
@@ -1508,7 +1509,7 @@ export class PerformancesServices {
       }
 
       data.push({
-        name: displayName,
+        session: displayName,
         precisionRightHand,
         precisionLeftHand,
         precisionBothHands,

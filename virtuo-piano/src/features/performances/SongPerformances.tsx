@@ -3,7 +3,7 @@
 import { useEffect, useState, useTransition } from 'react';
 import { useSong } from '@/contexts/SongContext';
 import { useRouter } from 'next/navigation';
-import { castMsToMin, formatDuration } from '@/common/utils/function';
+import { castMsToMin } from '@/common/utils/function';
 import {
   IconMusic,
   IconHeart,
@@ -13,33 +13,21 @@ import {
   IconTrophy,
   IconTarget,
   IconFlame,
-  IconMedal,
   IconTimeline,
   IconStar,
   IconBrain,
   IconFlame as IconFire,
 } from '@tabler/icons-react';
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts';
+
 import React from 'react';
 import styles from '../library/Song.module.css';
 import { toggleFavorite } from '@/lib/actions/songs';
 import DifficultyBadge from '@/components/DifficultyBadge';
 import { toast } from 'react-hot-toast';
 import { SongBasicData } from '@/lib/services/performances-services';
-import { Spinner } from '@/components/ui/spinner';
-import { useSongPerformanceGeneralTiles } from '@/customHooks/useSongPerformances';
 
 // Composants extraits
 import RecordsTimeline from './components/RecordsTimeline';
-import InfoTile from './components/InfoTile';
 import LineChartWithNavigation from './components/LineChartWithNavigation';
 import BarChartWithNavigation from './components/BarChartWithNavigation';
 import MultiAxisLineChart from './components/MultiAxisLineChart';
@@ -50,8 +38,6 @@ import RecentSessionsByMode from './components/RecentSessionsByMode';
 import {
   learningRecords,
   gameRecords,
-  gameTiles,
-  generateExtendedPrecisionData,
   generateExtendedPerformanceData,
   generateExtendedScoreData,
   learningBarIntervals,
@@ -68,7 +54,6 @@ import LearningTiles from './components/LearningTiles';
 import PracticeGraph from './components/PracticeGraph';
 import GeneralTiles from './components/GeneralTiles';
 import GamingTiles from './components/GamingTiles';
-import { getSongLearningPrecisionDataAction } from '@/lib/actions/songPerformances-actions';
 import PrecisionChart from './components/PrecisionChart';
 
 export default function SongPerformances({ song }: { song: SongBasicData }) {
@@ -389,6 +374,8 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
               <div className="grid grid-cols-12 gap-6">
                 <div className="col-span-12 lg:col-span-7">
                   <LineChartWithNavigation
+                    isLoading={false}
+                    error={null}
                     title="Performance par session"
                     icon={<IconStar size={20} className="mr-2 text-pink-400" />}
                     data={getPerformanceData()}

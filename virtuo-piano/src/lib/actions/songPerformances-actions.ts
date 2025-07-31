@@ -32,6 +32,16 @@ export interface SongLearningPrecisionDataActionResponse {
   error?: string;
 }
 
+export interface SongLearningPrecisionDataMultipleActionResponse {
+  success: boolean;
+  data?: {
+    current: SongLearningPrecisionData;
+    previous?: SongLearningPrecisionData;
+    next?: SongLearningPrecisionData;
+  };
+  error?: string;
+}
+
 export interface SongLearningModeTilesActionResponse {
   success: boolean;
   data?: SongLearningModeTiles;
@@ -175,27 +185,51 @@ export async function getSongPlayModeTilesAction(
   }
 }
 
-export async function getSongLearningPrecisionDataAction(
+export async function getSongLearningPrecisionDataMultipleAction(
   songId: string,
   interval: number,
   index: number
-): Promise<SongLearningPrecisionDataActionResponse> {
+): Promise<SongLearningPrecisionDataMultipleActionResponse> {
   try {
     const user = await getAuthenticatedUser();
 
-    const data = await PerformancesServices.getSongLearningPrecisionData(
-      songId,
-      user.id,
-      interval,
-      index
-    );
+    // Récupérer les données actuelles, précédentes et suivantes en parallèle
+    const [current, previous, next] = await Promise.all([
+      PerformancesServices.getSongLearningPrecisionData(
+        songId,
+        user.id,
+        interval,
+        index
+      ),
+      index > 0
+        ? PerformancesServices.getSongLearningPrecisionData(
+            songId,
+            user.id,
+            interval,
+            index - 1
+          )
+        : Promise.resolve(null),
+      PerformancesServices.getSongLearningPrecisionData(
+        songId,
+        user.id,
+        interval,
+        index + 1
+      ),
+    ]);
 
     return {
       success: true,
-      data,
+      data: {
+        current,
+        previous: previous || undefined,
+        next: next || undefined,
+      },
     };
   } catch (error) {
-    console.error('Erreur lors de la récupération des données:', error);
+    console.error(
+      'Erreur lors de la récupération des données de précision multiples:',
+      error
+    );
     return {
       success: false,
       error: 'Erreur lors de la récupération des données',
