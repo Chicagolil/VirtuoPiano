@@ -3,6 +3,7 @@
 import {
   PerformancesServices,
   SongLearningModeTiles,
+  SongLearningPrecisionData,
   SongPerformanceGeneralTiles,
   SongPlayModeTiles,
   SongPracticeData,
@@ -25,6 +26,12 @@ export interface SongPracticeDataMultipleActionResponse {
   };
   error?: string;
 }
+export interface SongLearningPrecisionDataActionResponse {
+  success: boolean;
+  data?: SongLearningPrecisionData;
+  error?: string;
+}
+
 export interface SongLearningModeTilesActionResponse {
   success: boolean;
   data?: SongLearningModeTiles;
@@ -161,6 +168,34 @@ export async function getSongPlayModeTilesAction(
     };
   } catch (error) {
     console.error('Erreur lors de la récupération des tuiles de jeu:', error);
+    return {
+      success: false,
+      error: 'Erreur lors de la récupération des données',
+    };
+  }
+}
+
+export async function getSongLearningPrecisionDataAction(
+  songId: string,
+  interval: number,
+  index: number
+): Promise<SongLearningPrecisionDataActionResponse> {
+  try {
+    const user = await getAuthenticatedUser();
+
+    const data = await PerformancesServices.getSongLearningPrecisionData(
+      songId,
+      user.id,
+      interval,
+      index
+    );
+
+    return {
+      success: true,
+      data,
+    };
+  } catch (error) {
+    console.error('Erreur lors de la récupération des données:', error);
     return {
       success: false,
       error: 'Erreur lors de la récupération des données',

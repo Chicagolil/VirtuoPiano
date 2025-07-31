@@ -281,6 +281,15 @@ export class PerformancesServices {
     }, 0);
   }
 
+  private static hasHandActivity(session: any): boolean {
+    return (
+      (session.correctNotes || 0) +
+        (session.missedNotes || 0) +
+        (session.wrongNotes || 0) >
+      0
+    );
+  }
+
   static async getPracticeDataForHeatmap(
     userId: string,
     year: number
@@ -1445,6 +1454,7 @@ export class PerformancesServices {
         sessionStartTime: 'desc',
       },
       take: interval,
+      skip: index * interval,
     });
 
     // Inverser l'ordre pour avoir les sessions du plus ancien au plus récent
@@ -1505,26 +1515,58 @@ export class PerformancesServices {
       });
     });
 
-    // Calculer les moyennes globales
-    const totalPrecisionRightHand = data.reduce(
+    // Calculer les moyennes globales seulement sur les sessions avec activité
+    const rightHandSessions = data.filter((point, index) => {
+      const session = orderedSessions[index];
+      const hasActivity = this.hasHandActivity(session);
+      return (
+        point.precisionRightHand > 0 ||
+        (hasActivity && session.hands === 'right')
+      );
+    });
+
+    const leftHandSessions = data.filter((point, index) => {
+      const session = orderedSessions[index];
+      const hasActivity = this.hasHandActivity(session);
+      return (
+        point.precisionLeftHand > 0 || (hasActivity && session.hands === 'left')
+      );
+    });
+
+    const bothHandsSessions = data.filter((point, index) => {
+      const session = orderedSessions[index];
+      const hasActivity = this.hasHandActivity(session);
+      return (
+        point.precisionBothHands > 0 ||
+        (hasActivity && session.hands === 'both')
+      );
+    });
+
+    const totalPrecisionRightHand = rightHandSessions.reduce(
       (sum, point) => sum + point.precisionRightHand,
       0
     );
-    const totalPrecisionLeftHand = data.reduce(
+    const totalPrecisionLeftHand = leftHandSessions.reduce(
       (sum, point) => sum + point.precisionLeftHand,
       0
     );
-    const totalPrecisionBothHands = data.reduce(
+    const totalPrecisionBothHands = bothHandsSessions.reduce(
       (sum, point) => sum + point.precisionBothHands,
       0
     );
 
     const averagePrecisionRightHand =
-      data.length > 0 ? Math.round(totalPrecisionRightHand / data.length) : 0;
+      rightHandSessions.length > 0
+        ? Math.round(totalPrecisionRightHand / rightHandSessions.length)
+        : 0;
     const averagePrecisionLeftHand =
-      data.length > 0 ? Math.round(totalPrecisionLeftHand / data.length) : 0;
+      leftHandSessions.length > 0
+        ? Math.round(totalPrecisionLeftHand / leftHandSessions.length)
+        : 0;
     const averagePrecisionBothHands =
-      data.length > 0 ? Math.round(totalPrecisionBothHands / data.length) : 0;
+      bothHandsSessions.length > 0
+        ? Math.round(totalPrecisionBothHands / bothHandsSessions.length)
+        : 0;
 
     return {
       data,

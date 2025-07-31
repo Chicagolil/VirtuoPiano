@@ -68,6 +68,8 @@ import LearningTiles from './components/LearningTiles';
 import PracticeGraph from './components/PracticeGraph';
 import GeneralTiles from './components/GeneralTiles';
 import GamingTiles from './components/GamingTiles';
+import { getSongLearningPrecisionDataAction } from '@/lib/actions/songPerformances-actions';
+import PrecisionChart from './components/PrecisionChart';
 
 export default function SongPerformances({ song }: { song: SongBasicData }) {
   const { setCurrentSong } = useSong();
@@ -79,8 +81,7 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
   );
 
   // États pour la navigation des intervalles de lignes
-  const [precisionInterval, setPrecisionInterval] = useState(7);
-  const [precisionIndex, setPrecisionIndex] = useState(0);
+
   const [performanceInterval, setPerformanceInterval] = useState(7);
   const [performanceIndex, setPerformanceIndex] = useState(0);
   const [scoreInterval, setScoreInterval] = useState(7);
@@ -90,10 +91,7 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
   const [learningBarIndex, setLearningBarIndex] = useState(0);
   const [gameBarIndex, setGameBarIndex] = useState(0);
 
-  // Hooks React Query
-
   // Données étendues
-  const extendedPrecisionData = generateExtendedPrecisionData();
   const extendedPerformanceData = generateExtendedPerformanceData();
   const extendedScoreData = generateExtendedScoreData();
 
@@ -104,9 +102,6 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
 
   // Initialiser les indices par défaut
   useEffect(() => {
-    setPrecisionIndex(
-      getDefaultIndex(extendedPrecisionData.length, precisionInterval)
-    );
     setPerformanceIndex(
       getDefaultIndex(extendedPerformanceData.length, performanceInterval)
     );
@@ -114,12 +109,6 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
     // Pas besoin d'initialiser practiceIndex car il est géré par le serveur
   }, []);
 
-  const getPrecisionData = () =>
-    sliceDataByInterval(
-      extendedPrecisionData,
-      precisionIndex,
-      precisionInterval
-    );
   const getPerformanceData = () =>
     sliceDataByInterval(
       extendedPerformanceData,
@@ -128,10 +117,6 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
     );
   const getScoreData = () =>
     sliceDataByInterval(extendedScoreData, scoreIndex, scoreInterval);
-
-  const avgPrecisionDeux = calculateAverage(getPrecisionData(), 'deux');
-  const avgPrecisionDroite = calculateAverage(getPrecisionData(), 'droite');
-  const avgPrecisionGauche = calculateAverage(getPrecisionData(), 'gauche');
 
   const avgPerformanceDeux = calculateAverage(getPerformanceData(), 'deux');
   const avgPerformanceDroite = calculateAverage(getPerformanceData(), 'droite');
@@ -184,23 +169,6 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
       <IconComponent size={20} className={iconColor} />
     ) : null;
   };
-
-  // Configuration des lignes pour les graphiques
-  const precisionLines = [
-    { dataKey: 'deux', color: '#f59e0b', name: 'Deux mains', strokeWidth: 3 },
-    {
-      dataKey: 'droite',
-      color: '#6366f1',
-      name: 'Main droite',
-      strokeDasharray: '5 5',
-    },
-    {
-      dataKey: 'gauche',
-      color: '#10b981',
-      name: 'Main gauche',
-      strokeDasharray: '10 5',
-    },
-  ];
 
   const performanceLines = [
     { dataKey: 'deux', color: '#f59e0b', name: 'Deux mains', strokeWidth: 3 },
@@ -414,45 +382,7 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
                 <LearningTiles songId={song.id} />
 
                 {/* Graphique Précision */}
-                <div className="col-span-12 lg:col-span-7">
-                  <LineChartWithNavigation
-                    title="Précision par session"
-                    icon={
-                      <IconTarget size={20} className="mr-2 text-green-400" />
-                    }
-                    data={getPrecisionData()}
-                    lines={precisionLines}
-                    interval={precisionInterval}
-                    index={precisionIndex}
-                    onIntervalChange={setPrecisionInterval}
-                    onIndexChange={setPrecisionIndex}
-                    maxDataLength={extendedPrecisionData.length}
-                    themeColor="text-green-400"
-                    intervalOptions={defaultIntervalOptions}
-                    summary={
-                      <ChartSummary
-                        title="Précisions moyennes"
-                        items={[
-                          {
-                            label: 'Deux mains',
-                            value: `${avgPrecisionDeux}%`,
-                            color: 'text-amber-500 dark:text-amber-400',
-                          },
-                          {
-                            label: 'Main droite',
-                            value: `${avgPrecisionDroite}%`,
-                            color: 'text-indigo-600 dark:text-indigo-400',
-                          },
-                          {
-                            label: 'Main gauche',
-                            value: `${avgPrecisionGauche}%`,
-                            color: 'text-green-500 dark:text-green-400',
-                          },
-                        ]}
-                      />
-                    }
-                  />
-                </div>
+                <PrecisionChart songId={song.id} />
               </div>
 
               {/* Graphique Performance et graphique en barres */}
