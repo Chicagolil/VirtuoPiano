@@ -85,11 +85,24 @@ export interface PracticeDataPoint {
   modeApprentissage: number;
 }
 
+export interface PrecisionDataPoint {
+  name: string;
+  precisionRightHand: number;
+  precisionLeftHand: number;
+  precisionBothHands: number;
+}
+
 export interface SongPracticeData {
   data: PracticeDataPoint[];
   totalPratique: number;
   totalModeJeu: number;
   totalModeApprentissage: number;
+}
+export interface SongLearningPrecisionData {
+  data: PrecisionDataPoint[];
+  averagePrecisionRightHand: number;
+  averagePrecisionLeftHand: number;
+  averagePrecisionBothHands: number;
 }
 
 export interface SongLearningModeTiles {
@@ -153,7 +166,6 @@ export class PerformancesServices {
 
     return { startDate, endDate };
   }
-
   private static getPreviousIntervalDates(
     interval: 'week' | 'month' | 'quarter'
   ): { startDate: Date; endDate: Date } {
@@ -1162,125 +1174,6 @@ export class PerformancesServices {
     };
   }
 
-  static async getSongPracticeData(
-    songId: string,
-    userId: string,
-    interval: number,
-    index: number
-  ): Promise<SongPracticeData> {
-    // Calculer la date de début et de fin pour l'intervalle
-    const endDate = new Date();
-    endDate.setHours(23, 59, 59, 999);
-
-    const startDate = new Date();
-    startDate.setDate(endDate.getDate() - interval * (index + 1) + 1);
-    startDate.setHours(0, 0, 0, 0);
-
-    // Récupérer toutes les sessions pour cette chanson dans l'intervalle
-    const sessions = await prisma.scores.findMany({
-      where: {
-        song_id: songId,
-        user_id: userId,
-        sessionStartTime: {
-          gte: startDate,
-          lte: endDate,
-        },
-      },
-      include: {
-        mode: {
-          select: {
-            name: true,
-          },
-        },
-      },
-      orderBy: {
-        sessionStartTime: 'asc',
-      },
-    });
-
-    // Grouper les sessions par jour
-    const dailyData = new Map<
-      string,
-      {
-        pratique: number;
-        modeJeu: number;
-        modeApprentissage: number;
-      }
-    >();
-
-    sessions.forEach((session) => {
-      const dateKey = session.sessionStartTime.toISOString().split('T')[0];
-      const durationMs =
-        session.sessionEndTime.getTime() - session.sessionStartTime.getTime();
-      const durationMinutes = Math.round(durationMs / (1000 * 60));
-
-      if (!dailyData.has(dateKey)) {
-        dailyData.set(dateKey, {
-          pratique: 0,
-          modeJeu: 0,
-          modeApprentissage: 0,
-        });
-      }
-
-      const dayData = dailyData.get(dateKey)!;
-      dayData.pratique += durationMinutes;
-
-      if (session.mode.name === 'Jeu') {
-        dayData.modeJeu += durationMinutes;
-      } else if (session.mode.name === 'Apprentissage') {
-        dayData.modeApprentissage += durationMinutes;
-      }
-    });
-
-    // Créer les points de données avec les bonnes dates
-    const data: PracticeDataPoint[] = [];
-    const today = new Date();
-
-    for (let i = interval - 1; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(today.getDate() - index * interval - i);
-      const dateKey = date.toISOString().split('T')[0];
-
-      const dayData = dailyData.get(dateKey) || {
-        pratique: 0,
-        modeJeu: 0,
-        modeApprentissage: 0,
-      };
-
-      // Formater le nom de la date
-      let displayName: string;
-      if (i === 0 && index === 0) {
-        displayName = "Aujourd'hui";
-      } else {
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        displayName = `${day}/${month}`;
-      }
-
-      data.push({
-        name: displayName,
-        pratique: dayData.pratique,
-        modeJeu: dayData.modeJeu,
-        modeApprentissage: dayData.modeApprentissage,
-      });
-    }
-
-    // Calculer les totaux
-    const totalPratique = data.reduce((sum, point) => sum + point.pratique, 0);
-    const totalModeJeu = data.reduce((sum, point) => sum + point.modeJeu, 0);
-    const totalModeApprentissage = data.reduce(
-      (sum, point) => sum + point.modeApprentissage,
-      0
-    );
-
-    return {
-      data,
-      totalPratique,
-      totalModeJeu,
-      totalModeApprentissage,
-    };
-  }
-
   static async getSongLearningModeTilesData(
     songId: string,
     userId: string
@@ -1408,6 +1301,236 @@ export class PerformancesServices {
       totalTimeInMinutes,
       longestSessionInMinutes,
       currentStreak,
+    };
+  }
+
+  static async getSongPracticeData(
+    songId: string,
+    userId: string,
+    interval: number,
+    index: number
+  ): Promise<SongPracticeData> {
+    // Calculer la date de début et de fin pour l'intervalle
+    const endDate = new Date();
+    endDate.setHours(23, 59, 59, 999);
+
+    const startDate = new Date();
+    startDate.setDate(endDate.getDate() - interval * (index + 1) + 1);
+    startDate.setHours(0, 0, 0, 0);
+
+    // Récupérer toutes les sessions pour cette chanson dans l'intervalle
+    const sessions = await prisma.scores.findMany({
+      where: {
+        song_id: songId,
+        user_id: userId,
+        sessionStartTime: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+      include: {
+        mode: {
+          select: {
+            name: true,
+          },
+        },
+      },
+      orderBy: {
+        sessionStartTime: 'asc',
+      },
+    });
+
+    // Grouper les sessions par jour
+    const dailyData = new Map<
+      string,
+      {
+        pratique: number;
+        modeJeu: number;
+        modeApprentissage: number;
+      }
+    >();
+
+    sessions.forEach((session) => {
+      const dateKey = session.sessionStartTime.toISOString().split('T')[0];
+      const durationMs =
+        session.sessionEndTime.getTime() - session.sessionStartTime.getTime();
+      const durationMinutes = Math.round(durationMs / (1000 * 60));
+
+      if (!dailyData.has(dateKey)) {
+        dailyData.set(dateKey, {
+          pratique: 0,
+          modeJeu: 0,
+          modeApprentissage: 0,
+        });
+      }
+
+      const dayData = dailyData.get(dateKey)!;
+      dayData.pratique += durationMinutes;
+
+      if (session.mode.name === 'Jeu') {
+        dayData.modeJeu += durationMinutes;
+      } else if (session.mode.name === 'Apprentissage') {
+        dayData.modeApprentissage += durationMinutes;
+      }
+    });
+
+    // Créer les points de données avec les bonnes dates
+    const data: PracticeDataPoint[] = [];
+    const today = new Date();
+
+    for (let i = interval - 1; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(today.getDate() - index * interval - i);
+      const dateKey = date.toISOString().split('T')[0];
+
+      const dayData = dailyData.get(dateKey) || {
+        pratique: 0,
+        modeJeu: 0,
+        modeApprentissage: 0,
+      };
+
+      // Formater le nom de la date
+      let displayName: string;
+      if (i === 0 && index === 0) {
+        displayName = "Aujourd'hui";
+      } else {
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        displayName = `${day}/${month}`;
+      }
+
+      data.push({
+        name: displayName,
+        pratique: dayData.pratique,
+        modeJeu: dayData.modeJeu,
+        modeApprentissage: dayData.modeApprentissage,
+      });
+    }
+
+    // Calculer les totaux
+    const totalPratique = data.reduce((sum, point) => sum + point.pratique, 0);
+    const totalModeJeu = data.reduce((sum, point) => sum + point.modeJeu, 0);
+    const totalModeApprentissage = data.reduce(
+      (sum, point) => sum + point.modeApprentissage,
+      0
+    );
+
+    return {
+      data,
+      totalPratique,
+      totalModeJeu,
+      totalModeApprentissage,
+    };
+  }
+
+  static async getSongLearningPrecisionData(
+    songId: string,
+    userId: string,
+    interval: number,
+    index: number
+  ): Promise<SongLearningPrecisionData> {
+    // session dans l'intervalle
+    const sessions = await prisma.scores.findMany({
+      where: {
+        song_id: songId,
+        user_id: userId,
+        mode: {
+          name: 'Apprentissage',
+        },
+      },
+      include: {
+        mode: true,
+      },
+      orderBy: {
+        sessionStartTime: 'desc',
+      },
+      take: interval,
+    });
+
+    // Inverser l'ordre pour avoir les sessions du plus ancien au plus récent
+    const orderedSessions = sessions.reverse();
+
+    // Créer un point de données pour chaque session
+    const data: PrecisionDataPoint[] = [];
+    const today = new Date();
+
+    orderedSessions.forEach((session, index) => {
+      const sessionDate = session.sessionStartTime;
+
+      // Calculer la précision pour cette session
+      const { accuracy } = getLearnScores(
+        session.correctNotes || 0,
+        session.missedNotes || 0,
+        session.wrongNotes || 0
+      );
+
+      // Formater le nom de la date
+      let displayName: string;
+      const isToday = sessionDate.toDateString() === today.toDateString();
+
+      if (isToday) {
+        displayName = "Aujourd'hui";
+      } else {
+        const day = String(sessionDate.getDate()).padStart(2, '0');
+        const month = String(sessionDate.getMonth() + 1).padStart(2, '0');
+        displayName = `${day}/${month}`;
+      }
+
+      // Déterminer quelle main a été utilisée et assigner la précision
+      let precisionRightHand = 0;
+      let precisionLeftHand = 0;
+      let precisionBothHands = 0;
+
+      switch (session.hands) {
+        case 'right':
+          precisionRightHand = accuracy;
+          break;
+        case 'left':
+          precisionLeftHand = accuracy;
+          break;
+        case 'both':
+          precisionBothHands = accuracy;
+          break;
+        default:
+          // Si hands n'est pas défini, on met tout dans both
+          precisionBothHands = accuracy;
+          break;
+      }
+
+      data.push({
+        name: displayName,
+        precisionRightHand,
+        precisionLeftHand,
+        precisionBothHands,
+      });
+    });
+
+    // Calculer les moyennes globales
+    const totalPrecisionRightHand = data.reduce(
+      (sum, point) => sum + point.precisionRightHand,
+      0
+    );
+    const totalPrecisionLeftHand = data.reduce(
+      (sum, point) => sum + point.precisionLeftHand,
+      0
+    );
+    const totalPrecisionBothHands = data.reduce(
+      (sum, point) => sum + point.precisionBothHands,
+      0
+    );
+
+    const averagePrecisionRightHand =
+      data.length > 0 ? Math.round(totalPrecisionRightHand / data.length) : 0;
+    const averagePrecisionLeftHand =
+      data.length > 0 ? Math.round(totalPrecisionLeftHand / data.length) : 0;
+    const averagePrecisionBothHands =
+      data.length > 0 ? Math.round(totalPrecisionBothHands / data.length) : 0;
+
+    return {
+      data,
+      averagePrecisionRightHand,
+      averagePrecisionLeftHand,
+      averagePrecisionBothHands,
     };
   }
 }

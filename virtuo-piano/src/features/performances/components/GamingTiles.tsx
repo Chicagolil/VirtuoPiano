@@ -4,7 +4,6 @@ import InfoTile from './InfoTile';
 import {
   IconChartBar,
   IconClock,
-  IconFireExtinguisher,
   IconFlame,
   IconTrophy,
 } from '@tabler/icons-react';
