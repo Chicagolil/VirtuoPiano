@@ -88,7 +88,7 @@ export default function PrecisionChart({ songId }: { songId: string }) {
         index={precisionIndex}
         onIntervalChange={handleIntervalChange}
         onIndexChange={handleIndexChange}
-        maxDataLength={precisionData.length}
+        maxDataLength={precisionResult?.data?.current?.totalSessions || 0}
         themeColor="text-green-400"
         intervalOptions={defaultIntervalOptions}
         summary={

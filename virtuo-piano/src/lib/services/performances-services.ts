@@ -103,6 +103,7 @@ export interface SongLearningPrecisionData {
   averagePrecisionRightHand: number;
   averagePrecisionLeftHand: number;
   averagePrecisionBothHands: number;
+  totalSessions: number;
 }
 
 export interface SongLearningModeTiles {
@@ -1438,6 +1439,17 @@ export class PerformancesServices {
     interval: number,
     index: number
   ): Promise<SongLearningPrecisionData> {
+    // Compter le nombre total de sessions
+    const totalSessions = await prisma.scores.count({
+      where: {
+        song_id: songId,
+        user_id: userId,
+        mode: {
+          name: 'Apprentissage',
+        },
+      },
+    });
+
     // session dans l'intervalle
     const sessions = await prisma.scores.findMany({
       where: {
@@ -1574,6 +1586,7 @@ export class PerformancesServices {
       averagePrecisionRightHand,
       averagePrecisionLeftHand,
       averagePrecisionBothHands,
+      totalSessions,
     };
   }
 }

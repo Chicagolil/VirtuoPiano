@@ -82,8 +82,8 @@ export default function LineChartWithNavigation({
         <div className="flex flex-col items-center mb-2">
           <div className="flex items-center justify-center space-x-4 mb-2">
             <button
-              onClick={() => onIndexChange(Math.max(0, index - 1))}
-              disabled={index === 0}
+              onClick={() => onIndexChange(index + 1)}
+              disabled={(index + 1) * interval >= maxDataLength}
               className="p-2 rounded-full hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <IconChevronLeft size={20} className={themeColor} />
@@ -104,8 +104,8 @@ export default function LineChartWithNavigation({
               ))}
             </select>
             <button
-              onClick={() => onIndexChange(index + 1)}
-              disabled={(index + 1) * interval >= maxDataLength}
+              onClick={() => onIndexChange(Math.max(0, index - 1))}
+              disabled={index === 0}
               className="p-2 rounded-full hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <IconChevronRight size={20} className={themeColor} />
