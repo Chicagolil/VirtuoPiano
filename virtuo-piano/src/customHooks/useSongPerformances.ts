@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getSongLearningModeTilesAction,
   getSongPerformanceGeneralTilesAction,
+  getSongPlayModeTilesAction,
   getSongPracticeDataMultipleAction,
 } from '@/lib/actions/songPerformances-actions';
 
@@ -76,6 +77,9 @@ export function useInvalidatePracticeCache() {
       queryClient.invalidateQueries({
         queryKey: ['songLearningModeTiles', songId],
       });
+      queryClient.invalidateQueries({
+        queryKey: ['songPlayModeTiles', songId],
+      });
     } else {
       // Invalider tout le cache de pratique
       queryClient.invalidateQueries({
@@ -86,6 +90,9 @@ export function useInvalidatePracticeCache() {
       });
       queryClient.invalidateQueries({
         queryKey: ['songLearningModeTiles'],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['songPlayModeTiles'],
       });
     }
   };
@@ -111,6 +118,15 @@ export function useSongLearningModeTiles(songId: string) {
   return useQuery({
     queryKey: ['songLearningModeTiles', songId],
     queryFn: () => getSongLearningModeTilesAction(songId),
+    enabled: !!songId,
+  });
+}
+
+// hook tuiles de jeu
+export function useSongPlayModeTiles(songId: string) {
+  return useQuery({
+    queryKey: ['songPlayModeTiles', songId],
+    queryFn: () => getSongPlayModeTilesAction(songId),
     enabled: !!songId,
   });
 }

@@ -67,6 +67,7 @@ import {
 import LearningTiles from './components/LearningTiles';
 import PracticeGraph from './components/PracticeGraph';
 import GeneralTiles from './components/GeneralTiles';
+import GamingTiles from './components/GamingTiles';
 
 export default function SongPerformances({ song }: { song: SongBasicData }) {
   const { setCurrentSong } = useSong();
@@ -533,17 +534,7 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
               </div>
 
               {/* Tuiles d'infos */}
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-                {gameTiles.map((tile, idx) => (
-                  <InfoTile
-                    key={idx}
-                    icon={getIconComponent(tile.iconName, tile.iconColor)}
-                    value={tile.value}
-                    label={tile.label}
-                  />
-                ))}
-              </div>
-
+              <GamingTiles songId={song.id} />
               {/* Graphiques côte à côte */}
               <div className="grid grid-cols-12 gap-6">
                 {/* Graphique Score multi-axes */}

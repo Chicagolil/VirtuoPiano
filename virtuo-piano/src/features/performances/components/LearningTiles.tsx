@@ -112,7 +112,10 @@ export default function LearningTiles({ songId }: { songId: string }) {
               ? ''
               : learningTilesError
               ? 'Erreur'
-              : `${learningTilesResult?.data?.longestSessionInMinutes || 0}min`
+              : formatDuration(
+                  learningTilesResult?.data?.longestSessionInMinutes || 0,
+                  true
+                )
           }
           label="Plus longue session"
         />
