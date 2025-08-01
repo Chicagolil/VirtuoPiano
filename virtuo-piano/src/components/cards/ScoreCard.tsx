@@ -1,6 +1,9 @@
 import {
   IconCalendar,
   IconClock,
+  IconFlame,
+  IconHandFinger,
+  IconHandStop,
   IconMusic,
   IconTrophy,
 } from '@tabler/icons-react';
@@ -21,6 +24,7 @@ export interface ScoreSummary {
   duration: string;
   imageUrl?: string;
   performance: number;
+  hands?: string;
 }
 
 export default function ScoreCard({ score }: { score: ScoreSummary }) {
@@ -67,10 +71,22 @@ export default function ScoreCard({ score }: { score: ScoreSummary }) {
               <IconCalendar size={14} className="mr-1" />
               {score.playedAt}
             </span>
-            <span className="inline-flex items-center">
+            <span className="inline-flex items-center mr-3">
               <IconClock size={14} className="mr-1" />
               {score.duration}
             </span>
+            {score.hands && (
+              <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-100/20 text-blue-300 border border-blue-300/30">
+                <IconHandStop size={12} className="mr-1" />
+                {score.hands === 'right'
+                  ? 'Main droite'
+                  : score.hands === 'left'
+                  ? 'Main gauche'
+                  : score.hands === 'both'
+                  ? 'Deux mains'
+                  : score.hands}
+              </span>
+            )}
           </div>
 
           <div className="flex items-center justify-between">

@@ -77,6 +77,7 @@ function transformScoreData(score: ScoreSummaryService): ScoreSummary {
     duration,
     imageUrl: score.imageUrl || undefined,
     performance,
+    hands: score.hands || undefined,
   };
 }
 
@@ -98,7 +99,6 @@ export async function getRecentSessions(limit: number = 3): Promise<{
       userId,
       limit
     );
-
     // Transformer les données en format ScoreSummary avec la logique métier
     const scoreSummaries: ScoreSummary[] = sessions.map(transformScoreData);
 

@@ -52,6 +52,7 @@ export interface ScoreSummaryService {
   sessionStartTime: Date;
   sessionEndTime: Date;
   modeName: string;
+  hands: string | null;
 }
 
 export type PlayedSong = {
@@ -630,6 +631,7 @@ export class PerformancesServices {
       maxCombo: score.maxCombo,
       sessionStartTime: score.sessionStartTime,
       sessionEndTime: score.sessionEndTime,
+      hands: score.hands,
     }));
   }
 
@@ -675,6 +677,7 @@ export class PerformancesServices {
       maxCombo: score.maxCombo,
       sessionStartTime: score.sessionStartTime,
       sessionEndTime: score.sessionEndTime,
+      hands: score.hands,
     }));
   }
 
@@ -784,6 +787,7 @@ export class PerformancesServices {
           maxCombo: score.maxCombo,
           sessionStartTime: score.sessionStartTime,
           sessionEndTime: score.sessionEndTime,
+          hands: score.hands,
         }))
         .filter((score) => {
           const { performance } = getLearnScores(
@@ -852,6 +856,7 @@ export class PerformancesServices {
         maxCombo: score.maxCombo,
         sessionStartTime: score.sessionStartTime,
         sessionEndTime: score.sessionEndTime,
+        hands: score.hands,
       }));
 
       const hasMore = pagination.offset + mappedScores.length < total;
