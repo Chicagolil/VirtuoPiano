@@ -21,7 +21,7 @@ import { defaultIntervalOptions } from '../utils/chartUtils';
 import ChartSummary from './ChartSummary';
 
 export default function PracticeGraph({ songId }: { songId: string }) {
-  const [practiceInterval, setPracticeInterval] = useState(7);
+  const [practiceInterval, setPracticeInterval] = useState(15);
   const [practiceIndex, setPracticeIndex] = useState(0);
 
   const {

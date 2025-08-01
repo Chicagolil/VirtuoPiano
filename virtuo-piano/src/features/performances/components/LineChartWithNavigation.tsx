@@ -150,6 +150,9 @@ export default function LineChartWithNavigation({
               }}
               formatter={(value, name) => {
                 const line = lines.find((l) => l.dataKey === name);
+                if (value === null || value === undefined) {
+                  return ['Non testé', line?.name || name];
+                }
                 return [`${value}%`, line?.name || name];
               }}
             />
@@ -162,6 +165,7 @@ export default function LineChartWithNavigation({
                 stroke={line.color}
                 strokeWidth={line.strokeWidth || (idx === 0 ? 3 : 2)}
                 strokeDasharray={line.strokeDasharray}
+                connectNulls={true}
                 dot={{
                   r: idx === 0 ? 4 : 3,
                   fill: line.color,

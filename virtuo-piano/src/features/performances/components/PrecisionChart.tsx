@@ -10,7 +10,7 @@ import {
 } from '@/customHooks/useSongPerformances';
 
 export default function PrecisionChart({ songId }: { songId: string }) {
-  const [precisionInterval, setPrecisionInterval] = useState(7);
+  const [precisionInterval, setPrecisionInterval] = useState(15);
   const [precisionIndex, setPrecisionIndex] = useState(0);
 
   // Hooks React Query
@@ -89,6 +89,7 @@ export default function PrecisionChart({ songId }: { songId: string }) {
         onIntervalChange={handleIntervalChange}
         onIndexChange={handleIndexChange}
         maxDataLength={precisionResult?.data?.current?.totalSessions || 0}
+        yAxisDomain={[0, 100]}
         themeColor="text-green-400"
         intervalOptions={defaultIntervalOptions}
         summary={

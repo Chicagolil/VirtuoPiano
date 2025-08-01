@@ -87,9 +87,9 @@ export interface PracticeDataPoint {
 
 export interface PrecisionDataPoint {
   session: string;
-  precisionRightHand: number;
-  precisionLeftHand: number;
-  precisionBothHands: number;
+  precisionRightHand: number | null;
+  precisionLeftHand: number | null;
+  precisionBothHands: number | null;
 }
 
 export interface SongPracticeData {
@@ -1481,9 +1481,9 @@ export class PerformancesServices {
 
       // Calculer la précision pour cette session
       const { accuracy } = getLearnScores(
+        session.wrongNotes || 0,
         session.correctNotes || 0,
-        session.missedNotes || 0,
-        session.wrongNotes || 0
+        session.missedNotes || 0
       );
 
       // Formater le nom de la date
@@ -1500,9 +1500,9 @@ export class PerformancesServices {
       }
 
       // Déterminer quelle main a été utilisée et assigner la précision
-      let precisionRightHand = 0;
-      let precisionLeftHand = 0;
-      let precisionBothHands = 0;
+      let precisionRightHand: number | null = null;
+      let precisionLeftHand: number | null = null;
+      let precisionBothHands: number | null = null;
 
       switch (session.hands) {
         case 'right':
@@ -1533,7 +1533,7 @@ export class PerformancesServices {
       const session = orderedSessions[index];
       const hasActivity = this.hasHandActivity(session);
       return (
-        point.precisionRightHand > 0 ||
+        point.precisionRightHand !== null ||
         (hasActivity && session.hands === 'right')
       );
     });
@@ -1542,7 +1542,8 @@ export class PerformancesServices {
       const session = orderedSessions[index];
       const hasActivity = this.hasHandActivity(session);
       return (
-        point.precisionLeftHand > 0 || (hasActivity && session.hands === 'left')
+        point.precisionLeftHand !== null ||
+        (hasActivity && session.hands === 'left')
       );
     });
 
@@ -1550,21 +1551,21 @@ export class PerformancesServices {
       const session = orderedSessions[index];
       const hasActivity = this.hasHandActivity(session);
       return (
-        point.precisionBothHands > 0 ||
+        point.precisionBothHands !== null ||
         (hasActivity && session.hands === 'both')
       );
     });
 
     const totalPrecisionRightHand = rightHandSessions.reduce(
-      (sum, point) => sum + point.precisionRightHand,
+      (sum, point) => sum + (point.precisionRightHand || 0),
       0
     );
     const totalPrecisionLeftHand = leftHandSessions.reduce(
-      (sum, point) => sum + point.precisionLeftHand,
+      (sum, point) => sum + (point.precisionLeftHand || 0),
       0
     );
     const totalPrecisionBothHands = bothHandsSessions.reduce(
-      (sum, point) => sum + point.precisionBothHands,
+      (sum, point) => sum + (point.precisionBothHands || 0),
       0
     );
 
