@@ -76,7 +76,17 @@ export default function ScoreCard({ score }: { score: ScoreSummary }) {
               {score.duration}
             </span>
             {score.hands && (
-              <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-100/20 text-blue-300 border border-blue-300/30">
+              <span
+                className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium border ${
+                  score.hands === 'right'
+                    ? 'bg-indigo-100/20 text-indigo-300 border-indigo-300/30'
+                    : score.hands === 'left'
+                    ? 'bg-green-100/20 text-green-300 border-green-300/30'
+                    : score.hands === 'both'
+                    ? 'bg-amber-100/20 text-amber-300 border-amber-300/30'
+                    : 'bg-blue-100/20 text-blue-300 border-blue-300/30'
+                }`}
+              >
                 <IconHandStop size={12} className="mr-1" />
                 {score.hands === 'right'
                   ? 'Main droite'
