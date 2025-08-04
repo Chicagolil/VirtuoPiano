@@ -139,6 +139,18 @@ export interface SongPlayModeTiles {
   currentStreak: number;
 }
 
+export interface BarChartDataPoint {
+  mois: string;
+  precision: number;
+  performance: number;
+}
+
+export interface SongPerformancePrecisionBarChartData {
+  label: string;
+  data: BarChartDataPoint[];
+  totalIntervals: number;
+}
+
 export class PerformancesServices {
   // Méthodes utilitaires privées pour calculer les intervalles
   private static getCurrentIntervalDates(
@@ -1756,6 +1768,144 @@ export class PerformancesServices {
       averagePerformanceRightHand,
       averagePerformanceLeftHand,
       averagePerformanceBothHands,
+    };
+  }
+
+  static async getSongPerformancePrecisionBarChartData(
+    songId: string,
+    userId: string,
+    index: number = 0
+  ): Promise<SongPerformancePrecisionBarChartData> {
+    // Récupérer toutes les sessions d'apprentissage pour cette chanson
+    const sessions = await prisma.scores.findMany({
+      where: {
+        song_id: songId,
+        user_id: userId,
+        mode: {
+          name: 'Apprentissage',
+        },
+      },
+      include: {
+        mode: true,
+      },
+      orderBy: {
+        sessionStartTime: 'asc',
+      },
+    });
+
+    if (sessions.length === 0) {
+      return {
+        label: 'Aucune donnée',
+        data: [],
+        totalIntervals: 0,
+      };
+    }
+
+    // Grouper les sessions par mois et calculer les moyennes
+    const monthlyData = new Map<
+      string,
+      {
+        precisionSum: number;
+        performanceSum: number;
+        count: number;
+        date: Date;
+      }
+    >();
+
+    sessions.forEach((session) => {
+      const sessionDate = session.sessionStartTime;
+      const monthKey = `${sessionDate.getFullYear()}-${String(
+        sessionDate.getMonth() + 1
+      ).padStart(2, '0')}`;
+
+      // Calculer la précision et la performance pour cette session
+      const { accuracy, performance } = getLearnScores(
+        session.wrongNotes || 0,
+        session.correctNotes || 0,
+        session.missedNotes || 0
+      );
+
+      if (!monthlyData.has(monthKey)) {
+        monthlyData.set(monthKey, {
+          precisionSum: 0,
+          performanceSum: 0,
+          count: 0,
+          date: sessionDate,
+        });
+      }
+
+      const monthData = monthlyData.get(monthKey)!;
+      monthData.precisionSum += accuracy;
+      monthData.performanceSum += performance;
+      monthData.count += 1;
+    });
+
+    // Convertir en tableau et trier par date
+    const sortedMonthlyData = Array.from(monthlyData.entries())
+      .map(([monthKey, data]) => ({
+        monthKey,
+        averagePrecision: Math.round(data.precisionSum / data.count),
+        averagePerformance: Math.round(data.performanceSum / data.count),
+        date: data.date,
+      }))
+      .sort((a, b) => a.date.getTime() - b.date.getTime());
+
+    // Grouper par intervalles de 6 mois
+    const intervalsData: Array<{
+      label: string;
+      data: BarChartDataPoint[];
+    }> = [];
+
+    for (let i = 0; i < sortedMonthlyData.length; i += 6) {
+      const intervalMonths = sortedMonthlyData.slice(i, i + 6);
+
+      if (intervalMonths.length === 0) continue;
+
+      const startMonth = intervalMonths[0].date;
+      const endMonth = intervalMonths[intervalMonths.length - 1].date;
+
+      const startMonthName = startMonth.toLocaleDateString('fr-FR', {
+        month: 'short',
+        year: 'numeric',
+      });
+      const endMonthName = endMonth.toLocaleDateString('fr-FR', {
+        month: 'short',
+        year: 'numeric',
+      });
+
+      const label = `${startMonthName} - ${endMonthName}`;
+
+      const data: BarChartDataPoint[] = intervalMonths.map((monthData) => ({
+        mois: monthData.date.toLocaleDateString('fr-FR', {
+          month: 'short',
+          year: 'numeric',
+        }),
+        precision: monthData.averagePrecision,
+        performance: monthData.averagePerformance,
+      }));
+
+      intervalsData.push({ label, data });
+    }
+
+    // Si aucun intervalle, créer un intervalle par défaut
+    if (intervalsData.length === 0) {
+      return {
+        label: 'Aucune donnée',
+        data: [],
+        totalIntervals: 0,
+      };
+    }
+
+    // Retourner l'intervalle demandé par l'index (en commençant par le plus récent)
+    const totalIntervals = intervalsData.length;
+    const requestedIntervalIndex = Math.min(index, totalIntervals - 1);
+    const requestedInterval =
+      intervalsData[totalIntervals - 1 - requestedIntervalIndex];
+
+    return {
+      label: requestedInterval.label,
+      data: requestedInterval.data,
+      totalIntervals,
     };
   }
 }

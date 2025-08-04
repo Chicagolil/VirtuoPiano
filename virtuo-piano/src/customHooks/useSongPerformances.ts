@@ -6,6 +6,7 @@ import {
   getSongPracticeDataAction,
   getSongLearningPrecisionDataAction,
   getSongLearningPerformanceDataAction,
+  getSongPerformancePrecisionBarChartDataAction,
 } from '@/lib/actions/songPerformances-actions';
 
 // Hook pour les tuiles générales
@@ -286,6 +287,61 @@ export function usePrefetchLearningPerformanceData(
           currentIndex + 1
         ),
       staleTime: 2 * 60 * 1000,
+    });
+  };
+
+  return { prefetchAdjacent };
+}
+
+// Hook pour les données de bar chart précision/performance
+export function useSongPerformancePrecisionBarChartData(
+  songId: string,
+  index: number
+) {
+  return useQuery({
+    queryKey: ['songPerformancePrecisionBarChartData', songId, index],
+    queryFn: () => getSongPerformancePrecisionBarChartDataAction(songId, index),
+    enabled: !!songId,
+    staleTime: 5 * 60 * 1000,
+    placeholderData: (previousData) => previousData,
+  });
+}
+
+// Hook pour précharger les données de bar chart adjacentes
+export function usePrefetchPerformancePrecisionBarChartData(
+  songId: string,
+  currentIndex: number
+) {
+  const queryClient = useQueryClient();
+
+  const prefetchAdjacent = () => {
+    // Précharger l'index précédent
+    if (currentIndex > 0) {
+      queryClient.prefetchQuery({
+        queryKey: [
+          'songPerformancePrecisionBarChartData',
+          songId,
+          currentIndex - 1,
+        ],
+        queryFn: () =>
+          getSongPerformancePrecisionBarChartDataAction(
+            songId,
+            currentIndex - 1
+          ),
+        staleTime: 5 * 60 * 1000,
+      });
+    }
+
+    // Précharger l'index suivant
+    queryClient.prefetchQuery({
+      queryKey: [
+        'songPerformancePrecisionBarChartData',
+        songId,
+        currentIndex + 1,
+      ],
+      queryFn: () =>
+        getSongPerformancePrecisionBarChartDataAction(songId, currentIndex + 1),
+      staleTime: 5 * 60 * 1000,
     });
   };
 

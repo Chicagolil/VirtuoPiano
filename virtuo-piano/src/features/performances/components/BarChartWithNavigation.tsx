@@ -10,6 +10,7 @@ import {
 } from 'recharts';
 import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 import * as Separator from '@radix-ui/react-separator';
+import { Spinner } from '@/components/ui/spinner';
 
 interface BarConfig {
   dataKey: string;
@@ -34,6 +35,8 @@ interface BarChartWithNavigationProps {
   themeColor: string;
   yAxisDomain?: [number, number];
   multiAxis?: boolean;
+  isLoading?: boolean;
+  error?: any;
 }
 
 export default function BarChartWithNavigation({
@@ -47,6 +50,8 @@ export default function BarChartWithNavigation({
   themeColor,
   yAxisDomain,
   multiAxis = false,
+  isLoading = false,
+  error = null,
 }: BarChartWithNavigationProps) {
   const currentData = intervals[index]?.data || [];
 
@@ -83,99 +88,111 @@ export default function BarChartWithNavigation({
         </div>
       </div>
 
-      <ResponsiveContainer width="100%" height={height}>
-        <BarChart
-          data={currentData}
-          margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-        >
-          <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-          <XAxis dataKey="mois" tick={{ fontSize: 12, fill: '#94a3b8' }} />
+      {isLoading ? (
+        <div className="flex items-center justify-center" style={{ height }}>
+          <Spinner variant="bars" size={32} className="text-white" />
+        </div>
+      ) : error ? (
+        <div className="flex items-center justify-center" style={{ height }}>
+          <div className="text-center text-red-400 text-sm">
+            {error.message || 'Erreur lors du chargement'}
+          </div>
+        </div>
+      ) : (
+        <ResponsiveContainer width="100%" height={height}>
+          <BarChart
+            data={currentData}
+            margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+            <XAxis dataKey="mois" tick={{ fontSize: 12, fill: '#94a3b8' }} />
 
-          {multiAxis ? (
-            // Mode multi-axes : créer un YAxis pour chaque yAxisId unique
-            <>
-              {Array.from(
-                new Set(bars.map((bar) => bar.yAxisId).filter(Boolean))
-              ).map((yAxisId) => (
-                <YAxis
-                  key={yAxisId}
-                  yAxisId={yAxisId}
-                  orientation="left"
-                  domain={
-                    yAxisId === 'score'
-                      ? [8000, 10000]
-                      : yAxisId === 'combo'
-                      ? [300, 600]
-                      : [3, 5]
-                  }
-                  tick={{
-                    fontSize: 12,
-                    fill:
-                      bars.find((b) => b.yAxisId === yAxisId)?.color ||
-                      '#94a3b8',
-                  }}
-                />
-              ))}
-            </>
-          ) : (
-            // Mode simple : un seul YAxis sans yAxisId
-            <YAxis
-              domain={yAxisDomain}
-              tick={{ fontSize: 12, fill: '#94a3b8' }}
+            {multiAxis ? (
+              // Mode multi-axes : créer un YAxis pour chaque yAxisId unique
+              <>
+                {Array.from(
+                  new Set(bars.map((bar) => bar.yAxisId).filter(Boolean))
+                ).map((yAxisId) => (
+                  <YAxis
+                    key={yAxisId}
+                    yAxisId={yAxisId}
+                    orientation="left"
+                    domain={
+                      yAxisId === 'score'
+                        ? [8000, 10000]
+                        : yAxisId === 'combo'
+                        ? [300, 600]
+                        : [3, 5]
+                    }
+                    tick={{
+                      fontSize: 12,
+                      fill:
+                        bars.find((b) => b.yAxisId === yAxisId)?.color ||
+                        '#94a3b8',
+                    }}
+                  />
+                ))}
+              </>
+            ) : (
+              // Mode simple : un seul YAxis sans yAxisId
+              <YAxis
+                domain={yAxisDomain}
+                tick={{ fontSize: 12, fill: '#94a3b8' }}
+              />
+            )}
+
+            <Tooltip
+              contentStyle={{
+                backgroundColor: '#1e293b',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '12px',
+              }}
+              itemStyle={{ color: '#e2e8f0' }}
+              labelStyle={{
+                color: '#e2e8f0',
+                fontWeight: 'bold',
+                marginBottom: '4px',
+              }}
+              formatter={(value, name) => {
+                const bar = bars.find((b) => b.dataKey === name);
+                if (bar?.dataKey === 'precision')
+                  return [`${value}%`, 'Précision'];
+                if (bar?.dataKey === 'performance')
+                  return [`${value}%`, 'Performance'];
+                if (bar?.dataKey === 'score')
+                  return [`${value} points`, 'Meilleur score'];
+                if (bar?.dataKey === 'combo')
+                  return [`${value} notes`, 'Combo max'];
+                if (bar?.dataKey === 'multi')
+                  return [`x${value}`, 'Multiplicateur max'];
+                return [`${value}`, bar?.name || name];
+              }}
             />
-          )}
 
-          <Tooltip
-            contentStyle={{
-              backgroundColor: '#1e293b',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '12px',
-            }}
-            itemStyle={{ color: '#e2e8f0' }}
-            labelStyle={{
-              color: '#e2e8f0',
-              fontWeight: 'bold',
-              marginBottom: '4px',
-            }}
-            formatter={(value, name) => {
-              const bar = bars.find((b) => b.dataKey === name);
-              if (bar?.dataKey === 'precision')
-                return [`${value}%`, 'Précision'];
-              if (bar?.dataKey === 'performance')
-                return [`${value}%`, 'Performance'];
-              if (bar?.dataKey === 'score')
-                return [`${value} points`, 'Meilleur score'];
-              if (bar?.dataKey === 'combo')
-                return [`${value} notes`, 'Combo max'];
-              if (bar?.dataKey === 'multi')
-                return [`x${value}`, 'Multiplicateur max'];
-              return [`${value}`, bar?.name || name];
-            }}
-          />
-
-          {multiAxis
-            ? // Mode multi-axes : utiliser les yAxisId des barres
-              bars.map((bar) => (
-                <Bar
-                  key={bar.dataKey}
-                  yAxisId={bar.yAxisId}
-                  dataKey={bar.dataKey}
-                  fill={bar.color}
-                  radius={[4, 4, 0, 0]}
-                />
-              ))
-            : // Mode simple : aucun yAxisId
-              bars.map((bar) => (
-                <Bar
-                  key={bar.dataKey}
-                  dataKey={bar.dataKey}
-                  fill={bar.color}
-                  radius={[4, 4, 0, 0]}
-                />
-              ))}
-        </BarChart>
-      </ResponsiveContainer>
+            {multiAxis
+              ? // Mode multi-axes : utiliser les yAxisId des barres
+                bars.map((bar) => (
+                  <Bar
+                    key={bar.dataKey}
+                    yAxisId={bar.yAxisId}
+                    dataKey={bar.dataKey}
+                    fill={bar.color}
+                    radius={[4, 4, 0, 0]}
+                  />
+                ))
+              : // Mode simple : aucun yAxisId
+                bars.map((bar) => (
+                  <Bar
+                    key={bar.dataKey}
+                    dataKey={bar.dataKey}
+                    fill={bar.color}
+                    radius={[4, 4, 0, 0]}
+                  />
+                ))}
+          </BarChart>
+        </ResponsiveContainer>
+      )}
 
       <Separator.Root className="h-px bg-slate-500 dark:bg-slate-800 my-4" />
 
