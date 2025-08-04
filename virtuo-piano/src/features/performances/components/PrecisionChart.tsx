@@ -45,7 +45,7 @@ export default function PrecisionChart({ songId }: { songId: string }) {
   };
 
   // Données pour le graphique
-  const precisionData = precisionResult?.data?.current?.data || [];
+  const precisionData = precisionResult?.data?.data || [];
   const precisionLines = [
     {
       dataKey: 'precisionBothHands',
@@ -69,11 +69,11 @@ export default function PrecisionChart({ songId }: { songId: string }) {
 
   // Calculer les moyennes
   const avgPrecisionBothHands =
-    precisionResult?.data?.current?.averagePrecisionBothHands || 0;
+    precisionResult?.data?.averagePrecisionBothHands || 0;
   const avgPrecisionRightHand =
-    precisionResult?.data?.current?.averagePrecisionRightHand || 0;
+    precisionResult?.data?.averagePrecisionRightHand || 0;
   const avgPrecisionLeftHand =
-    precisionResult?.data?.current?.averagePrecisionLeftHand || 0;
+    precisionResult?.data?.averagePrecisionLeftHand || 0;
 
   return (
     <div className="col-span-12 lg:col-span-7">
@@ -88,7 +88,7 @@ export default function PrecisionChart({ songId }: { songId: string }) {
         index={precisionIndex}
         onIntervalChange={handleIntervalChange}
         onIndexChange={handleIndexChange}
-        maxDataLength={precisionResult?.data?.current?.totalSessions || 0}
+        maxDataLength={precisionResult?.data?.totalSessions || 0}
         yAxisDomain={[0, 100]}
         themeColor="text-green-400"
         intervalOptions={defaultIntervalOptions}

@@ -4,7 +4,7 @@ import {
   getSongPerformanceGeneralTilesAction,
   getSongPlayModeTilesAction,
   getSongPracticeDataMultipleAction,
-  getSongLearningPrecisionDataMultipleAction,
+  getSongLearningPrecisionDataAction,
 } from '@/lib/actions/songPerformances-actions';
 
 // Hook pour les tuiles générales
@@ -163,8 +163,7 @@ export function useSongLearningPrecisionData(
 ) {
   return useQuery({
     queryKey: ['songLearningPrecisionData', songId, interval, index],
-    queryFn: () =>
-      getSongLearningPrecisionDataMultipleAction(songId, interval, index),
+    queryFn: () => getSongLearningPrecisionDataAction(songId, interval, index),
     enabled: !!songId,
     staleTime: 2 * 60 * 1000, // 2 minutes
     placeholderData: (previousData) => previousData, // Garde les anciennes données pendant le chargement
@@ -190,7 +189,7 @@ export function usePrefetchLearningPrecisionData(
           currentIndex - 1,
         ],
         queryFn: () =>
-          getSongLearningPrecisionDataMultipleAction(
+          getSongLearningPrecisionDataAction(
             songId,
             interval,
             currentIndex - 1
@@ -208,11 +207,7 @@ export function usePrefetchLearningPrecisionData(
         currentIndex + 1,
       ],
       queryFn: () =>
-        getSongLearningPrecisionDataMultipleAction(
-          songId,
-          interval,
-          currentIndex + 1
-        ),
+        getSongLearningPrecisionDataAction(songId, interval, currentIndex + 1),
       staleTime: 1 * 60 * 1000,
     });
   };
