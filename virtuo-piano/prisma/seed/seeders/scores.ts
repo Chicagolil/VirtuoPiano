@@ -46,7 +46,7 @@ export const seedScores = async (prisma: PrismaClient) => {
     const notesArray = chicagolilSong.notes as any[];
 
     // Générer des dates étalées sur 12 mois pour Chicagolil
-    const monthsAgo = faker.number.int({ min: 0, max: 32 });
+    const monthsAgo = faker.number.int({ min: 0, max: 12 });
     const daysAgo = faker.number.int({ min: 0, max: 30 });
     const sessionStartTime = new Date();
     sessionStartTime.setMonth(sessionStartTime.getMonth() - monthsAgo);
