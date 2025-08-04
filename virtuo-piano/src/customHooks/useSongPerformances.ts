@@ -5,6 +5,7 @@ import {
   getSongPlayModeTilesAction,
   getSongPracticeDataAction,
   getSongLearningPrecisionDataAction,
+  getSongLearningPerformanceDataAction,
 } from '@/lib/actions/songPerformances-actions';
 
 // Hook pour les tuiles générales
@@ -27,7 +28,7 @@ export function useSongPracticeData(
     queryFn: () => getSongPracticeDataAction(songId, interval, index),
     enabled: !!songId,
     staleTime: 2 * 60 * 1000, // 2 minutes
-    placeholderData: (previousData) => previousData, // Garde les anciennes données pendant le chargement
+    placeholderData: (previousData) => previousData,
   });
 }
 
@@ -55,7 +56,7 @@ export function usePrefetchAdjacentData(
       queryKey: ['songPracticeData', songId, interval, currentIndex + 1],
       queryFn: () =>
         getSongPracticeDataAction(songId, interval, currentIndex + 1),
-      staleTime: 1 * 60 * 1000,
+      staleTime: 2 * 60 * 1000,
     });
   };
 
@@ -130,10 +131,23 @@ export function useInvalidatePracticeCache() {
     }
   };
 
+  const invalidatePerformanceDataOnly = (songId?: string) => {
+    if (songId) {
+      queryClient.invalidateQueries({
+        queryKey: ['songLearningPerformanceData', songId],
+      });
+    } else {
+      queryClient.invalidateQueries({
+        queryKey: ['songLearningPerformanceData'],
+      });
+    }
+  };
+
   return {
     invalidateCache,
     invalidatePracticeDataOnly,
     invalidatePrecisionDataOnly,
+    invalidatePerformanceDataOnly,
   };
 }
 
@@ -166,7 +180,7 @@ export function useSongLearningPrecisionData(
     queryFn: () => getSongLearningPrecisionDataAction(songId, interval, index),
     enabled: !!songId,
     staleTime: 2 * 60 * 1000, // 2 minutes
-    placeholderData: (previousData) => previousData, // Garde les anciennes données pendant le chargement
+    placeholderData: (previousData) => previousData,
   });
 }
 
@@ -194,7 +208,7 @@ export function usePrefetchLearningPrecisionData(
             interval,
             currentIndex - 1
           ),
-        staleTime: 1 * 60 * 1000,
+        staleTime: 2 * 60 * 1000,
       });
     }
 
@@ -208,7 +222,70 @@ export function usePrefetchLearningPrecisionData(
       ],
       queryFn: () =>
         getSongLearningPrecisionDataAction(songId, interval, currentIndex + 1),
-      staleTime: 1 * 60 * 1000,
+      staleTime: 2 * 60 * 1000,
+    });
+  };
+
+  return { prefetchAdjacent };
+}
+
+export function useSongLearningPerformanceData(
+  songId: string,
+  interval: number,
+  index: number
+) {
+  return useQuery({
+    queryKey: ['songLearningPerformanceData', songId, interval, index],
+    queryFn: () =>
+      getSongLearningPerformanceDataAction(songId, interval, index),
+    enabled: !!songId,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    placeholderData: (previousData) => previousData,
+  });
+}
+
+export function usePrefetchLearningPerformanceData(
+  songId: string,
+  interval: number,
+  currentIndex: number
+) {
+  const queryClient = useQueryClient();
+
+  const prefetchAdjacent = () => {
+    // Précharger l'index précédent
+    if (currentIndex > 0) {
+      queryClient.prefetchQuery({
+        queryKey: [
+          'songLearningPerformanceData',
+          songId,
+          interval,
+          currentIndex - 1,
+        ],
+        queryFn: () =>
+          getSongLearningPerformanceDataAction(
+            songId,
+            interval,
+            currentIndex - 1
+          ),
+        staleTime: 2 * 60 * 1000,
+      });
+    }
+
+    // Précharger l'index suivant
+    queryClient.prefetchQuery({
+      queryKey: [
+        'songLearningPerformanceData',
+        songId,
+        interval,
+        currentIndex + 1,
+      ],
+      queryFn: () =>
+        getSongLearningPerformanceDataAction(
+          songId,
+          interval,
+          currentIndex + 1
+        ),
+      staleTime: 2 * 60 * 1000,
     });
   };
 

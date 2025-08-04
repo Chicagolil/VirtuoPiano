@@ -119,73 +119,7 @@ export const gameRecords: TimelineRecord[] = [
   },
 ];
 
-// --- TILES DATA ---
-interface TileData {
-  label: string;
-  value: string | number;
-  iconName: string;
-  iconColor: string;
-}
-
-export const gameTiles: TileData[] = [
-  {
-    label: 'Sessions',
-    value: 14,
-    iconName: 'IconClock',
-    iconColor: 'text-blue-500',
-  },
-  {
-    label: 'Score moyen',
-    value: '7,850',
-    iconName: 'IconChartBar',
-    iconColor: 'text-green-500',
-  },
-  {
-    label: 'Meilleur score',
-    value: '8,950',
-    iconName: 'IconTrophy',
-    iconColor: 'text-yellow-500',
-  },
-  {
-    label: 'Temps total',
-    value: '3h 40min',
-    iconName: 'IconClock',
-    iconColor: 'text-purple-500',
-  },
-  {
-    label: 'Plus longue session',
-    value: '38min',
-    iconName: 'IconFlame',
-    iconColor: 'text-orange-500',
-  },
-  {
-    label: 'Streak',
-    value: '4 jours',
-    iconName: 'IconFire',
-    iconColor: 'text-red-500',
-  },
-];
-
 // --- CHART DATA ---
-export const learningPrecisionData = [
-  { session: 1, droite: 82, gauche: 75, deux: 80 },
-  { session: 2, droite: 85, gauche: 78, deux: 82 },
-  { session: 3, droite: 88, gauche: 80, deux: 85 },
-  { session: 4, droite: 90, gauche: 82, deux: 87 },
-  { session: 5, droite: 92, gauche: 85, deux: 89 },
-  { session: 6, droite: 91, gauche: 86, deux: 90 },
-  { session: 7, droite: 93, gauche: 88, deux: 92 },
-];
-
-export const learningPerformanceData = [
-  { session: 1, droite: 78, gauche: 70, deux: 75 },
-  { session: 2, droite: 80, gauche: 72, deux: 77 },
-  { session: 3, droite: 83, gauche: 74, deux: 80 },
-  { session: 4, droite: 85, gauche: 76, deux: 82 },
-  { session: 5, droite: 87, gauche: 78, deux: 84 },
-  { session: 6, droite: 89, gauche: 80, deux: 86 },
-  { session: 7, droite: 91, gauche: 82, deux: 88 },
-];
 
 export const gameScoreLineData = [
   { session: 1, score: 8200, combo: 320, multi: 3.2 },
@@ -249,28 +183,6 @@ export const gameBarIntervals = [
 ];
 
 // --- EXTENDED DATA ---
-
-export const generateExtendedPerformanceData = () => {
-  return [
-    ...learningPerformanceData,
-    // Sessions 8-14
-    { session: 8, droite: 92, gauche: 83, deux: 89 },
-    { session: 9, droite: 93, gauche: 84, deux: 90 },
-    { session: 10, droite: 91, gauche: 85, deux: 89 },
-    { session: 11, droite: 94, gauche: 86, deux: 91 },
-    { session: 12, droite: 95, gauche: 87, deux: 92 },
-    { session: 13, droite: 93, gauche: 88, deux: 91 },
-    { session: 14, droite: 96, gauche: 89, deux: 93 },
-    // Sessions 15-21
-    { session: 15, droite: 94, gauche: 87, deux: 91 },
-    { session: 16, droite: 95, gauche: 88, deux: 92 },
-    { session: 17, droite: 96, gauche: 89, deux: 93 },
-    { session: 18, droite: 97, gauche: 90, deux: 94 },
-    { session: 19, droite: 95, gauche: 91, deux: 93 },
-    { session: 20, droite: 96, gauche: 92, deux: 94 },
-    { session: 21, droite: 97, gauche: 93, deux: 95 },
-  ];
-};
 
 export const generateExtendedScoreData = () => {
   return [

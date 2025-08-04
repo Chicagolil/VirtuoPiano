@@ -28,7 +28,6 @@ import { SongBasicData } from '@/lib/services/performances-services';
 
 // Composants extraits
 import RecordsTimeline from './components/RecordsTimeline';
-import LineChartWithNavigation from './components/LineChartWithNavigation';
 import BarChartWithNavigation from './components/BarChartWithNavigation';
 import MultiAxisLineChart from './components/MultiAxisLineChart';
 import ChartSummary from './components/ChartSummary';
@@ -38,7 +37,6 @@ import RecentSessionsByMode from './components/RecentSessionsByMode';
 import {
   learningRecords,
   gameRecords,
-  generateExtendedPerformanceData,
   generateExtendedScoreData,
   learningBarIntervals,
   gameBarIntervals,
@@ -55,6 +53,7 @@ import PracticeGraph from './components/PracticeGraph';
 import GeneralTiles from './components/GeneralTiles';
 import GamingTiles from './components/GamingTiles';
 import PrecisionChart from './components/PrecisionChart';
+import PerformanceChart from './components/PerformanceChart';
 
 export default function SongPerformances({ song }: { song: SongBasicData }) {
   const { setCurrentSong } = useSong();
@@ -67,8 +66,6 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
 
   // États pour la navigation des intervalles de lignes
 
-  const [performanceInterval, setPerformanceInterval] = useState(7);
-  const [performanceIndex, setPerformanceIndex] = useState(0);
   const [scoreInterval, setScoreInterval] = useState(7);
   const [scoreIndex, setScoreIndex] = useState(0);
 
@@ -77,7 +74,6 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
   const [gameBarIndex, setGameBarIndex] = useState(0);
 
   // Données étendues
-  const extendedPerformanceData = generateExtendedPerformanceData();
   const extendedScoreData = generateExtendedScoreData();
 
   useEffect(() => {
@@ -87,25 +83,12 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
 
   // Initialiser les indices par défaut
   useEffect(() => {
-    setPerformanceIndex(
-      getDefaultIndex(extendedPerformanceData.length, performanceInterval)
-    );
     setScoreIndex(getDefaultIndex(extendedScoreData.length, scoreInterval));
     // Pas besoin d'initialiser practiceIndex car il est géré par le serveur
   }, []);
 
-  const getPerformanceData = () =>
-    sliceDataByInterval(
-      extendedPerformanceData,
-      performanceIndex,
-      performanceInterval
-    );
   const getScoreData = () =>
     sliceDataByInterval(extendedScoreData, scoreIndex, scoreInterval);
-
-  const avgPerformanceDeux = calculateAverage(getPerformanceData(), 'deux');
-  const avgPerformanceDroite = calculateAverage(getPerformanceData(), 'droite');
-  const avgPerformanceGauche = calculateAverage(getPerformanceData(), 'gauche');
 
   const avgScore = calculateAverage(getScoreData(), 'score');
   const avgCombo = calculateAverage(getScoreData(), 'combo');
@@ -137,39 +120,6 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
   const handleBackToPlayedSongs = () => {
     router.push('/performances?tab=playedSongs');
   };
-
-  // Fonction pour obtenir l'icône correspondant au nom d'icône
-  const getIconComponent = (iconName: string, iconColor: string) => {
-    const iconMap: Record<string, React.ComponentType<any>> = {
-      IconClock,
-      IconTarget,
-      IconStar,
-      IconFlame,
-      IconFire,
-      IconChartBar,
-      IconTrophy,
-    };
-    const IconComponent = iconMap[iconName];
-    return IconComponent ? (
-      <IconComponent size={20} className={iconColor} />
-    ) : null;
-  };
-
-  const performanceLines = [
-    { dataKey: 'deux', color: '#f59e0b', name: 'Deux mains', strokeWidth: 3 },
-    {
-      dataKey: 'droite',
-      color: '#6366f1',
-      name: 'Main droite',
-      strokeDasharray: '5 5',
-    },
-    {
-      dataKey: 'gauche',
-      color: '#10b981',
-      name: 'Main gauche',
-      strokeDasharray: '10 5',
-    },
-  ];
 
   const scoreLines = [
     { dataKey: 'score', color: '#6366f1', name: 'Score', yAxisId: 'score' },
@@ -293,7 +243,6 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
         <div className="grid grid-cols-1 pb-4 md:grid-cols-3 lg:grid-cols-4 gap-4 auto-rows-auto">
           {/* Graphique principal de pratique */}
           <PracticeGraph songId={song.id} />
-
           {/* Tuiles d'informations */}
           <GeneralTiles songId={song.id} />
         </div>
@@ -372,46 +321,7 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
 
               {/* Graphique Performance et graphique en barres */}
               <div className="grid grid-cols-12 gap-6">
-                <div className="col-span-12 lg:col-span-7">
-                  <LineChartWithNavigation
-                    isLoading={false}
-                    error={null}
-                    title="Performance par session"
-                    icon={<IconStar size={20} className="mr-2 text-pink-400" />}
-                    data={getPerformanceData()}
-                    lines={performanceLines}
-                    interval={performanceInterval}
-                    index={performanceIndex}
-                    onIntervalChange={setPerformanceInterval}
-                    onIndexChange={setPerformanceIndex}
-                    maxDataLength={extendedPerformanceData.length}
-                    themeColor="text-pink-400"
-                    intervalOptions={defaultIntervalOptions}
-                    summary={
-                      <ChartSummary
-                        title="Performances moyennes"
-                        items={[
-                          {
-                            label: 'Deux mains',
-                            value: `${avgPerformanceDeux}%`,
-                            color: 'text-amber-500 dark:text-amber-400',
-                          },
-                          {
-                            label: 'Main droite',
-                            value: `${avgPerformanceDroite}%`,
-                            color: 'text-indigo-600 dark:text-indigo-400',
-                          },
-                          {
-                            label: 'Main gauche',
-                            value: `${avgPerformanceGauche}%`,
-                            color: 'text-green-500 dark:text-green-400',
-                          },
-                        ]}
-                      />
-                    }
-                  />
-                </div>
-
+                <PerformanceChart songId={song.id} />
                 {/* Graphique à barres Précision & Performance */}
                 <div className="col-span-12 lg:col-span-5">
                   <BarChartWithNavigation

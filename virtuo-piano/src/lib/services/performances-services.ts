@@ -93,6 +93,13 @@ export interface PrecisionDataPoint {
   precisionBothHands: number | null;
 }
 
+export interface PerformanceDataPoint {
+  session: string;
+  performanceRightHand: number | null;
+  performanceLeftHand: number | null;
+  performanceBothHands: number | null;
+}
+
 export interface SongPracticeData {
   data: PracticeDataPoint[];
   totalPratique: number;
@@ -105,6 +112,13 @@ export interface SongLearningPrecisionData {
   averagePrecisionLeftHand: number;
   averagePrecisionBothHands: number;
   totalSessions: number;
+}
+export interface SongLearningPerformanceData {
+  data: PerformanceDataPoint[];
+  totalSessions: number;
+  averagePerformanceRightHand: number;
+  averagePerformanceLeftHand: number;
+  averagePerformanceBothHands: number;
 }
 
 export interface SongLearningModeTiles {
@@ -1593,6 +1607,155 @@ export class PerformancesServices {
       averagePrecisionLeftHand,
       averagePrecisionBothHands,
       totalSessions,
+    };
+  }
+
+  static async getSongLearningPerformanceData(
+    songId: string,
+    userId: string,
+    interval: number,
+    index: number
+  ): Promise<SongLearningPerformanceData> {
+    const totalSessions = await prisma.scores.count({
+      where: {
+        song_id: songId,
+        user_id: userId,
+        mode: {
+          name: 'Apprentissage',
+        },
+      },
+    });
+
+    const sessions = await prisma.scores.findMany({
+      where: {
+        song_id: songId,
+        user_id: userId,
+        mode: {
+          name: 'Apprentissage',
+        },
+      },
+      include: {
+        mode: true,
+      },
+      orderBy: {
+        sessionStartTime: 'desc',
+      },
+      take: interval,
+      skip: index * interval,
+    });
+
+    const orderedSessions = sessions.reverse();
+
+    const data: PerformanceDataPoint[] = [];
+    const today = new Date();
+
+    orderedSessions.forEach((session, index) => {
+      const sessionDate = session.sessionStartTime;
+
+      const { performance } = getLearnScores(
+        session.wrongNotes || 0,
+        session.correctNotes || 0,
+        session.missedNotes || 0
+      );
+      // Formater le nom de la date
+      let displayName: string;
+      const isToday = sessionDate.toDateString() === today.toDateString();
+
+      if (isToday) {
+        displayName = "Aujourd'hui";
+      } else {
+        const day = String(sessionDate.getDate()).padStart(2, '0');
+        const month = String(sessionDate.getMonth() + 1).padStart(2, '0');
+        const year = sessionDate.getFullYear();
+        displayName = `${day}/${month}/${year}`;
+      }
+      // Déterminer quelle main a été utilisée et assigner la précision
+      let performanceRightHand: number | null = null;
+      let performanceLeftHand: number | null = null;
+      let performanceBothHands: number | null = null;
+
+      switch (session.hands) {
+        case 'right':
+          performanceRightHand = performance;
+          break;
+        case 'left':
+          performanceLeftHand = performance;
+          break;
+        case 'both':
+          performanceBothHands = performance;
+          break;
+        default:
+          // Si hands n'est pas défini, on met tout dans both
+          performanceBothHands = performance;
+          break;
+      }
+
+      data.push({
+        session: displayName,
+        performanceRightHand,
+        performanceLeftHand,
+        performanceBothHands,
+      });
+    });
+
+    // Calculer les moyennes globales seulement sur les sessions avec activité
+    const rightHandSessions = data.filter((point, index) => {
+      const session = orderedSessions[index];
+      const hasActivity = this.hasHandActivity(session);
+      return (
+        point.performanceRightHand !== null ||
+        (hasActivity && session.hands === 'right')
+      );
+    });
+    const leftHandSessions = data.filter((point, index) => {
+      const session = orderedSessions[index];
+      const hasActivity = this.hasHandActivity(session);
+      return (
+        point.performanceLeftHand !== null ||
+        (hasActivity && session.hands === 'left')
+      );
+    });
+    const bothHandsSessions = data.filter((point, index) => {
+      const session = orderedSessions[index];
+      const hasActivity = this.hasHandActivity(session);
+      return (
+        point.performanceBothHands !== null ||
+        (hasActivity && session.hands === 'both')
+      );
+    });
+
+    const totalPerformanceRightHand = rightHandSessions.reduce(
+      (sum, point) => sum + (point.performanceRightHand || 0),
+      0
+    );
+    const totalPerformanceLeftHand = leftHandSessions.reduce(
+      (sum, point) => sum + (point.performanceLeftHand || 0),
+      0
+    );
+    const totalPerformanceBothHands = bothHandsSessions.reduce(
+      (sum, point) => sum + (point.performanceBothHands || 0),
+      0
+    );
+
+    const averagePerformanceRightHand =
+      rightHandSessions.length > 0
+        ? Math.round(totalPerformanceRightHand / rightHandSessions.length)
+        : 0;
+    const averagePerformanceLeftHand =
+      leftHandSessions.length > 0
+        ? Math.round(totalPerformanceLeftHand / leftHandSessions.length)
+        : 0;
+    const averagePerformanceBothHands =
+      bothHandsSessions.length > 0
+        ? Math.round(totalPerformanceBothHands / bothHandsSessions.length)
+        : 0;
+
+    return {
+      data,
+      totalSessions,
+      averagePerformanceRightHand,
+      averagePerformanceLeftHand,
+      averagePerformanceBothHands,
     };
   }
 }
