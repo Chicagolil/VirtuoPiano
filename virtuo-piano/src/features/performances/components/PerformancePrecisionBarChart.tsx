@@ -48,6 +48,7 @@ export default function PerformancePrecisionBarChart({
   return (
     <div className="col-span-12 lg:col-span-5">
       <BarChartWithNavigation
+        maxIntervals={barChartResult?.data?.totalIntervals || 0}
         isLoading={barChartLoading}
         error={barChartError}
         title="Précision & Performance par mois"
