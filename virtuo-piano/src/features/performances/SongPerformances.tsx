@@ -54,6 +54,7 @@ import GeneralTiles from './components/GeneralTiles';
 import GamingTiles from './components/GamingTiles';
 import PrecisionChart from './components/PrecisionChart';
 import PerformanceChart from './components/PerformanceChart';
+import PerformancePrecisionBarChart from './components/PerformancePrecisionBarChart';
 
 export default function SongPerformances({ song }: { song: SongBasicData }) {
   const { setCurrentSong } = useSong();
@@ -70,7 +71,7 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
   const [scoreIndex, setScoreIndex] = useState(0);
 
   // États pour la navigation des intervalles de barres
-  const [learningBarIndex, setLearningBarIndex] = useState(0);
+
   const [gameBarIndex, setGameBarIndex] = useState(0);
 
   // Données étendues
@@ -137,12 +138,6 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
       yAxisId: 'multi',
       strokeDasharray: '5 5',
     },
-  ];
-
-  // Configuration des barres pour les graphiques
-  const learningBars = [
-    { dataKey: 'precision', color: '#6366f1', name: 'Précision' },
-    { dataKey: 'performance', color: '#f59e0b', name: 'Performance' },
   ];
 
   const gameBars = [
@@ -323,23 +318,7 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
               <div className="grid grid-cols-12 gap-6">
                 <PerformanceChart songId={song.id} />
                 {/* Graphique à barres Précision & Performance */}
-                <div className="col-span-12 lg:col-span-5">
-                  <BarChartWithNavigation
-                    title="Précision & Performance par mois"
-                    icon={
-                      <IconChartBar
-                        size={20}
-                        className="mr-2 text-indigo-400"
-                      />
-                    }
-                    intervals={learningBarIntervals}
-                    bars={learningBars}
-                    index={learningBarIndex}
-                    onIndexChange={setLearningBarIndex}
-                    themeColor="text-indigo-400"
-                    yAxisDomain={[70, 100]}
-                  />
-                </div>
+                <PerformancePrecisionBarChart songId={song.id} />
               </div>
               <RecentSessionsByMode
                 songTitle={song.title}
