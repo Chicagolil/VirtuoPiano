@@ -3,7 +3,7 @@ import {
   getSongLearningModeTilesAction,
   getSongPerformanceGeneralTilesAction,
   getSongPlayModeTilesAction,
-  getSongPracticeDataMultipleAction,
+  getSongPracticeDataAction,
   getSongLearningPrecisionDataAction,
 } from '@/lib/actions/songPerformances-actions';
 
@@ -24,7 +24,7 @@ export function useSongPracticeData(
 ) {
   return useQuery({
     queryKey: ['songPracticeData', songId, interval, index],
-    queryFn: () => getSongPracticeDataMultipleAction(songId, interval, index),
+    queryFn: () => getSongPracticeDataAction(songId, interval, index),
     enabled: !!songId,
     staleTime: 2 * 60 * 1000, // 2 minutes
     placeholderData: (previousData) => previousData, // Garde les anciennes données pendant le chargement
@@ -45,7 +45,7 @@ export function usePrefetchAdjacentData(
       queryClient.prefetchQuery({
         queryKey: ['songPracticeData', songId, interval, currentIndex - 1],
         queryFn: () =>
-          getSongPracticeDataMultipleAction(songId, interval, currentIndex - 1),
+          getSongPracticeDataAction(songId, interval, currentIndex - 1),
         staleTime: 2 * 60 * 1000,
       });
     }
@@ -54,7 +54,7 @@ export function usePrefetchAdjacentData(
     queryClient.prefetchQuery({
       queryKey: ['songPracticeData', songId, interval, currentIndex + 1],
       queryFn: () =>
-        getSongPracticeDataMultipleAction(songId, interval, currentIndex + 1),
+        getSongPracticeDataAction(songId, interval, currentIndex + 1),
       staleTime: 1 * 60 * 1000,
     });
   };

@@ -46,15 +46,15 @@ export default function PracticeGraph({ songId }: { songId: string }) {
 
   // Fonctions pour obtenir les données
   const getPracticeData = () => {
-    if (!practiceResult?.data?.current?.data) {
+    if (!practiceResult?.data?.data) {
       return [];
     }
-    return practiceResult.data.current.data;
+    return practiceResult.data.data;
   };
 
   // Calculs des totaux
   const practiceData = getPracticeData();
-  const currentData = practiceResult?.data?.current;
+  const currentData = practiceResult?.data;
 
   const totalPratique = currentData?.totalPratique || 0;
   const totalModeJeu = currentData?.totalModeJeu || 0;

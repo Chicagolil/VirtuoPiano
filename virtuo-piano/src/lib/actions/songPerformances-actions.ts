@@ -17,15 +17,12 @@ export interface SongGeneralTilesActionResponse {
   error?: string;
 }
 
-export interface SongPracticeDataMultipleActionResponse {
+export interface SongPracticeDataActionResponse {
   success: boolean;
-  data?: {
-    current: SongPracticeData;
-    previous?: SongPracticeData;
-    next?: SongPracticeData;
-  };
+  data?: SongPracticeData;
   error?: string;
 }
+
 export interface SongLearningPrecisionDataActionResponse {
   success: boolean;
   data?: SongLearningPrecisionData;
@@ -72,49 +69,28 @@ export async function getSongPerformanceGeneralTilesAction(
   }
 }
 
-export async function getSongPracticeDataMultipleAction(
+export async function getSongPracticeDataAction(
   songId: string,
   interval: number,
   index: number
-): Promise<SongPracticeDataMultipleActionResponse> {
+): Promise<SongPracticeDataActionResponse> {
   try {
     const user = await getAuthenticatedUser();
 
-    // Récupérer les données actuelles, précédentes et suivantes en parallèle
-    const [current, previous, next] = await Promise.all([
-      PerformancesServices.getSongPracticeData(
-        songId,
-        user.id,
-        interval,
-        index
-      ),
-      index > 0
-        ? PerformancesServices.getSongPracticeData(
-            songId,
-            user.id,
-            interval,
-            index - 1
-          )
-        : Promise.resolve(null),
-      PerformancesServices.getSongPracticeData(
-        songId,
-        user.id,
-        interval,
-        index + 1
-      ),
-    ]);
+    const data = await PerformancesServices.getSongPracticeData(
+      songId,
+      user.id,
+      interval,
+      index
+    );
 
     return {
       success: true,
-      data: {
-        current,
-        previous: previous || undefined,
-        next: next || undefined,
-      },
+      data,
     };
   } catch (error) {
     console.error(
-      'Erreur lors de la récupération des données de pratique multiples:',
+      'Erreur lors de la récupération des données de pratique:',
       error
     );
     return {
