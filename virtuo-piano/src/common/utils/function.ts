@@ -2,7 +2,7 @@ import { DIFFICULTY_RANGES } from '../constants/Difficulties';
 import { DifficultyRange } from '../types/songs';
 import { SONG_TYPE_RANGE } from '../constants/SongTypes';
 import { SongTypeRange } from '../types/songs';
-import { ScoreDurationData } from '@/lib/services/performances-services';
+import { ScoreDurationData } from '@/lib/types';
 import { MONTH_NAMES } from '../constants/heatmaps';
 
 export function getDifficultyRange(difficulty: number) {
