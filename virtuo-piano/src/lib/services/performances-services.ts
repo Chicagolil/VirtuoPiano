@@ -1878,13 +1878,48 @@ export class PerformancesServices {
       }))
       .sort((a, b) => a.date.getTime() - b.date.getTime());
 
-    // Grouper par intervalles de 6 mois
+    // Grouper par intervalles de 6 mois en partant du plus récent
     const intervalsData: Array<{
       label: string;
       data: BarChartDataPoint[];
     }> = [];
 
-    for (let i = 0; i < sortedMonthlyData.length; i += 6) {
+    // Calculer le nombre de groupes et le reste
+    const totalMonths = sortedMonthlyData.length;
+    const remainder = totalMonths % 6;
+
+    // Commencer par le groupe incomplet des plus anciens (si il y en a un)
+    if (remainder > 0) {
+      const incompleteGroup = sortedMonthlyData.slice(0, remainder);
+
+      const startMonth = incompleteGroup[0].date;
+      const endMonth = incompleteGroup[incompleteGroup.length - 1].date;
+
+      const startMonthName = startMonth.toLocaleDateString('fr-FR', {
+        month: 'short',
+        year: 'numeric',
+      });
+      const endMonthName = endMonth.toLocaleDateString('fr-FR', {
+        month: 'short',
+        year: 'numeric',
+      });
+
+      const label = `${startMonthName} - ${endMonthName}`;
+
+      const data: BarChartDataPoint[] = incompleteGroup.map((monthData) => ({
+        mois: monthData.date.toLocaleDateString('fr-FR', {
+          month: 'short',
+          year: 'numeric',
+        }),
+        precision: monthData.averagePrecision,
+        performance: monthData.averagePerformance,
+      }));
+
+      intervalsData.push({ label, data });
+    }
+
+    // Puis ajouter les groupes complets de 6 mois
+    for (let i = remainder; i < totalMonths; i += 6) {
       const intervalMonths = sortedMonthlyData.slice(i, i + 6);
 
       if (intervalMonths.length === 0) continue;
@@ -2088,13 +2123,51 @@ export class PerformancesServices {
       }))
       .sort((a, b) => a.date.getTime() - b.date.getTime());
 
-    // Grouper par intervalles de 6 mois
+    // Grouper par intervalles de 6 mois en partant du plus récent
     const intervalsData: Array<{
       label: string;
       data: SongGamingBarChartDataPoint[];
     }> = [];
 
-    for (let i = 0; i < sortedMonthlyData.length; i += 6) {
+    // Calculer le nombre de groupes et le reste
+    const totalMonths = sortedMonthlyData.length;
+    const remainder = totalMonths % 6;
+
+    // Commencer par le groupe incomplet des plus anciens (si il y en a un)
+    if (remainder > 0) {
+      const incompleteGroup = sortedMonthlyData.slice(0, remainder);
+
+      const startMonth = incompleteGroup[0].date;
+      const endMonth = incompleteGroup[incompleteGroup.length - 1].date;
+
+      const startMonthName = startMonth.toLocaleDateString('fr-FR', {
+        month: 'short',
+        year: 'numeric',
+      });
+      const endMonthName = endMonth.toLocaleDateString('fr-FR', {
+        month: 'short',
+        year: 'numeric',
+      });
+
+      const label = `${startMonthName} - ${endMonthName}`;
+
+      const data: SongGamingBarChartDataPoint[] = incompleteGroup.map(
+        (monthData) => ({
+          mois: monthData.date.toLocaleDateString('fr-FR', {
+            month: 'short',
+            year: 'numeric',
+          }),
+          score: monthData.averageScore,
+          combo: monthData.averageCombo,
+          multi: monthData.averageMulti,
+        })
+      );
+
+      intervalsData.push({ label, data });
+    }
+
+    // Puis ajouter les groupes complets de 6 mois
+    for (let i = remainder; i < totalMonths; i += 6) {
       const intervalMonths = sortedMonthlyData.slice(i, i + 6);
 
       if (intervalMonths.length === 0) continue;
