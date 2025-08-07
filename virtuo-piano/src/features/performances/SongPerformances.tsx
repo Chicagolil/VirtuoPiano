@@ -23,16 +23,11 @@ import { SongBasicData } from '@/lib/services/performances-services';
 
 // Composants extraits
 import RecordsTimeline from './components/RecordsTimeline';
-import BarChartWithNavigation from './components/BarChartWithNavigation';
 
 import RecentSessionsByMode from './components/RecentSessionsByMode';
 
 // Données et utilitaires
-import {
-  learningRecords,
-  gameRecords,
-  gameBarIntervals,
-} from './data/performanceData';
+import { learningRecords, gameRecords } from './data/performanceData';
 
 import LearningTiles from './components/LearningTiles';
 import PracticeGraph from './components/PracticeGraph';
@@ -42,6 +37,7 @@ import PrecisionChart from './components/PrecisionChart';
 import PerformanceChart from './components/PerformanceChart';
 import PerformancePrecisionBarChart from './components/PerformancePrecisionBarChart';
 import GamingLineChart from './components/GamingLineChart';
+import GamingBarChart from './components/GamingBarChart';
 
 export default function SongPerformances({ song }: { song: SongBasicData }) {
   const { setCurrentSong } = useSong();
@@ -51,10 +47,6 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
   const [activeTab, setActiveTab] = useState<'apprentissage' | 'jeu'>(
     'apprentissage'
   );
-
-  // États pour la navigation des intervalles de barres
-
-  const [gameBarIndex, setGameBarIndex] = useState(0);
 
   // Données étendues
 
@@ -89,22 +81,6 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
   const handleBackToPlayedSongs = () => {
     router.push('/performances?tab=playedSongs');
   };
-
-  const gameBars = [
-    {
-      dataKey: 'score',
-      color: '#6366f1',
-      name: 'Meilleur score',
-      yAxisId: 'score',
-    },
-    { dataKey: 'combo', color: '#f59e0b', name: 'Combo max', yAxisId: 'combo' },
-    {
-      dataKey: 'multi',
-      color: '#10b981',
-      name: 'Multiplicateur max',
-      yAxisId: 'multi',
-    },
-  ];
 
   return (
     <div className={styles.container}>
@@ -297,24 +273,7 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
                 <GamingLineChart songId={song.id} />
 
                 {/* Graphique à barres Score, combo & multiplicateur */}
-                <div className="col-span-12 lg:col-span-6">
-                  <BarChartWithNavigation
-                    title="Score, combo & multiplicateur par mois"
-                    icon={
-                      <IconChartBar
-                        size={20}
-                        className="mr-2 text-orange-400"
-                      />
-                    }
-                    intervals={gameBarIntervals}
-                    bars={gameBars}
-                    index={gameBarIndex}
-                    onIndexChange={setGameBarIndex}
-                    height={320}
-                    themeColor="text-orange-400"
-                    multiAxis={true}
-                  />
-                </div>
+                <GamingBarChart songId={song.id} />
               </div>
               <RecentSessionsByMode
                 songTitle={song.title}

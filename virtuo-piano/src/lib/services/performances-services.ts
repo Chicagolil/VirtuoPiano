@@ -166,6 +166,19 @@ export interface SongGamingLineChartData {
   totalSessions: number;
 }
 
+export interface SongGamingBarChartDataPoint {
+  mois: string;
+  score: number;
+  combo: number;
+  multi: number;
+}
+
+export interface SongGamingBarChartData {
+  label: string;
+  data: SongGamingBarChartDataPoint[];
+  totalIntervals: number;
+}
+
 export class PerformancesServices {
   // Méthodes utilitaires privées pour calculer les intervalles
   private static getCurrentIntervalDates(
@@ -2000,6 +2013,140 @@ export class PerformancesServices {
       averageCombo,
       averageMulti,
       totalSessions,
+    };
+  }
+
+  static async getSongGamingBarChartData(
+    songId: string,
+    userId: string,
+    index: number
+  ): Promise<SongGamingBarChartData> {
+    const sessions = await prisma.scores.findMany({
+      where: {
+        song_id: songId,
+        user_id: userId,
+        mode: { name: 'Jeu' },
+      },
+      include: {
+        mode: true,
+      },
+      orderBy: {
+        sessionStartTime: 'asc',
+      },
+    });
+
+    if (sessions.length === 0) {
+      return {
+        label: 'Aucune donnée',
+        data: [],
+        totalIntervals: 0,
+      };
+    }
+    // Grouper les sessions par mois et calculer les moyennes
+    const monthlyData = new Map<
+      string,
+      {
+        scoreSum: number;
+        comboSum: number;
+        multiSum: number;
+        count: number;
+        date: Date;
+      }
+    >();
+
+    sessions.forEach((session) => {
+      const sessionDate = session.sessionStartTime;
+      const monthKey = `${sessionDate.getFullYear()}-${String(
+        sessionDate.getMonth() + 1
+      ).padStart(2, '0')}`;
+
+      if (!monthlyData.has(monthKey)) {
+        monthlyData.set(monthKey, {
+          scoreSum: 0,
+          comboSum: 0,
+          multiSum: 0,
+          count: 0,
+          date: sessionDate,
+        });
+      }
+
+      const monthData = monthlyData.get(monthKey)!;
+      monthData.scoreSum += session.totalPoints || 0;
+      monthData.comboSum += session.maxCombo || 0;
+      monthData.multiSum += session.maxMultiplier || 0;
+      monthData.count += 1;
+    });
+
+    // Convertir en tableau et trier par date
+    const sortedMonthlyData = Array.from(monthlyData.entries())
+      .map(([monthKey, data]) => ({
+        monthKey,
+        averageScore: Math.round(data.scoreSum / data.count),
+        averageCombo: Math.round(data.comboSum / data.count),
+        averageMulti: Math.round(data.multiSum / data.count),
+        date: data.date,
+      }))
+      .sort((a, b) => a.date.getTime() - b.date.getTime());
+
+    // Grouper par intervalles de 6 mois
+    const intervalsData: Array<{
+      label: string;
+      data: SongGamingBarChartDataPoint[];
+    }> = [];
+
+    for (let i = 0; i < sortedMonthlyData.length; i += 6) {
+      const intervalMonths = sortedMonthlyData.slice(i, i + 6);
+
+      if (intervalMonths.length === 0) continue;
+
+      const startMonth = intervalMonths[0].date;
+      const endMonth = intervalMonths[intervalMonths.length - 1].date;
+
+      const startMonthName = startMonth.toLocaleDateString('fr-FR', {
+        month: 'short',
+        year: 'numeric',
+      });
+      const endMonthName = endMonth.toLocaleDateString('fr-FR', {
+        month: 'short',
+        year: 'numeric',
+      });
+
+      const label = `${startMonthName} - ${endMonthName}`;
+
+      const data: SongGamingBarChartDataPoint[] = intervalMonths.map(
+        (monthData) => ({
+          mois: monthData.date.toLocaleDateString('fr-FR', {
+            month: 'short',
+            year: 'numeric',
+          }),
+          score: monthData.averageScore,
+          combo: monthData.averageCombo,
+          multi: monthData.averageMulti,
+        })
+      );
+
+      intervalsData.push({ label, data });
+    }
+
+    // Si aucun intervalle, créer un intervalle par défaut
+    if (intervalsData.length === 0) {
+      return {
+        label: 'Aucune donnée',
+        data: [],
+        totalIntervals: 0,
+      };
+    }
+
+    // Retourner l'intervalle demandé par l'index (en commençant par le plus récent)
+    const totalIntervals = intervalsData.length;
+    const requestedIntervalIndex = Math.min(index, totalIntervals - 1);
+    const requestedInterval =
+      intervalsData[totalIntervals - 1 - requestedIntervalIndex];
+
+    return {
+      label: requestedInterval.label,
+      data: requestedInterval.data,
+      totalIntervals,
     };
   }
 }

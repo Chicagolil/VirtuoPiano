@@ -119,18 +119,6 @@ export const gameRecords: TimelineRecord[] = [
   },
 ];
 
-// --- CHART DATA ---
-
-export const gameScoreLineData = [
-  { session: 1, score: 8200, combo: 320, multi: 3.2 },
-  { session: 2, score: 8450, combo: 350, multi: 3.5 },
-  { session: 3, score: 8700, combo: 370, multi: 3.8 },
-  { session: 4, score: 8900, combo: 400, multi: 4.0 },
-  { session: 5, score: 9100, combo: 420, multi: 4.1 },
-  { session: 6, score: 9300, combo: 450, multi: 4.2 },
-  { session: 7, score: 9500, combo: 470, multi: 4.3 },
-];
-
 // --- BAR CHART INTERVALS DATA ---
 export const learningBarIntervals = [
   {
@@ -181,27 +169,3 @@ export const gameBarIntervals = [
     ],
   },
 ];
-
-// --- EXTENDED DATA ---
-
-export const generateExtendedScoreData = () => {
-  return [
-    ...gameScoreLineData,
-    // Sessions 8-14
-    { session: 8, score: 9600, combo: 480, multi: 4.4 },
-    { session: 9, score: 9700, combo: 490, multi: 4.5 },
-    { session: 10, score: 9550, combo: 485, multi: 4.3 },
-    { session: 11, score: 9800, combo: 500, multi: 4.6 },
-    { session: 12, score: 9900, combo: 510, multi: 4.7 },
-    { session: 13, score: 9750, combo: 495, multi: 4.4 },
-    { session: 14, score: 10000, combo: 520, multi: 4.8 },
-    // Sessions 15-21
-    { session: 15, score: 9850, combo: 505, multi: 4.5 },
-    { session: 16, score: 9950, combo: 515, multi: 4.6 },
-    { session: 17, score: 10100, combo: 525, multi: 4.9 },
-    { session: 18, score: 10200, combo: 535, multi: 5.0 },
-    { session: 19, score: 10050, combo: 530, multi: 4.8 },
-    { session: 20, score: 10150, combo: 540, multi: 4.9 },
-    { session: 21, score: 10300, combo: 550, multi: 5.1 },
-  ];
-};

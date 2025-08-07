@@ -10,6 +10,7 @@ import {
   SongPracticeData,
   SongPerformancePrecisionBarChartData,
   SongGamingLineChartData,
+  SongGamingBarChartData,
 } from '@/lib/services/performances-services';
 
 import { getAuthenticatedUser } from '../auth/get-authenticated-user';
@@ -59,6 +60,12 @@ export interface SongPerformancePrecisionBarChartDataActionResponse {
 export interface SongGamingLineChartDataActionResponse {
   success: boolean;
   data?: SongGamingLineChartData;
+  error?: string;
+}
+
+export interface SongGamingBarChartDataActionResponse {
+  success: boolean;
+  data?: SongGamingBarChartData;
   error?: string;
 }
 
@@ -286,6 +293,35 @@ export async function getSongGamingLineChartDataAction(
   } catch (error) {
     console.error(
       'Erreur lors de la récupération des données de ligne:',
+      error
+    );
+    return {
+      success: false,
+      error: 'Erreur lors de la récupération des données',
+    };
+  }
+}
+
+export async function getSongGamingBarChartDataAction(
+  songId: string,
+  index: number
+): Promise<SongGamingBarChartDataActionResponse> {
+  try {
+    const user = await getAuthenticatedUser();
+
+    const data = await PerformancesServices.getSongGamingBarChartData(
+      songId,
+      user.id,
+      index
+    );
+
+    return {
+      success: true,
+      data,
+    };
+  } catch (error) {
+    console.error(
+      'Erreur lors de la récupération des données de barres:',
       error
     );
     return {
