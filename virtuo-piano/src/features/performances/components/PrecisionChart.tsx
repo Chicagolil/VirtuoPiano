@@ -1,7 +1,7 @@
 import { IconTarget } from '@tabler/icons-react';
-import LineChartWithNavigation from './LineChartWithNavigation';
+import LineChartWithNavigation from '../../../components/charts/LineChartWithNavigation';
 import { defaultIntervalOptions } from '../utils/chartUtils';
-import ChartSummary from './ChartSummary';
+import ChartSummary from '../../../components/charts/ChartSummary';
 import { useEffect, useState } from 'react';
 import {
   useSongLearningPrecisionData,

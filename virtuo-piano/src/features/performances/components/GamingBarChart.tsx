@@ -1,5 +1,5 @@
 import { IconChartBar } from '@tabler/icons-react';
-import BarChartWithNavigation from './BarChartWithNavigation';
+import BarChartWithNavigation from '../../../components/charts/BarChartWithNavigation';
 import { useEffect, useState } from 'react';
 import {
   usePrefetchGamingBarChartData,

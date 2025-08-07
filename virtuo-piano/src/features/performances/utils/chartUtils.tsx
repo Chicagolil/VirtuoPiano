@@ -8,7 +8,7 @@ import {
   IconStar,
   IconMedal,
 } from '@tabler/icons-react';
-import { TimelineRecord } from '../components/RecordsTimeline';
+import { TimelineRecord } from '../../../components/timeline/RecordsTimeline';
 
 export interface IntervalOption {
   value: number;

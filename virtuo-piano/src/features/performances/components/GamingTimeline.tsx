@@ -1,4 +1,4 @@
-import RecordsTimeline from './RecordsTimeline';
+import RecordsTimeline from '../../../components/timeline/RecordsTimeline';
 import { useSongTimelineRecordsData } from '@/customHooks/useSongPerformances';
 
 interface GamingTimelineProps {

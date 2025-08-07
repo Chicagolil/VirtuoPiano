@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { defaultIntervalOptions } from '../utils/chartUtils';
-import LineChartWithNavigation from './LineChartWithNavigation';
+import LineChartWithNavigation from '../../../components/charts/LineChartWithNavigation';
 import { IconStar } from '@tabler/icons-react';
-import ChartSummary from './ChartSummary';
+import ChartSummary from '../../../components/charts/ChartSummary';
 import {
   useSongLearningPerformanceData,
   usePrefetchLearningPerformanceData,

@@ -18,7 +18,7 @@ import {
   getIcon,
   getPopupIcon,
   getValueDisplay,
-} from '../utils/chartUtils';
+} from '../../features/performances/utils/chartUtils';
 
 export interface TimelineRecord {
   id: number;

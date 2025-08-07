@@ -18,7 +18,7 @@ import {
 import { useState, useEffect } from 'react';
 import { formatDuration } from '@/common/utils/function';
 import { defaultIntervalOptions } from '../utils/chartUtils';
-import ChartSummary from './ChartSummary';
+import ChartSummary from '../../../components/charts/ChartSummary';
 
 export default function PracticeGraph({ songId }: { songId: string }) {
   const [practiceInterval, setPracticeInterval] = useState(15);

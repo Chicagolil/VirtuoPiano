@@ -1,6 +1,6 @@
 import { IconTrophy } from '@tabler/icons-react';
 import MultiAxisLineChart from './MultiAxisLineChart';
-import ChartSummary from './ChartSummary';
+import ChartSummary from '../../../components/charts/ChartSummary';
 import { defaultIntervalOptions } from '../utils/chartUtils';
 import {
   useInvalidatePracticeCache,
