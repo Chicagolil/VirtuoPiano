@@ -7,6 +7,7 @@ import {
   getSongLearningPrecisionDataAction,
   getSongLearningPerformanceDataAction,
   getSongPerformancePrecisionBarChartDataAction,
+  getSongGamingLineChartDataAction,
 } from '@/lib/actions/songPerformances-actions';
 
 // Hook pour les tuiles générales
@@ -86,6 +87,9 @@ export function useInvalidatePracticeCache() {
       queryClient.invalidateQueries({
         queryKey: ['songLearningPrecisionData', songId],
       });
+      queryClient.invalidateQueries({
+        queryKey: ['songGamingLineChartData', songId],
+      });
     } else {
       // Invalider tout le cache de pratique
       queryClient.invalidateQueries({
@@ -102,6 +106,9 @@ export function useInvalidatePracticeCache() {
       });
       queryClient.invalidateQueries({
         queryKey: ['songLearningPrecisionData'],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['songGamingLineChartData'],
       });
     }
   };
@@ -144,11 +151,24 @@ export function useInvalidatePracticeCache() {
     }
   };
 
+  const invalidateGamingLineChartDataOnly = (songId?: string) => {
+    if (songId) {
+      queryClient.invalidateQueries({
+        queryKey: ['songGamingLineChartData', songId],
+      });
+    } else {
+      queryClient.invalidateQueries({
+        queryKey: ['songGamingLineChartData'],
+      });
+    }
+  };
+
   return {
     invalidateCache,
     invalidatePracticeDataOnly,
     invalidatePrecisionDataOnly,
     invalidatePerformanceDataOnly,
+    invalidateGamingLineChartDataOnly,
   };
 }
 
@@ -342,6 +362,55 @@ export function usePrefetchPerformancePrecisionBarChartData(
       queryFn: () =>
         getSongPerformancePrecisionBarChartDataAction(songId, currentIndex + 1),
       staleTime: 5 * 60 * 1000,
+    });
+  };
+
+  return { prefetchAdjacent };
+}
+
+export function useSongGamingLineChartData(
+  songId: string,
+  index: number,
+  interval: number
+) {
+  return useQuery({
+    queryKey: ['songGamingLineChartData', songId, index, interval],
+    queryFn: () => getSongGamingLineChartDataAction(songId, index, interval),
+    enabled: !!songId,
+    staleTime: 2 * 60 * 1000,
+    placeholderData: (previousData) => previousData,
+  });
+}
+
+export function usePrefetchGamingLineChartData(
+  songId: string,
+  interval: number,
+  currentIndex: number
+) {
+  const queryClient = useQueryClient();
+
+  const prefetchAdjacent = () => {
+    // Précharger l'index précédent
+    if (currentIndex > 0) {
+      queryClient.prefetchQuery({
+        queryKey: [
+          'songGamingLineChartData',
+          songId,
+          currentIndex - 1,
+          interval,
+        ],
+        queryFn: () =>
+          getSongGamingLineChartDataAction(songId, currentIndex - 1, interval),
+        staleTime: 2 * 60 * 1000,
+      });
+    }
+
+    // Précharger l'index suivant
+    queryClient.prefetchQuery({
+      queryKey: ['songGamingLineChartData', songId, currentIndex + 1, interval],
+      queryFn: () =>
+        getSongGamingLineChartDataAction(songId, currentIndex + 1, interval),
+      staleTime: 2 * 60 * 1000,
     });
   };
 

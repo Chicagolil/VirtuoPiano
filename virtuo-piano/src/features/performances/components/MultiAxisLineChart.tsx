@@ -9,6 +9,8 @@ import {
 } from 'recharts';
 import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 import * as Separator from '@radix-ui/react-separator';
+import { Spinner } from '@/components/ui/spinner';
+import { LineChartDataPoint } from '@/lib/services/performances-services';
 
 interface MultiAxisLine {
   dataKey: string;
@@ -37,6 +39,11 @@ interface MultiAxisLineChartProps {
   themeColor: string;
   intervalOptions: IntervalOption[];
   summary?: React.ReactNode;
+  isLoading?: boolean;
+  error: Error | null;
+  scoreAxisDomain: number[];
+  comboAxisDomain: number[];
+  multiAxisDomain: number[];
 }
 
 export default function MultiAxisLineChart({
@@ -53,6 +60,11 @@ export default function MultiAxisLineChart({
   themeColor,
   intervalOptions,
   summary,
+  isLoading,
+  error,
+  scoreAxisDomain,
+  comboAxisDomain,
+  multiAxisDomain,
 }: MultiAxisLineChartProps) {
   const getDefaultIndex = (dataLength: number, interval: number) => {
     const numCompleteIntervals = Math.floor(dataLength / interval);
@@ -74,8 +86,8 @@ export default function MultiAxisLineChart({
         <div className="flex flex-col items-center mb-2">
           <div className="flex items-center justify-center space-x-4 mb-2">
             <button
-              onClick={() => onIndexChange(Math.max(0, index - 1))}
-              disabled={index === 0}
+              onClick={() => onIndexChange(index + 1)}
+              disabled={(index + 1) * interval >= maxDataLength}
               className="p-2 rounded-full hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <IconChevronLeft size={20} className={themeColor} />
@@ -96,8 +108,8 @@ export default function MultiAxisLineChart({
               ))}
             </select>
             <button
-              onClick={() => onIndexChange(index + 1)}
-              disabled={(index + 1) * interval >= maxDataLength}
+              onClick={() => onIndexChange(Math.max(0, index - 1))}
+              disabled={index === 0}
               className="p-2 rounded-full hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <IconChevronRight size={20} className={themeColor} />
@@ -105,82 +117,92 @@ export default function MultiAxisLineChart({
           </div>
         </div>
       </div>
+      {isLoading ? (
+        <div className="flex items-center justify-center h-[250px]">
+          <Spinner variant="bars" size={32} className="text-white" />
+        </div>
+      ) : error ? (
+        <div className="flex items-center justify-center h-[250px]">
+          <div className="text-center text-red-400 text-sm">
+            {error.message || 'Erreur lors du chargement'}
+          </div>
+        </div>
+      ) : (
+        <ResponsiveContainer width="100%" height={height}>
+          <LineChart
+            data={data}
+            margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+            <XAxis dataKey="session" tick={{ fontSize: 12, fill: '#94a3b8' }} />
 
-      <ResponsiveContainer width="100%" height={height}>
-        <LineChart
-          data={data}
-          margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-        >
-          <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-          <XAxis dataKey="session" tick={{ fontSize: 12, fill: '#94a3b8' }} />
+            {/* Axes Y multiples */}
+            <YAxis
+              yAxisId="score"
+              domain={scoreAxisDomain}
+              tick={{ fontSize: 12, fill: '#94a3b8' }}
+            />
+            <YAxis
+              yAxisId="combo"
+              orientation="left"
+              domain={comboAxisDomain}
+              tick={{ fontSize: 12, fill: '#f59e0b' }}
+            />
+            <YAxis
+              yAxisId="multi"
+              orientation="left"
+              domain={multiAxisDomain}
+              tick={{ fontSize: 12, fill: '#10b981' }}
+            />
 
-          {/* Axes Y multiples */}
-          <YAxis
-            yAxisId="score"
-            domain={[8000, 10000]}
-            tick={{ fontSize: 12, fill: '#94a3b8' }}
-          />
-          <YAxis
-            yAxisId="combo"
-            orientation="left"
-            domain={[300, 600]}
-            tick={{ fontSize: 12, fill: '#f59e0b' }}
-          />
-          <YAxis
-            yAxisId="multi"
-            orientation="left"
-            domain={[3, 5]}
-            tick={{ fontSize: 12, fill: '#10b981' }}
-          />
-
-          <Tooltip
-            contentStyle={{
-              backgroundColor: '#1e293b',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '12px',
-            }}
-            itemStyle={{ color: '#e2e8f0' }}
-            labelStyle={{
-              color: '#e2e8f0',
-              fontWeight: 'bold',
-              marginBottom: '4px',
-            }}
-            formatter={(value, name) => {
-              const line = lines.find((l) => l.dataKey === name);
-              if (line?.dataKey === 'score')
-                return [`${value} points`, 'Score'];
-              if (line?.dataKey === 'combo')
-                return [`${value} notes`, 'Combo max'];
-              if (line?.dataKey === 'multi')
-                return [`x${value}`, 'Multiplicateur max'];
-              return [`${value}`, line?.name || name];
-            }}
-          />
-
-          {lines.map((line, idx) => (
-            <Line
-              key={line.dataKey}
-              yAxisId={line.yAxisId}
-              type="monotone"
-              dataKey={line.dataKey}
-              stroke={line.color}
-              strokeWidth={idx === 0 ? 3 : 2}
-              strokeDasharray={line.strokeDasharray}
-              dot={{
-                r: idx === 0 ? 4 : 3,
-                fill: line.color,
-                strokeWidth: 0,
+            <Tooltip
+              contentStyle={{
+                backgroundColor: '#1e293b',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '12px',
               }}
-              activeDot={{
-                r: idx === 0 ? 6 : 5,
-                fill: line.color.replace('500', '400'),
+              itemStyle={{ color: '#e2e8f0' }}
+              labelStyle={{
+                color: '#e2e8f0',
+                fontWeight: 'bold',
+                marginBottom: '4px',
+              }}
+              formatter={(value, name) => {
+                const line = lines.find((l) => l.dataKey === name);
+                if (line?.dataKey === 'score')
+                  return [`${value} points`, 'Score'];
+                if (line?.dataKey === 'combo')
+                  return [`${value} notes`, 'Combo max'];
+                if (line?.dataKey === 'multi')
+                  return [`x${value}`, 'Multiplicateur max'];
+                return [`${value}`, line?.name || name];
               }}
             />
-          ))}
-        </LineChart>
-      </ResponsiveContainer>
 
+            {lines.map((line, idx) => (
+              <Line
+                key={line.dataKey}
+                yAxisId={line.yAxisId}
+                type="monotone"
+                dataKey={line.dataKey}
+                stroke={line.color}
+                strokeWidth={idx === 0 ? 3 : 2}
+                strokeDasharray={line.strokeDasharray}
+                dot={{
+                  r: idx === 0 ? 4 : 3,
+                  fill: line.color,
+                  strokeWidth: 0,
+                }}
+                activeDot={{
+                  r: idx === 0 ? 6 : 5,
+                  fill: line.color.replace('500', '400'),
+                }}
+              />
+            ))}
+          </LineChart>
+        </ResponsiveContainer>
+      )}
       <Separator.Root className="h-px bg-slate-500 dark:bg-slate-800 my-4" />
 
       <div className="flex items-center justify-between flex-wrap gap-4 mt-4 mb-2">

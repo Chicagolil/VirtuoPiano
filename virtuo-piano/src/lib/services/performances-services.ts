@@ -151,6 +151,21 @@ export interface SongPerformancePrecisionBarChartData {
   totalIntervals: number;
 }
 
+export interface LineChartDataPoint {
+  session: string;
+  score: number;
+  combo: number;
+  multi: number;
+}
+
+export interface SongGamingLineChartData {
+  data: LineChartDataPoint[];
+  averageScore: number;
+  averageCombo: number;
+  averageMulti: number;
+  totalSessions: number;
+}
+
 export class PerformancesServices {
   // Méthodes utilitaires privées pour calculer les intervalles
   private static getCurrentIntervalDates(
@@ -1906,6 +1921,85 @@ export class PerformancesServices {
       label: requestedInterval.label,
       data: requestedInterval.data,
       totalIntervals,
+    };
+  }
+
+  static async getSongGamingLineChartData(
+    songId: string,
+    userId: string,
+    index: number,
+    interval: number
+  ): Promise<SongGamingLineChartData> {
+    const totalSessions = await prisma.scores.count({
+      where: {
+        song_id: songId,
+        user_id: userId,
+        mode: {
+          name: 'Jeu',
+        },
+      },
+    });
+    const sessions = await prisma.scores.findMany({
+      where: {
+        song_id: songId,
+        user_id: userId,
+        mode: {
+          name: 'Jeu',
+        },
+      },
+      include: {
+        mode: true,
+      },
+      orderBy: {
+        sessionStartTime: 'desc',
+      },
+      take: interval,
+      skip: index * interval,
+    });
+
+    const orderedSessions = sessions.reverse();
+
+    const data: LineChartDataPoint[] = [];
+    const today = new Date();
+
+    orderedSessions.forEach((session, index) => {
+      const sessionDate = session.sessionStartTime;
+      const isToday = sessionDate.toDateString() === today.toDateString();
+      let displayName: string;
+
+      if (isToday) {
+        displayName = "Aujourd'hui";
+      } else {
+        const day = String(sessionDate.getDate()).padStart(2, '0');
+        const month = String(sessionDate.getMonth() + 1).padStart(2, '0');
+        const year = sessionDate.getFullYear();
+        displayName = `${day}/${month}/${year}`;
+      }
+
+      data.push({
+        session: displayName,
+        score: session.totalPoints || 0,
+        combo: session.maxCombo || 0,
+        multi: session.maxMultiplier || 0,
+      });
+    });
+
+    const averageScore = Math.round(
+      data.reduce((sum, point) => sum + point.score, 0) / data.length
+    );
+    const averageCombo = Math.round(
+      data.reduce((sum, point) => sum + point.combo, 0) / data.length
+    );
+    const averageMulti = Math.round(
+      data.reduce((sum, point) => sum + point.multi, 0) / data.length
+    );
+
+    return {
+      data,
+      averageScore,
+      averageCombo,
+      averageMulti,
+      totalSessions,
     };
   }
 }

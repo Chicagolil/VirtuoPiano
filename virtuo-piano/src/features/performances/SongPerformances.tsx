@@ -10,13 +10,8 @@ import {
   IconClock,
   IconChartBar,
   IconChevronRight,
-  IconTrophy,
-  IconTarget,
-  IconFlame,
   IconTimeline,
-  IconStar,
   IconBrain,
-  IconFlame as IconFire,
 } from '@tabler/icons-react';
 
 import React from 'react';
@@ -29,25 +24,16 @@ import { SongBasicData } from '@/lib/services/performances-services';
 // Composants extraits
 import RecordsTimeline from './components/RecordsTimeline';
 import BarChartWithNavigation from './components/BarChartWithNavigation';
-import MultiAxisLineChart from './components/MultiAxisLineChart';
-import ChartSummary from './components/ChartSummary';
+
 import RecentSessionsByMode from './components/RecentSessionsByMode';
 
 // Données et utilitaires
 import {
   learningRecords,
   gameRecords,
-  generateExtendedScoreData,
-  learningBarIntervals,
   gameBarIntervals,
 } from './data/performanceData';
-import {
-  defaultIntervalOptions,
-  getDefaultIndex,
-  sliceDataByInterval,
-  calculateAverage,
-  calculateAverageFixed,
-} from './utils/chartUtils';
+
 import LearningTiles from './components/LearningTiles';
 import PracticeGraph from './components/PracticeGraph';
 import GeneralTiles from './components/GeneralTiles';
@@ -55,6 +41,7 @@ import GamingTiles from './components/GamingTiles';
 import PrecisionChart from './components/PrecisionChart';
 import PerformanceChart from './components/PerformanceChart';
 import PerformancePrecisionBarChart from './components/PerformancePrecisionBarChart';
+import GamingLineChart from './components/GamingLineChart';
 
 export default function SongPerformances({ song }: { song: SongBasicData }) {
   const { setCurrentSong } = useSong();
@@ -65,35 +52,16 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
     'apprentissage'
   );
 
-  // États pour la navigation des intervalles de lignes
-
-  const [scoreInterval, setScoreInterval] = useState(7);
-  const [scoreIndex, setScoreIndex] = useState(0);
-
   // États pour la navigation des intervalles de barres
 
   const [gameBarIndex, setGameBarIndex] = useState(0);
 
   // Données étendues
-  const extendedScoreData = generateExtendedScoreData();
 
   useEffect(() => {
     setCurrentSong(song);
     return () => setCurrentSong(null);
   }, [song, setCurrentSong]);
-
-  // Initialiser les indices par défaut
-  useEffect(() => {
-    setScoreIndex(getDefaultIndex(extendedScoreData.length, scoreInterval));
-    // Pas besoin d'initialiser practiceIndex car il est géré par le serveur
-  }, []);
-
-  const getScoreData = () =>
-    sliceDataByInterval(extendedScoreData, scoreIndex, scoreInterval);
-
-  const avgScore = calculateAverage(getScoreData(), 'score');
-  const avgCombo = calculateAverage(getScoreData(), 'combo');
-  const avgMulti = calculateAverageFixed(getScoreData(), 'multi');
 
   // Gestion des favoris
   const handleFavoriteClick = () => {
@@ -121,24 +89,6 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
   const handleBackToPlayedSongs = () => {
     router.push('/performances?tab=playedSongs');
   };
-
-  const scoreLines = [
-    { dataKey: 'score', color: '#6366f1', name: 'Score', yAxisId: 'score' },
-    {
-      dataKey: 'combo',
-      color: '#f59e0b',
-      name: 'Combo max',
-      yAxisId: 'combo',
-      strokeDasharray: '10 5',
-    },
-    {
-      dataKey: 'multi',
-      color: '#10b981',
-      name: 'Multiplicateur max',
-      yAxisId: 'multi',
-      strokeDasharray: '5 5',
-    },
-  ];
 
   const gameBars = [
     {
@@ -344,46 +294,7 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
               {/* Graphiques côte à côte */}
               <div className="grid grid-cols-12 gap-6">
                 {/* Graphique Score multi-axes */}
-                <div className="col-span-12 lg:col-span-6">
-                  <MultiAxisLineChart
-                    title="Score par session"
-                    icon={
-                      <IconTrophy size={20} className="mr-2 text-yellow-400" />
-                    }
-                    data={getScoreData()}
-                    lines={scoreLines}
-                    interval={scoreInterval}
-                    index={scoreIndex}
-                    onIntervalChange={setScoreInterval}
-                    onIndexChange={setScoreIndex}
-                    maxDataLength={extendedScoreData.length}
-                    height={280}
-                    themeColor="text-yellow-400"
-                    intervalOptions={defaultIntervalOptions}
-                    summary={
-                      <ChartSummary
-                        title="Moyennes sur la période"
-                        items={[
-                          {
-                            label: 'Score',
-                            value: avgScore,
-                            color: 'text-indigo-600 dark:text-indigo-400',
-                          },
-                          {
-                            label: 'Combo',
-                            value: avgCombo,
-                            color: 'text-amber-500 dark:text-amber-400',
-                          },
-                          {
-                            label: 'Multiplicateur',
-                            value: `x${avgMulti}`,
-                            color: 'text-green-500 dark:text-green-400',
-                          },
-                        ]}
-                      />
-                    }
-                  />
-                </div>
+                <GamingLineChart songId={song.id} />
 
                 {/* Graphique à barres Score, combo & multiplicateur */}
                 <div className="col-span-12 lg:col-span-6">
