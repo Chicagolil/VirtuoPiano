@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { SongBasicData } from '@/lib/services/performances-services';
+import { SongBasicData } from '@/lib/types';
 
 type SongContextType = {
   currentSong: SongBasicData | null;

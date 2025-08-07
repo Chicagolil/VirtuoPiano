@@ -23,7 +23,7 @@ import DifficultyBadge from '@/components/DifficultyBadge';
 import SongTypeBadge from '@/components/SongTypeBadge';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
-import { SongBasicData } from '@/lib/services/performances-services';
+import { SongBasicData } from '@/lib/types';
 
 export default function Song({
   song,

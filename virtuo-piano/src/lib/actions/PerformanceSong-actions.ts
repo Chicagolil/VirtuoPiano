@@ -1,10 +1,8 @@
 'use server';
 
 import { getServerSession } from 'next-auth';
-import {
-  PerformancesServices,
-  SongBasicData,
-} from '../services/performances-services';
+import { SongBasicData } from '@/lib/types';
+import { PerformancesServices } from '../services/performances-services';
 import { authOptions } from '../authoption';
 
 export async function getSongBasicDataAction(songId: string): Promise<{

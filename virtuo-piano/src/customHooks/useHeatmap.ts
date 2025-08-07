@@ -3,10 +3,7 @@ import {
   getHeatmapData,
   getSessionsByDate,
 } from '@/lib/actions/heatmap-actions';
-import {
-  ScoreDurationData,
-  SessionDetail,
-} from '@/lib/services/performances-services';
+import { SessionDetail } from '@/lib/types';
 import {
   generateYearData,
   generateMonthLabels,

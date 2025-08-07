@@ -11,7 +11,8 @@ const GeneralStats = lazy(() => import('@/features/performances/generalStats'));
 const HistoryStats = lazy(() => import('@/features/performances/HistoryStats'));
 const PlayedSongs = lazy(() => import('@/features/performances/PlayedSongs'));
 
-export default function PerformancesPage() {
+// Composant séparé pour gérer useSearchParams
+function PerformancesContent() {
   const [activeTab, setActiveTab] = useState('overview');
   const searchParams = useSearchParams();
 
@@ -114,5 +115,19 @@ export default function PerformancesPage() {
         </Tabs.Root>
       </div>
     </div>
+  );
+}
+
+export default function PerformancesPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex justify-center items-center h-screen">
+          <Spinner variant="bars" size={32} className="text-white" />
+        </div>
+      }
+    >
+      <PerformancesContent />
+    </Suspense>
   );
 }

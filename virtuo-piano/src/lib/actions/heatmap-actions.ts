@@ -1,10 +1,7 @@
 'use server';
 
-import {
-  PerformancesServices,
-  ScoreDurationData,
-  SessionDetail,
-} from '@/lib/services/performances-services';
+import { ScoreDurationData, SessionDetail } from '@/lib/types';
+import { PerformancesServices } from '../services/performances-services';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authoption';
 

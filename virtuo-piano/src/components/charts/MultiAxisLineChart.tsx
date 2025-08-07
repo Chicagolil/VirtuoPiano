@@ -10,7 +10,6 @@ import {
 import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 import * as Separator from '@radix-ui/react-separator';
 import { Spinner } from '@/components/ui/spinner';
-import { LineChartDataPoint } from '@/lib/services/performances-services';
 
 interface MultiAxisLine {
   dataKey: string;

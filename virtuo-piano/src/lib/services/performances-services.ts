@@ -76,7 +76,7 @@ export class PerformancesServices {
     today.setHours(0, 0, 0, 0);
 
     let streak = 0;
-    let currentDate = new Date(today);
+    const currentDate = new Date(today);
 
     for (let i = 0; i < 365; i++) {
       // Limite à 1 an

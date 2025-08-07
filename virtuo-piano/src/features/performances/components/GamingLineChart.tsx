@@ -1,5 +1,5 @@
 import { IconTrophy } from '@tabler/icons-react';
-import MultiAxisLineChart from './MultiAxisLineChart';
+import MultiAxisLineChart from '../../../components/charts/MultiAxisLineChart';
 import ChartSummary from '../../../components/charts/ChartSummary';
 import { defaultIntervalOptions } from '../utils/chartUtils';
 import {

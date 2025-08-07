@@ -2,10 +2,8 @@
 
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authoption';
-import {
-  PerformancesServices,
-  PlayedSong,
-} from '@/lib/services/performances-services';
+import { PlayedSong } from '@/lib/types';
+import { PerformancesServices } from '../services/performances-services';
 
 export type PlayedSongsResult = {
   songs: PlayedSong[];

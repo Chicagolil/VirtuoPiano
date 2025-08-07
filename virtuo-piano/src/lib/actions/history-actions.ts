@@ -2,10 +2,8 @@
 
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../authoption';
-import {
-  PerformancesServices,
-  ScoreSummaryService,
-} from '../services/performances-services';
+import { ScoreSummaryService } from '@/lib/types';
+import { PerformancesServices } from '../services/performances-services';
 import { ScoreSummary } from '@/components/cards/ScoreCard';
 import { getLearnScores } from '@/common/utils/function';
 
