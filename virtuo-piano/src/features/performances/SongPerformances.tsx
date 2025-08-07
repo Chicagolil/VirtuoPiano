@@ -19,15 +19,11 @@ import styles from '../library/Song.module.css';
 import { toggleFavorite } from '@/lib/actions/songs';
 import DifficultyBadge from '@/components/DifficultyBadge';
 import { toast } from 'react-hot-toast';
-import { SongBasicData } from '@/lib/services/performances-services';
-
-// Composants extraits
-import RecordsTimeline from './components/RecordsTimeline';
+import { SongBasicData } from '@/lib/types';
 
 import RecentSessionsByMode from './components/RecentSessionsByMode';
 
 // Données et utilitaires
-import { learningRecords, gameRecords } from './data/performanceData';
 
 import LearningTiles from './components/LearningTiles';
 import PracticeGraph from './components/PracticeGraph';
@@ -38,6 +34,8 @@ import PerformanceChart from './components/PerformanceChart';
 import PerformancePrecisionBarChart from './components/PerformancePrecisionBarChart';
 import GamingLineChart from './components/GamingLineChart';
 import GamingBarChart from './components/GamingBarChart';
+import LearningTimeline from './components/LearningTimeline';
+import GamingTimeline from './components/GamingTimeline';
 
 export default function SongPerformances({ song }: { song: SongBasicData }) {
   const { setCurrentSong } = useSong();
@@ -228,7 +226,7 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
                   <IconTimeline size={20} className="mr-2 text-yellow-400" />
                   Ligne du temps des records
                 </h3>
-                <RecordsTimeline records={learningRecords} />
+                <LearningTimeline songId={song.id} />
               </div>
 
               {/* Layout avec tuiles et graphiques */}
@@ -262,7 +260,7 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
                   <IconTimeline size={20} className="mr-2 text-orange-400" />
                   Ligne du temps des records
                 </h3>
-                <RecordsTimeline records={gameRecords} />
+                <GamingTimeline songId={song.id} />
               </div>
 
               {/* Tuiles d'infos */}

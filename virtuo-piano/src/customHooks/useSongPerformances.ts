@@ -9,6 +9,7 @@ import {
   getSongPerformancePrecisionBarChartDataAction,
   getSongGamingLineChartDataAction,
   getSongGamingBarChartDataAction,
+  getSongTimelineRecordsDataAction,
 } from '@/lib/actions/songPerformances-actions';
 
 // Hook pour les tuiles générales
@@ -64,6 +65,19 @@ export function usePrefetchAdjacentData(
   };
 
   return { prefetchAdjacent };
+}
+
+// Hook pour les records timeline
+export function useSongTimelineRecordsData(
+  songId: string,
+  mode: 'learning' | 'game'
+) {
+  return useQuery({
+    queryKey: ['songTimelineRecordsData', songId, mode],
+    queryFn: () => getSongTimelineRecordsDataAction(songId, mode),
+    enabled: !!songId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 }
 
 // Hook pour invalider le cache

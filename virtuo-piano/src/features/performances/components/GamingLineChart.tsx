@@ -1,19 +1,12 @@
 import { IconTrophy } from '@tabler/icons-react';
 import MultiAxisLineChart from './MultiAxisLineChart';
 import ChartSummary from './ChartSummary';
-import {
-  calculateAverage,
-  calculateAverageFixed,
-  defaultIntervalOptions,
-  getDefaultIndex,
-  sliceDataByInterval,
-} from '../utils/chartUtils';
+import { defaultIntervalOptions } from '../utils/chartUtils';
 import {
   useInvalidatePracticeCache,
   usePrefetchGamingLineChartData,
   useSongGamingLineChartData,
 } from '@/customHooks/useSongPerformances';
-import { generateExtendedScoreData } from '../data/performanceData';
 import { useEffect, useState } from 'react';
 
 export default function GamingLineChart({ songId }: { songId: string }) {

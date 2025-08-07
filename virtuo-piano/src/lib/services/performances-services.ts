@@ -1,272 +1,48 @@
 import prisma from '@/lib/prisma';
 import { getLearnScores, getDifficultyRange } from '@/common/utils/function';
-import { SongType, SourceType } from '@prisma/client';
-import { JsonValue } from '@prisma/client/runtime/library';
-
-export type SongBasicData = {
-  id: string;
-  title: string;
-  composer: string | null;
-  imageUrl: string | null;
-  duration_ms: number;
-  genre: string | null;
-  tempo: number;
-  Level: number;
-  isFavorite: boolean;
-};
-
-export type ScoreDurationData = {
-  date: Date;
-  durationInMinutes: number;
-};
-
-export type SessionDetail = {
-  id: string;
-  songTitle: string;
-  songComposer: string | null;
-  correctNotes: number | null;
-  missedNotes: number | null;
-  wrongNotes: number | null;
-  totalPoints: number | null;
-  maxMultiplier: number | null;
-  maxCombo: number | null;
-  sessionStartTime: Date;
-  sessionEndTime: Date;
-  modeName: string;
-  durationInMinutes: number;
-  accuracy: number;
-  performance: number;
-};
-
-export interface ScoreSummaryService {
-  id: string;
-  songTitle: string;
-  songComposer: string | null;
-  totalPoints: number | null;
-  maxMultiplier: number | null;
-  imageUrl: string | null;
-  wrongNotes: number | null;
-  correctNotes: number | null;
-  missedNotes: number | null;
-  maxCombo: number | null;
-  sessionStartTime: Date;
-  sessionEndTime: Date;
-  modeName: string;
-  hands: string | null;
-}
-
-export type PlayedSong = {
-  id: string;
-  title: string;
-  composer: string | null;
-  genre: string | null;
-  tempo: number;
-  duration_ms: number;
-  timeSignature: string;
-  SourceType: SourceType;
-  notes: JsonValue;
-  Level: number;
-  imageUrl: string | null;
-  SongType: SongType;
-  isFavorite: boolean;
-  lastPlayed: string;
-};
-
-export interface SongPerformanceGeneralTiles {
-  totalSessions: number;
-  totalTimeInMinutes: number;
-  currentStreak: number;
-  globalRanking: number | null;
-}
-
-export interface PracticeDataPoint {
-  name: string;
-  pratique: number;
-  modeJeu: number;
-  modeApprentissage: number;
-}
-
-export interface PrecisionDataPoint {
-  session: string;
-  precisionRightHand: number | null;
-  precisionLeftHand: number | null;
-  precisionBothHands: number | null;
-}
-
-export interface PerformanceDataPoint {
-  session: string;
-  performanceRightHand: number | null;
-  performanceLeftHand: number | null;
-  performanceBothHands: number | null;
-}
-
-export interface SongPracticeData {
-  data: PracticeDataPoint[];
-  totalPratique: number;
-  totalModeJeu: number;
-  totalModeApprentissage: number;
-}
-export interface SongLearningPrecisionData {
-  data: PrecisionDataPoint[];
-  averagePrecisionRightHand: number;
-  averagePrecisionLeftHand: number;
-  averagePrecisionBothHands: number;
-  totalSessions: number;
-}
-export interface SongLearningPerformanceData {
-  data: PerformanceDataPoint[];
-  totalSessions: number;
-  averagePerformanceRightHand: number;
-  averagePerformanceLeftHand: number;
-  averagePerformanceBothHands: number;
-}
-
-export interface SongLearningModeTiles {
-  totalSessions: number;
-  averageAccuracy: number;
-  averagePerformance: number;
-  totalTimeInMinutes: number;
-  longestSessionInMinutes: number;
-  currentStreak: number;
-}
-
-export interface SongPlayModeTiles {
-  totalSessions: number;
-  averageScore: number;
-  bestScore: number;
-  totalTimeInMinutes: number;
-  longestSessionInMinutes: number;
-  currentStreak: number;
-}
-
-export interface BarChartDataPoint {
-  mois: string;
-  precision: number;
-  performance: number;
-}
-
-export interface SongPerformancePrecisionBarChartData {
-  label: string;
-  data: BarChartDataPoint[];
-  totalIntervals: number;
-}
-
-export interface LineChartDataPoint {
-  session: string;
-  score: number;
-  combo: number;
-  multi: number;
-}
-
-export interface SongGamingLineChartData {
-  data: LineChartDataPoint[];
-  averageScore: number;
-  averageCombo: number;
-  averageMulti: number;
-  totalSessions: number;
-}
-
-export interface SongGamingBarChartDataPoint {
-  mois: string;
-  score: number;
-  combo: number;
-  multi: number;
-}
-
-export interface SongGamingBarChartData {
-  label: string;
-  data: SongGamingBarChartDataPoint[];
-  totalIntervals: number;
-}
+import {
+  ScoreDurationData,
+  SessionDetail,
+  ScoreSummaryService,
+  PlayedSong,
+  SongBasicData,
+  SongPerformanceGeneralTiles,
+  SongLearningModeTiles,
+  SongPlayModeTiles,
+  SongPracticeData,
+  SongLearningPrecisionData,
+  SongLearningPerformanceData,
+  SongPerformancePrecisionBarChartData,
+  SongGamingLineChartData,
+  SongGamingBarChartData,
+  SongTimelineRecordsData,
+  PracticeDataPoint,
+  PrecisionDataPoint,
+  PerformanceDataPoint,
+  BarChartDataPoint,
+  LineChartDataPoint,
+  SongGamingBarChartDataPoint,
+  TimelineRecordData,
+} from '@/lib/types';
+import {
+  getAccuracyComment,
+  getPerformanceComment,
+  getBothHandsAccuracyComment,
+  getBothHandsPerformanceComment,
+  getFinishedComment,
+  getSessionComment,
+  getMarathonComment,
+  getScoreComment,
+  getComboComment,
+  getMultiplierComment,
+  getCurrentIntervalDates,
+  getPreviousIntervalDates,
+  calculateTotalTimeInMinutes,
+  calculateLongestSessionInMinutes,
+  hasHandActivity,
+} from '@/lib/utils';
 
 export class PerformancesServices {
-  // Méthodes utilitaires privées pour calculer les intervalles
-  private static getCurrentIntervalDates(
-    interval: 'week' | 'month' | 'quarter'
-  ): { startDate: Date; endDate: Date } {
-    const now = new Date();
-    let startDate: Date;
-    let endDate: Date;
-
-    switch (interval) {
-      case 'week':
-        // 7 derniers jours
-        startDate = new Date(now);
-        startDate.setDate(now.getDate() - 6);
-        startDate.setHours(0, 0, 0, 0);
-        endDate = new Date(now);
-        endDate.setHours(23, 59, 59, 999);
-        break;
-
-      case 'month':
-        // 31 derniers jours
-        startDate = new Date(now);
-        startDate.setDate(now.getDate() - 30);
-        startDate.setHours(0, 0, 0, 0);
-        endDate = new Date(now);
-        endDate.setHours(23, 59, 59, 999);
-        break;
-
-      case 'quarter':
-        // 90 derniers jours
-        startDate = new Date(now);
-        startDate.setDate(now.getDate() - 89);
-        startDate.setHours(0, 0, 0, 0);
-        endDate = new Date(now);
-        endDate.setHours(23, 59, 59, 999);
-        break;
-
-      default:
-        throw new Error('Paramètre invalide');
-    }
-
-    return { startDate, endDate };
-  }
-  private static getPreviousIntervalDates(
-    interval: 'week' | 'month' | 'quarter'
-  ): { startDate: Date; endDate: Date } {
-    const now = new Date();
-    let startDate: Date;
-    let endDate: Date;
-
-    switch (interval) {
-      case 'week':
-        // 7 jours précédents (jours 8 à 14)
-        startDate = new Date(now);
-        startDate.setDate(now.getDate() - 13);
-        startDate.setHours(0, 0, 0, 0);
-        endDate = new Date(now);
-        endDate.setDate(now.getDate() - 7);
-        endDate.setHours(23, 59, 59, 999);
-        break;
-
-      case 'month':
-        // 31 jours précédents (jours 32 à 62)
-        startDate = new Date(now);
-        startDate.setDate(now.getDate() - 61);
-        startDate.setHours(0, 0, 0, 0);
-        endDate = new Date(now);
-        endDate.setDate(now.getDate() - 31);
-        endDate.setHours(23, 59, 59, 999);
-        break;
-
-      case 'quarter':
-        // 90 jours précédents (jours 91 à 180)
-        startDate = new Date(now);
-        startDate.setDate(now.getDate() - 179);
-        startDate.setHours(0, 0, 0, 0);
-        endDate = new Date(now);
-        endDate.setDate(now.getDate() - 90);
-        endDate.setHours(23, 59, 59, 999);
-        break;
-
-      default:
-        throw new Error('Paramètre invalide');
-    }
-
-    return { startDate, endDate };
-  }
-
   private static async calculateCurrentStreak(
     songId: string,
     userId: string,
@@ -320,32 +96,6 @@ export class PerformancesServices {
 
     return streak;
   }
-
-  private static calculateTotalTimeInMinutes(sessions: any[]): number {
-    return sessions.reduce((sum, session) => {
-      const durationMs =
-        session.sessionEndTime.getTime() - session.sessionStartTime.getTime();
-      return sum + Math.round(durationMs / (1000 * 60));
-    }, 0);
-  }
-
-  private static calculateLongestSessionInMinutes(sessions: any[]): number {
-    return sessions.reduce((max, session) => {
-      const durationMs =
-        session.sessionEndTime.getTime() - session.sessionStartTime.getTime();
-      return Math.max(max, Math.round(durationMs / (1000 * 60)));
-    }, 0);
-  }
-
-  private static hasHandActivity(session: any): boolean {
-    return (
-      (session.correctNotes || 0) +
-        (session.missedNotes || 0) +
-        (session.wrongNotes || 0) >
-      0
-    );
-  }
-
   static async getPracticeDataForHeatmap(
     userId: string,
     year: number
@@ -518,7 +268,7 @@ export class PerformancesServices {
     userId: string,
     interval: 'week' | 'month' | 'quarter'
   ): Promise<number> {
-    const { startDate, endDate } = this.getCurrentIntervalDates(interval);
+    const { startDate, endDate } = getCurrentIntervalDates(interval);
 
     const scores = await prisma.scores.findMany({
       where: {
@@ -548,7 +298,7 @@ export class PerformancesServices {
     userId: string,
     interval: 'week' | 'month' | 'quarter'
   ): Promise<number> {
-    const { startDate, endDate } = this.getPreviousIntervalDates(interval);
+    const { startDate, endDate } = getPreviousIntervalDates(interval);
 
     const scores = await prisma.scores.findMany({
       where: {
@@ -578,7 +328,7 @@ export class PerformancesServices {
     userId: string,
     interval: 'week' | 'month' | 'quarter'
   ): Promise<number> {
-    const { startDate, endDate } = this.getCurrentIntervalDates(interval);
+    const { startDate, endDate } = getCurrentIntervalDates(interval);
 
     // Compter les morceaux uniques démarrés dans l'intervalle
     const startedSongs = await prisma.scores.groupBy({
@@ -599,7 +349,7 @@ export class PerformancesServices {
     userId: string,
     interval: 'week' | 'month' | 'quarter'
   ): Promise<number> {
-    const { startDate, endDate } = this.getPreviousIntervalDates(interval);
+    const { startDate, endDate } = getPreviousIntervalDates(interval);
 
     // Compter les morceaux uniques démarrés dans l'intervalle précédent
     const startedSongs = await prisma.scores.groupBy({
@@ -1292,9 +1042,8 @@ export class PerformancesServices {
         totalSessions
     );
 
-    const totalTimeInMinutes = this.calculateTotalTimeInMinutes(sessions);
-    const longestSessionInMinutes =
-      this.calculateLongestSessionInMinutes(sessions);
+    const totalTimeInMinutes = calculateTotalTimeInMinutes(sessions);
+    const longestSessionInMinutes = calculateLongestSessionInMinutes(sessions);
 
     // Calculer le streak (jours consécutifs)
     const currentStreak = await this.calculateCurrentStreak(
@@ -1352,9 +1101,8 @@ export class PerformancesServices {
       ...sessions.map((session) => session.totalPoints || 0)
     );
 
-    const totalTimeInMinutes = this.calculateTotalTimeInMinutes(sessions);
-    const longestSessionInMinutes =
-      this.calculateLongestSessionInMinutes(sessions);
+    const totalTimeInMinutes = calculateTotalTimeInMinutes(sessions);
+    const longestSessionInMinutes = calculateLongestSessionInMinutes(sessions);
 
     // Calculer le streak (jours consécutifs)
     const currentStreak = await this.calculateCurrentStreak(
@@ -1590,7 +1338,7 @@ export class PerformancesServices {
     // Calculer les moyennes globales seulement sur les sessions avec activité
     const rightHandSessions = data.filter((point, index) => {
       const session = orderedSessions[index];
-      const hasActivity = this.hasHandActivity(session);
+      const hasActivity = hasHandActivity(session);
       return (
         point.precisionRightHand !== null ||
         (hasActivity && session.hands === 'right')
@@ -1599,7 +1347,7 @@ export class PerformancesServices {
 
     const leftHandSessions = data.filter((point, index) => {
       const session = orderedSessions[index];
-      const hasActivity = this.hasHandActivity(session);
+      const hasActivity = hasHandActivity(session);
       return (
         point.precisionLeftHand !== null ||
         (hasActivity && session.hands === 'left')
@@ -1608,7 +1356,7 @@ export class PerformancesServices {
 
     const bothHandsSessions = data.filter((point, index) => {
       const session = orderedSessions[index];
-      const hasActivity = this.hasHandActivity(session);
+      const hasActivity = hasHandActivity(session);
       return (
         point.precisionBothHands !== null ||
         (hasActivity && session.hands === 'both')
@@ -1741,7 +1489,7 @@ export class PerformancesServices {
     // Calculer les moyennes globales seulement sur les sessions avec activité
     const rightHandSessions = data.filter((point, index) => {
       const session = orderedSessions[index];
-      const hasActivity = this.hasHandActivity(session);
+      const hasActivity = hasHandActivity(session);
       return (
         point.performanceRightHand !== null ||
         (hasActivity && session.hands === 'right')
@@ -1749,7 +1497,7 @@ export class PerformancesServices {
     });
     const leftHandSessions = data.filter((point, index) => {
       const session = orderedSessions[index];
-      const hasActivity = this.hasHandActivity(session);
+      const hasActivity = hasHandActivity(session);
       return (
         point.performanceLeftHand !== null ||
         (hasActivity && session.hands === 'left')
@@ -1757,7 +1505,7 @@ export class PerformancesServices {
     });
     const bothHandsSessions = data.filter((point, index) => {
       const session = orderedSessions[index];
-      const hasActivity = this.hasHandActivity(session);
+      const hasActivity = hasHandActivity(session);
       return (
         point.performanceBothHands !== null ||
         (hasActivity && session.hands === 'both')
@@ -2221,5 +1969,357 @@ export class PerformancesServices {
       data: requestedInterval.data,
       totalIntervals,
     };
+  }
+
+  static async getSongTimelineRecordsData(
+    songId: string,
+    userId: string,
+    mode: 'learning' | 'game'
+  ): Promise<SongTimelineRecordsData> {
+    const records: TimelineRecordData[] = [];
+    let recordId = 1;
+
+    // Récupérer toutes les sessions pour cette chanson et ce mode
+    const sessions = await prisma.scores.findMany({
+      where: {
+        song_id: songId,
+        user_id: userId,
+        mode: {
+          name: mode === 'learning' ? 'Apprentissage' : 'Jeu',
+        },
+      },
+      orderBy: {
+        sessionStartTime: 'asc',
+      },
+    });
+
+    if (sessions.length === 0) {
+      return { records: [] };
+    }
+
+    // Premier record : première session
+    const firstSession = sessions[0];
+    records.push({
+      id: recordId++,
+      date: firstSession.sessionStartTime.toISOString(),
+      score: 0,
+      type: mode === 'learning' ? 'start' : 'start_game',
+      description:
+        mode === 'learning'
+          ? "Début de l'apprentissage"
+          : 'Première session en mode Jeu',
+      details:
+        mode === 'learning'
+          ? 'Vous avez commencé votre apprentissage de ce morceau. Le voyage commence !'
+          : 'Vous avez joué ce morceau pour la première fois en mode Jeu. Bonne chance pour battre des records !',
+    });
+
+    // Records pour les meilleures performances
+    if (mode === 'learning') {
+      // Meilleure précision main droite
+      const bestAccuracyRight = sessions
+        .filter((s) => s.hands === 'right' && hasHandActivity(s))
+        .map((s) => {
+          const { accuracy } = getLearnScores(
+            s.wrongNotes || 0,
+            s.correctNotes || 0,
+            s.missedNotes || 0
+          );
+          return { session: s, accuracy };
+        })
+        .sort((a, b) => b.accuracy - a.accuracy)[0];
+
+      if (bestAccuracyRight && bestAccuracyRight.accuracy > 0) {
+        records.push({
+          id: recordId++,
+          date: bestAccuracyRight.session.sessionStartTime.toISOString(),
+          score: bestAccuracyRight.accuracy,
+          type: 'accuracy_right',
+          description: 'Meilleure précision main droite',
+          details: `Vous avez atteint ${
+            bestAccuracyRight.accuracy
+          }% de précision avec votre main droite. ${getAccuracyComment(
+            bestAccuracyRight.accuracy,
+            'main droite'
+          )}`,
+        });
+      }
+
+      // Meilleure précision main gauche
+      const bestAccuracyLeft = sessions
+        .filter((s) => s.hands === 'left' && hasHandActivity(s))
+        .map((s) => {
+          const { accuracy } = getLearnScores(
+            s.wrongNotes || 0,
+            s.correctNotes || 0,
+            s.missedNotes || 0
+          );
+          return { session: s, accuracy };
+        })
+        .sort((a, b) => b.accuracy - a.accuracy)[0];
+
+      if (bestAccuracyLeft && bestAccuracyLeft.accuracy > 0) {
+        records.push({
+          id: recordId++,
+          date: bestAccuracyLeft.session.sessionStartTime.toISOString(),
+          score: bestAccuracyLeft.accuracy,
+          type: 'accuracy_left',
+          description: 'Meilleure précision main gauche',
+          details: `Vous avez atteint ${
+            bestAccuracyLeft.accuracy
+          }% de précision avec votre main gauche. ${getAccuracyComment(
+            bestAccuracyLeft.accuracy,
+            'main gauche'
+          )}`,
+        });
+      }
+
+      // Meilleure précision deux mains
+      const bestAccuracyBoth = sessions
+        .filter((s) => s.hands === 'both' && hasHandActivity(s))
+        .map((s) => {
+          const { accuracy } = getLearnScores(
+            s.wrongNotes || 0,
+            s.correctNotes || 0,
+            s.missedNotes || 0
+          );
+          return { session: s, accuracy };
+        })
+        .sort((a, b) => b.accuracy - a.accuracy)[0];
+
+      if (bestAccuracyBoth && bestAccuracyBoth.accuracy > 0) {
+        records.push({
+          id: recordId++,
+          date: bestAccuracyBoth.session.sessionStartTime.toISOString(),
+          score: bestAccuracyBoth.accuracy,
+          type: 'accuracy_both',
+          description: 'Meilleure précision deux mains',
+          details: `Vous avez atteint ${
+            bestAccuracyBoth.accuracy
+          }% de précision avec les deux mains. ${getBothHandsAccuracyComment(
+            bestAccuracyBoth.accuracy
+          )}`,
+        });
+      }
+
+      // Meilleure performance main droite
+      const bestPerformanceRight = sessions
+        .filter((s) => s.hands === 'right' && hasHandActivity(s))
+        .map((s) => {
+          const { performance } = getLearnScores(
+            s.wrongNotes || 0,
+            s.correctNotes || 0,
+            s.missedNotes || 0
+          );
+          return { session: s, performance };
+        })
+        .sort((a, b) => b.performance - a.performance)[0];
+
+      if (bestPerformanceRight && bestPerformanceRight.performance > 0) {
+        records.push({
+          id: recordId++,
+          date: bestPerformanceRight.session.sessionStartTime.toISOString(),
+          score: bestPerformanceRight.performance,
+          type: 'performance_right',
+          description: 'Meilleure performance main droite',
+          details: `Vous avez atteint ${
+            bestPerformanceRight.performance
+          }% de performance avec votre main droite. ${getPerformanceComment(
+            bestPerformanceRight.performance,
+            'main droite'
+          )}`,
+        });
+      }
+
+      // Meilleure performance main gauche
+      const bestPerformanceLeft = sessions
+        .filter((s) => s.hands === 'left' && hasHandActivity(s))
+        .map((s) => {
+          const { performance } = getLearnScores(
+            s.wrongNotes || 0,
+            s.correctNotes || 0,
+            s.missedNotes || 0
+          );
+          return { session: s, performance };
+        })
+        .sort((a, b) => b.performance - a.performance)[0];
+
+      if (bestPerformanceLeft && bestPerformanceLeft.performance > 0) {
+        records.push({
+          id: recordId++,
+          date: bestPerformanceLeft.session.sessionStartTime.toISOString(),
+          score: bestPerformanceLeft.performance,
+          type: 'performance_left',
+          description: 'Meilleure performance main gauche',
+          details: `Vous avez atteint ${
+            bestPerformanceLeft.performance
+          }% de performance avec votre main gauche. ${getPerformanceComment(
+            bestPerformanceLeft.performance,
+            'main gauche'
+          )}`,
+        });
+      }
+
+      // Meilleure performance deux mains
+      const bestPerformanceBoth = sessions
+        .filter((s) => s.hands === 'both' && hasHandActivity(s))
+        .map((s) => {
+          const { performance } = getLearnScores(
+            s.wrongNotes || 0,
+            s.correctNotes || 0,
+            s.missedNotes || 0
+          );
+          return { session: s, performance };
+        })
+        .sort((a, b) => b.performance - a.performance)[0];
+
+      if (bestPerformanceBoth && bestPerformanceBoth.performance > 0) {
+        // Vérifier si la performance dépasse 90% pour afficher "Musique terminée"
+        if (bestPerformanceBoth.performance >= 90) {
+          records.push({
+            id: recordId++,
+            date: bestPerformanceBoth.session.sessionStartTime.toISOString(),
+            score: bestPerformanceBoth.performance,
+            type: 'finished',
+            description: 'Musique terminée !',
+            details: `Félicitations ! Vous avez atteint ${
+              bestPerformanceBoth.performance
+            }% de performance avec les deux mains. ${getFinishedComment(
+              bestPerformanceBoth.performance
+            )}`,
+          });
+        } else {
+          records.push({
+            id: recordId++,
+            date: bestPerformanceBoth.session.sessionStartTime.toISOString(),
+            score: bestPerformanceBoth.performance,
+            type: 'performance_both',
+            description: 'Meilleure performance deux mains',
+            details: `Vous avez atteint ${
+              bestPerformanceBoth.performance
+            }% de performance avec les deux mains. ${getBothHandsPerformanceComment(
+              bestPerformanceBoth.performance
+            )}`,
+          });
+        }
+      }
+
+      // Session la plus longue
+      const longestSession = sessions.reduce((longest, session) => {
+        const duration =
+          session.sessionEndTime.getTime() - session.sessionStartTime.getTime();
+        const longestDuration =
+          longest.sessionEndTime.getTime() - longest.sessionStartTime.getTime();
+        return duration > longestDuration ? session : longest;
+      });
+
+      const longestDurationMinutes = Math.round(
+        (longestSession.sessionEndTime.getTime() -
+          longestSession.sessionStartTime.getTime()) /
+          (1000 * 60)
+      );
+
+      records.push({
+        id: recordId++,
+        date: longestSession.sessionStartTime.toISOString(),
+        score: longestDurationMinutes,
+        type: 'session',
+        description: 'Session la plus longue',
+        details: `Vous avez pratiqué pendant ${longestDurationMinutes} minutes d'affilée. ${getSessionComment(
+          longestDurationMinutes
+        )}`,
+      });
+
+      // Session marathon (> 60 min)
+      const marathonSession = sessions.find((session) => {
+        const durationMinutes = Math.round(
+          (session.sessionEndTime.getTime() -
+            session.sessionStartTime.getTime()) /
+            (1000 * 60)
+        );
+        return durationMinutes >= 60;
+      });
+
+      if (marathonSession) {
+        const marathonDurationMinutes = Math.round(
+          (marathonSession.sessionEndTime.getTime() -
+            marathonSession.sessionStartTime.getTime()) /
+            (1000 * 60)
+        );
+
+        records.push({
+          id: recordId++,
+          date: marathonSession.sessionStartTime.toISOString(),
+          score: marathonDurationMinutes,
+          type: 'session',
+          description: 'Session marathon',
+          details: `Session marathon de ${marathonDurationMinutes} minutes ! ${getMarathonComment(
+            marathonDurationMinutes
+          )}`,
+        });
+      }
+    } else {
+      // Mode jeu
+      // Meilleur score
+      const bestScore = sessions
+        .filter((s) => s.totalPoints && s.totalPoints > 0)
+        .sort((a, b) => (b.totalPoints || 0) - (a.totalPoints || 0))[0];
+
+      if (bestScore && bestScore.totalPoints) {
+        records.push({
+          id: recordId++,
+          date: bestScore.sessionStartTime.toISOString(),
+          score: bestScore.totalPoints,
+          type: 'score',
+          description: 'Meilleur score',
+          details: `Vous avez obtenu ${bestScore.totalPoints.toLocaleString()} points. ${getScoreComment(
+            bestScore.totalPoints
+          )}`,
+        });
+      }
+
+      // Meilleur combo
+      const bestCombo = sessions
+        .filter((s) => s.maxCombo && s.maxCombo > 0)
+        .sort((a, b) => (b.maxCombo || 0) - (a.maxCombo || 0))[0];
+
+      if (bestCombo && bestCombo.maxCombo) {
+        records.push({
+          id: recordId++,
+          date: bestCombo.sessionStartTime.toISOString(),
+          score: bestCombo.maxCombo,
+          type: 'combo',
+          description: 'Meilleur combo',
+          details: `Vous avez enchaîné ${
+            bestCombo.maxCombo
+          } notes d'affilée. ${getComboComment(bestCombo.maxCombo)}`,
+        });
+      }
+
+      // Meilleur multiplicateur
+      const bestMultiplier = sessions
+        .filter((s) => s.maxMultiplier && s.maxMultiplier > 0)
+        .sort((a, b) => (b.maxMultiplier || 0) - (a.maxMultiplier || 0))[0];
+
+      if (bestMultiplier && bestMultiplier.maxMultiplier) {
+        records.push({
+          id: recordId++,
+          date: bestMultiplier.sessionStartTime.toISOString(),
+          score: bestMultiplier.maxMultiplier,
+          type: 'multiplier',
+          description: 'Meilleur multiplicateur',
+          details: `Vous avez atteint un multiplicateur de x${
+            bestMultiplier.maxMultiplier
+          }. ${getMultiplierComment(bestMultiplier.maxMultiplier)}`,
+        });
+      }
+    }
+
+    // Trier les records par date
+    records.sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+
+    return { records };
   }
 }

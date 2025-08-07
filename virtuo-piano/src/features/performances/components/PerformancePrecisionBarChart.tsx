@@ -5,7 +5,6 @@ import {
   useSongPerformancePrecisionBarChartData,
   usePrefetchPerformancePrecisionBarChartData,
 } from '@/customHooks/useSongPerformances';
-import { learningBarIntervals } from '../data/performanceData';
 
 export default function PerformancePrecisionBarChart({
   songId,

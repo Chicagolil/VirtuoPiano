@@ -1,7 +1,6 @@
 'use server';
 
 import {
-  PerformancesServices,
   SongLearningModeTiles,
   SongLearningPerformanceData,
   SongLearningPrecisionData,
@@ -11,9 +10,11 @@ import {
   SongPerformancePrecisionBarChartData,
   SongGamingLineChartData,
   SongGamingBarChartData,
-} from '@/lib/services/performances-services';
+  SongTimelineRecordsData,
+} from '@/lib/types';
 
 import { getAuthenticatedUser } from '../auth/get-authenticated-user';
+import { PerformancesServices } from '../services/performances-services';
 
 export interface SongGeneralTilesActionResponse {
   success: boolean;
@@ -66,6 +67,12 @@ export interface SongGamingLineChartDataActionResponse {
 export interface SongGamingBarChartDataActionResponse {
   success: boolean;
   data?: SongGamingBarChartData;
+  error?: string;
+}
+
+export interface SongTimelineRecordsDataActionResponse {
+  success: boolean;
+  data?: SongTimelineRecordsData;
   error?: string;
 }
 
@@ -327,6 +334,35 @@ export async function getSongGamingBarChartDataAction(
     return {
       success: false,
       error: 'Erreur lors de la récupération des données',
+    };
+  }
+}
+
+export async function getSongTimelineRecordsDataAction(
+  songId: string,
+  mode: 'learning' | 'game'
+): Promise<SongTimelineRecordsDataActionResponse> {
+  try {
+    const user = await getAuthenticatedUser();
+
+    const data = await PerformancesServices.getSongTimelineRecordsData(
+      songId,
+      user.id,
+      mode
+    );
+
+    return {
+      success: true,
+      data,
+    };
+  } catch (error) {
+    console.error(
+      'Erreur lors de la récupération des records timeline:',
+      error
+    );
+    return {
+      success: false,
+      error: 'Erreur lors de la récupération des records',
     };
   }
 }
