@@ -35,10 +35,23 @@ export default function RecordsTimeline({
 }: RecordsTimelineProps) {
   const [selectedRecord, setSelectedRecord] = useState<number | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [animateRecords, setAnimateRecords] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Déclencher l'animation quand les données changent
+  useEffect(() => {
+    if (mounted && records.length > 0 && !isLoading) {
+      setAnimateRecords(false);
+      // Petit délai pour permettre au DOM de se mettre à jour
+      const timer = setTimeout(() => {
+        setAnimateRecords(true);
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [records, mounted, isLoading]);
 
   const getBubbleColor = (type: string) => {
     switch (type) {
@@ -276,17 +289,11 @@ export default function RecordsTimeline({
         {/* Bulles d'icônes */}
 
         {isLoading ? (
-          <div
-            className="flex items-center justify-center"
-            style={{ height: 200 }}
-          >
+          <div className="flex items-center justify-center w-full">
             <Spinner variant="bars" size={32} className="text-white" />
           </div>
         ) : error ? (
-          <div
-            className="flex items-center justify-center"
-            style={{ height: 200 }}
-          >
+          <div className="flex items-center justify-center w-full">
             <div className="text-center text-red-400 text-sm">
               {error.message || 'Erreur lors du chargement'}
             </div>
@@ -296,9 +303,11 @@ export default function RecordsTimeline({
             <div
               key={record.id}
               className={`relative z-10 ${
-                mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-75'
+                animateRecords ? 'opacity-100 scale-100' : 'opacity-0 scale-75'
               } animate-timeline-bubble`}
-              style={{ transitionDelay: mounted ? `${index * 400}ms` : '0ms' }}
+              style={{
+                transitionDelay: animateRecords ? `${index * 400}ms` : '0ms',
+              }}
             >
               {/* Bulle cliquable */}
               <button
