@@ -23,7 +23,7 @@ import DifficultyBadge from '@/components/DifficultyBadge';
 import SongTypeBadge from '@/components/SongTypeBadge';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
-import { Spinner } from '@/components/ui/spinner';
+import { SongBasicData } from '@/lib/types';
 
 export default function Song({
   song,
@@ -53,7 +53,7 @@ export default function Song({
 
   useEffect(() => {
     // Mettre à jour le contexte avec la chanson actuelle
-    setCurrentSong(song);
+    setCurrentSong(song as SongBasicData);
 
     // Nettoyer le contexte lorsque le composant est démonté
     return () => {
@@ -290,7 +290,13 @@ export default function Song({
       {/* En-tête du morceau */}
 
       <div className={styles.header}>
-        <div className={styles.headerGradient}>
+        <div
+          className={styles.headerGradient}
+          style={{
+            background:
+              'linear-gradient(to right, rgba(59, 130, 246, 0.2), rgba(99, 102, 241, 0.2), rgba(251, 146, 60, 0.2))',
+          }}
+        >
           <div className={styles.headerContent}>
             <div className={styles.songImage}>
               {song.imageUrl ? (
