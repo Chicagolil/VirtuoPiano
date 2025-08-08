@@ -84,7 +84,10 @@ export default function StartedSongsTile() {
               }`,
               isPositive: startedSongsData.trend === 'increase',
             }
-          : undefined
+          : {
+              value: 'Aucun changement',
+              isPositive: true,
+            }
       }
       showIntervalSelector={true}
       selectedInterval={selectedInterval}

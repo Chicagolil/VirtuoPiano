@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, Suspense, lazy } from 'react';
+import React, { useState, Suspense, lazy, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Spinner } from '@/components/ui/spinner';
 import * as Tabs from '@radix-ui/react-tabs';
 import { IconChartBar } from '@tabler/icons-react';
@@ -10,15 +11,23 @@ const GeneralStats = lazy(() => import('@/features/performances/generalStats'));
 const HistoryStats = lazy(() => import('@/features/performances/HistoryStats'));
 const PlayedSongs = lazy(() => import('@/features/performances/PlayedSongs'));
 
-export default function PerformancesPage() {
+// Composant séparé pour gérer useSearchParams
+function PerformancesContent() {
   const [activeTab, setActiveTab] = useState('overview');
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const initialTab = searchParams.get('tab');
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [searchParams]);
 
   return (
     <div className="w-full p-4 pt-7">
-      <div className="bg-transparent shadow-md rounded-2xl p-6 border border-slate-200/30 dark:border-slate-700/30">
+      <div className="max-w-[98.5%] mx-auto bg-transparent shadow-md rounded-2xl p-6 border border-slate-200/20 dark:border-slate-700/20">
         <Tabs.Root
           className="w-full"
-          // A TESTER
           value={activeTab}
           onValueChange={setActiveTab}
         >
@@ -75,7 +84,7 @@ export default function PerformancesPage() {
               }
             >
               <Heatmap />
-              {/* A TESTER */}
+
               <GeneralStats onTabChange={setActiveTab} />
             </Suspense>
           </Tabs.Content>
@@ -106,5 +115,19 @@ export default function PerformancesPage() {
         </Tabs.Root>
       </div>
     </div>
+  );
+}
+
+export default function PerformancesPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex justify-center items-center h-screen">
+          <Spinner variant="bars" size={32} className="text-white" />
+        </div>
+      }
+    >
+      <PerformancesContent />
+    </Suspense>
   );
 }

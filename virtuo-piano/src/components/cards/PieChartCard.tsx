@@ -188,6 +188,12 @@ export function PieChartCard({
           <div className="mt-2 text-sm text-red-400">
             Erreur lors du chargement des données
           </div>
+        ) : data.length === 0 ? (
+          <div className="flex items-center justify-center text-center">
+            <span className="text-sm text-white/70">
+              Aucune donnée disponible
+            </span>
+          </div>
         ) : (
           <div style={{ height: `${height}px`, width: '100%' }}>
             <Pie data={chartData} options={options} />
@@ -196,7 +202,7 @@ export function PieChartCard({
       </div>
 
       <div className="mt-2 grid grid-cols-2 gap-1">
-        {error
+        {error || data.length === 0
           ? ''
           : processedData.map((category, index) => (
               <div key={index} className="flex items-center space-x-1.5">

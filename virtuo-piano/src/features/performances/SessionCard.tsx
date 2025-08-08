@@ -1,5 +1,5 @@
 import React from 'react';
-import { SessionDetail } from '@/lib/services/performances-services';
+import { SessionDetail } from '@/lib/types';
 import { formatDuration } from '@/common/utils/function';
 import { sessionCardStyles } from './SessionCard.styles';
 

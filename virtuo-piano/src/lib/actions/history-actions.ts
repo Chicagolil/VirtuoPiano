@@ -2,10 +2,8 @@
 
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../authoption';
-import {
-  PerformancesServices,
-  ScoreSummaryService,
-} from '../services/performances-services';
+import { ScoreSummaryService } from '@/lib/types';
+import { PerformancesServices } from '../services/performances-services';
 import { ScoreSummary } from '@/components/cards/ScoreCard';
 import { getLearnScores } from '@/common/utils/function';
 
@@ -77,6 +75,7 @@ function transformScoreData(score: ScoreSummaryService): ScoreSummary {
     duration,
     imageUrl: score.imageUrl || undefined,
     performance,
+    hands: score.hands || undefined,
   };
 }
 
@@ -98,7 +97,6 @@ export async function getRecentSessions(limit: number = 3): Promise<{
       userId,
       limit
     );
-
     // Transformer les données en format ScoreSummary avec la logique métier
     const scoreSummaries: ScoreSummary[] = sessions.map(transformScoreData);
 
@@ -116,7 +114,6 @@ export async function getRecentSessions(limit: number = 3): Promise<{
   }
 }
 
-// A TESTER
 export async function getAllSessions(): Promise<{
   success: boolean;
   data: ScoreSummary[];

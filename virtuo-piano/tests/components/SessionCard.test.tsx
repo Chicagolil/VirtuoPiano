@@ -1,7 +1,22 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { SessionCard } from '@/features/performances/SessionCard';
-import { SessionDetail } from '@/lib/services/performances-services';
+
+// Type local pour les tests
+interface SessionDetail {
+  id: string;
+  songTitle: string;
+  songComposer: string;
+  totalPoints: number | null;
+  maxMultiplier: number | null;
+  maxCombo: number | null;
+  playedAt: string;
+  mode: 'learning' | 'gaming';
+  accuracy: number;
+  duration: string;
+  imageUrl: string | null;
+  performance: number;
+}
 
 describe('SessionCard Component', () => {
   const mockSession: SessionDetail = {
@@ -52,6 +67,7 @@ describe('SessionCard Component', () => {
     render(<SessionCard session={mockSession} />);
 
     expect(screen.getByText('10:00 - 10:30')).toBeInTheDocument();
+    // Le composant utilise formatDuration, donc on vérifie juste qu'il y a une durée spécifique
     expect(screen.getByText('30 minutes')).toBeInTheDocument();
   });
 
