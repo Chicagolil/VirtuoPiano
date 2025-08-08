@@ -9,7 +9,10 @@ export default function DifficultyBadge({
   const { label, className } = getDifficultyRange(difficulty);
 
   return (
-    <span className={`${styles.difficultyBadge} ${styles[className]}`}>
+    <span
+      className={`${styles.difficultyBadge} ${styles[className]}`}
+      data-testid="difficulty-badge"
+    >
       {label}
     </span>
   );

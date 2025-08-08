@@ -47,7 +47,7 @@ describe('General Stats Constants', () => {
     });
 
     it('should be immutable (frozen)', () => {
-      // Tenter de modifier le tableau
+      // Vérifier que le tableau est en lecture seule
       expect(() => {
         // @ts-ignore - Testing immutability
         PIE_CHART_COLORS.push('#000000');

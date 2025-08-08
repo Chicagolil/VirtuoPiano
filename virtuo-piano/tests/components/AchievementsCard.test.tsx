@@ -102,19 +102,10 @@ describe('AchievementsCard Component', () => {
         <AchievementsCard achievements={mockAchievements} />
       );
 
-      // Trouver l'achievement avec 100% de progression
-      const completedAchievement = screen
-        .getByText('Premier pas')
-        .closest('.group');
-
-      // Chercher le conteneur d'icône spécifiquement (le div avec les classes bg-amber-*)
-      const iconContainer = completedAchievement?.querySelector(
-        '.bg-amber-100, .bg-amber-900\\/30'
-      );
-
-      // Vérifier que l'élément a au moins une des classes attendues
-      expect(iconContainer).toHaveClass('bg-amber-100');
-      expect(iconContainer).toHaveClass('text-amber-600');
+      // Trouver l'élément avec le badge "Complété"
+      const completedBadge = screen.getByText('Complété');
+      expect(completedBadge).toHaveClass('bg-amber-900/30');
+      expect(completedBadge).toHaveClass('text-amber-400');
     });
 
     it('should not show "Complété" badge for incomplete achievements', () => {

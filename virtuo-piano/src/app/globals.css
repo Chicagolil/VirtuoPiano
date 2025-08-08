@@ -261,6 +261,12 @@ body {
   }
 }
 
+@layer utilities {
+  .animate-timeline-bubble {
+    @apply transition-all duration-500 ease-out;
+  }
+}
+
 @keyframes aurora {
   0% {
     background-position: 50% 50%, 50% 50%;

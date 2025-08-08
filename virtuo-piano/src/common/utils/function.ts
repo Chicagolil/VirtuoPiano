@@ -2,7 +2,7 @@ import { DIFFICULTY_RANGES } from '../constants/Difficulties';
 import { DifficultyRange } from '../types/songs';
 import { SONG_TYPE_RANGE } from '../constants/SongTypes';
 import { SongTypeRange } from '../types/songs';
-import { ScoreDurationData } from '@/lib/services/performances-services';
+import { ScoreDurationData } from '@/lib/types';
 import { MONTH_NAMES } from '../constants/heatmaps';
 
 export function getDifficultyRange(difficulty: number) {
@@ -50,18 +50,26 @@ export const getLearnScores = (
 };
 
 // Fonction pour formater la durée (utilisée dans le titre et les cartes)
-export const formatDuration = (minutes: number) => {
-  if (minutes < 60) {
-    return `${minutes} minute${minutes !== 1 ? 's' : ''}`;
+export const formatDuration = (minutes: number, court: boolean = false) => {
+  if (court) {
+    if (minutes < 60) return `${minutes}min`;
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    if (remainingMinutes === 0) return `${hours}h`;
+    return `${hours}h${remainingMinutes}`;
+  } else {
+    if (minutes < 60) {
+      return `${minutes} minute${minutes !== 1 ? 's' : ''}`;
+    }
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    if (remainingMinutes === 0) {
+      return `${hours} heure${hours !== 1 ? 's' : ''}`;
+    }
+    return `${hours} heure${hours !== 1 ? 's' : ''} ${remainingMinutes} minute${
+      remainingMinutes !== 1 ? 's' : ''
+    }`;
   }
-  const hours = Math.floor(minutes / 60);
-  const remainingMinutes = minutes % 60;
-  if (remainingMinutes === 0) {
-    return `${hours} heure${hours !== 1 ? 's' : ''}`;
-  }
-  return `${hours} heure${hours !== 1 ? 's' : ''} ${remainingMinutes} minute${
-    remainingMinutes !== 1 ? 's' : ''
-  }`;
 };
 
 // Type pour une semaine de contributions (7 jours)

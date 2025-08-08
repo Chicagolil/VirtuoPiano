@@ -21,7 +21,7 @@ export default function LandingPage() {
           icon={<FileMusic size={45} />}
           href="/library"
           pixelProps={{
-            colors: ['#e0f2fe', '#7dd3fc', '#0ea5e9', '#fef08a', '#fde047'],
+            colors: ['#3b82f6', '#60a5fa', '#fb923c'], // bleu moyen, bleu clair, orange moyen
             gap: 10,
             speed: 25,
           }}
@@ -32,7 +32,7 @@ export default function LandingPage() {
           icon={<Medal size={45} />}
           href="/leaderboard"
           pixelProps={{
-            colors: ['#e0f2fe', '#7dd3fc', '#0ea5e9', '#fef08a', '#fde047'],
+            colors: ['#60a5fa', '#3b82f6', '#fb923c'], // bleu clair, bleu moyen, orange moyen
             gap: 10,
             speed: 25,
           }}
@@ -43,7 +43,7 @@ export default function LandingPage() {
           icon={<ChartLine size={45} />}
           href="/performances"
           pixelProps={{
-            colors: ['#e0f2fe', '#7dd3fc', '#0ea5e9', '#fef08a', '#fde047'],
+            colors: ['#3b82f6', '#fb923c', '#60a5fa'], // bleu moyen, orange moyen, bleu clair
             gap: 10,
             speed: 25,
           }}
@@ -54,7 +54,7 @@ export default function LandingPage() {
           icon={<Star size={45} />}
           href="/favorites"
           pixelProps={{
-            colors: ['#e0f2fe', '#7dd3fc', '#0ea5e9', '#fef08a', '#fde047'],
+            colors: ['#fb923c', '#3b82f6', '#60a5fa'], // orange moyen, bleu moyen, bleu clair
             gap: 10,
             speed: 25,
           }}
@@ -65,7 +65,7 @@ export default function LandingPage() {
           icon={<FolderUp size={45} />}
           href="/imports"
           pixelProps={{
-            colors: ['#e0f2fe', '#7dd3fc', '#0ea5e9', '#fef08a', '#fde047'],
+            colors: ['#60a5fa', '#fb923c', '#3b82f6'], // bleu clair, orange moyen, bleu moyen
             gap: 10,
             speed: 25,
           }}

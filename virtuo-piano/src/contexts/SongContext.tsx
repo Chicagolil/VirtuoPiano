@@ -1,17 +1,17 @@
 'use client';
 
-import { Songs } from '@prisma/client';
 import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { SongBasicData } from '@/lib/types';
 
 type SongContextType = {
-  currentSong: Songs | null;
-  setCurrentSong: (song: Songs | null) => void;
+  currentSong: SongBasicData | null;
+  setCurrentSong: (song: SongBasicData | null) => void;
 };
 
 const SongContext = createContext<SongContextType | undefined>(undefined);
 
 export function SongProvider({ children }: { children: ReactNode }) {
-  const [currentSong, setCurrentSong] = useState<Songs | null>(null);
+  const [currentSong, setCurrentSong] = useState<SongBasicData | null>(null);
 
   return (
     <SongContext.Provider value={{ currentSong, setCurrentSong }}>

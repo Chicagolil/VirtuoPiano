@@ -53,7 +53,6 @@ const achievements = [
   },
 ];
 
-// A TESTER On tab change
 export default function GeneralStats({
   onTabChange,
 }: {
@@ -196,7 +195,6 @@ export default function GeneralStats({
             <IconClock size={20} className="mr-2 text-indigo-400" />
             Sessions récentes
           </h2>
-          {/* A TESTER onTabChange */}
           <button
             onClick={() => onTabChange?.('history')}
             className="text-xs cursor-pointer text-indigo-400 hover:text-indigo-300 font-medium flex items-center relative hover:after:w-[calc(100%-1rem)] after:absolute after:bottom-0 after:left-0 after:h-px after:bg-current after:transition-all after:duration-300 after:ease-out after:w-0"

@@ -191,7 +191,7 @@ export default function PlayedSongs() {
   };
 
   const handleSongClick = (songId: string) => {
-    router.push(`/library/${songId}`);
+    router.push(`/performances/${songId}`);
   };
 
   // Les chansons sont déjà filtrées côté serveur
