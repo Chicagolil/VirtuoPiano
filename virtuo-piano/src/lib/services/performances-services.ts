@@ -69,7 +69,6 @@ export class PerformancesServices {
         sessionStartTime: 'desc',
       },
     });
-
     if (sessions.length === 0) return 0;
 
     const today = new Date();

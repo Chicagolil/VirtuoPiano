@@ -118,7 +118,10 @@ export default function RecordsTimeline({
 
                 {/* Indicateur de sélection */}
                 {selectedRecord === record.id && (
-                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse"></div>
+                  <div
+                    className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse"
+                    data-testid="selected-indicator"
+                  ></div>
                 )}
               </button>
 

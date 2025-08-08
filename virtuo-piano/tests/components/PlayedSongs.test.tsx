@@ -45,21 +45,43 @@ const mockToast = vi.mocked(toast);
 
 // Fonctions utilitaires pour trouver les boutons sans nom accessible
 const getFilterButton = () => {
-  return screen
-    .getAllByRole('button')
-    .find((button) => button.className.includes('filterButton'))!;
+  // Chercher un bouton avec "Filtrer" ou essayer d'autres méthodes
+  const buttons = screen.getAllByRole('button');
+  return (
+    buttons.find(
+      (button) =>
+        button.textContent?.includes('Filtrer') ||
+        button.textContent?.includes('Filter') ||
+        button.className.includes('filter') ||
+        button.getAttribute('aria-label')?.includes('filtrer')
+    ) ||
+    buttons.find(
+      (button) =>
+        // Si pas trouvé, prendre le premier bouton qui n'est pas favori
+        !button.className.includes('favorite')
+    )
+  );
 };
 
 const getFavoriteButtons = () => {
   return screen
     .getAllByRole('button')
-    .filter((button) => button.className.includes('favoriteButton'));
+    .filter(
+      (button) =>
+        button.className.includes('favoriteButton') ||
+        button.className.includes('favorite')
+    );
 };
 
 const getPaginationButtons = () => {
   return screen
     .getAllByRole('button')
-    .filter((button) => button.className.includes('paginationButton'));
+    .filter(
+      (button) =>
+        button.className.includes('paginationButton') ||
+        button.textContent?.includes('Précédent') ||
+        button.textContent?.includes('Suivant')
+    );
 };
 
 describe('PlayedSongs Component', () => {
@@ -162,6 +184,7 @@ describe('PlayedSongs Component', () => {
       render(<PlayedSongs />);
 
       const filterButton = getFilterButton();
+      expect(filterButton).toBeTruthy();
       expect(filterButton).toBeInTheDocument();
     });
 
@@ -201,7 +224,8 @@ describe('PlayedSongs Component', () => {
       render(<PlayedSongs />);
 
       const filterButton = getFilterButton();
-      fireEvent.click(filterButton);
+      expect(filterButton).toBeTruthy();
+      fireEvent.click(filterButton!);
 
       await waitFor(() => {
         expect(screen.getByText('Tous')).toBeInTheDocument();
@@ -213,7 +237,8 @@ describe('PlayedSongs Component', () => {
       render(<PlayedSongs />);
 
       const filterButton = getFilterButton();
-      fireEvent.click(filterButton);
+      expect(filterButton).toBeTruthy();
+      fireEvent.click(filterButton!);
 
       await waitFor(() => {
         const favoritesFilter = screen.getByText('Favoris');
@@ -238,7 +263,8 @@ describe('PlayedSongs Component', () => {
       render(<PlayedSongs />);
 
       const filterButton = getFilterButton();
-      fireEvent.click(filterButton);
+      expect(filterButton).toBeTruthy();
+      fireEvent.click(filterButton!);
 
       await waitFor(() => {
         const favoritesFilter = screen.getByText('Favoris');

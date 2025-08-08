@@ -84,6 +84,7 @@ export default function LineChartWithNavigation({
               onClick={() => onIndexChange(index + 1)}
               disabled={(index + 1) * interval >= maxDataLength}
               className="p-2 rounded-full hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label="Période plus récente"
             >
               <IconChevronLeft size={20} className={themeColor} />
             </button>
@@ -106,6 +107,7 @@ export default function LineChartWithNavigation({
               onClick={() => onIndexChange(Math.max(0, index - 1))}
               disabled={index === 0}
               className="p-2 rounded-full hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label="Période plus ancienne"
             >
               <IconChevronRight size={20} className={themeColor} />
             </button>

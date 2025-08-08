@@ -55,7 +55,7 @@ export default function BarChartWithNavigation({
   error = null,
   maxIntervals = 0,
 }: BarChartWithNavigationProps) {
-  const currentData = intervals[0]?.data || [];
+  const currentData = intervals[index]?.data || [];
 
   return (
     <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 h-full">
@@ -67,24 +67,24 @@ export default function BarChartWithNavigation({
       <div className="flex flex-col items-center mb-2">
         <div className="flex items-center justify-center space-x-4 mb-2">
           <button
-            className="p-2 rounded-full hover:bg-white/10 transition-colors"
+            className="p-2 rounded-full hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={() => onIndexChange(Math.max(0, index - 1))}
+            disabled={index === 0}
+            aria-label="Période plus ancienne"
+          >
+            <IconChevronLeft size={20} className={themeColor} />
+          </button>
+          <span className="text-sm font-medium text-white/90">
+            {intervals[index]?.label || `Intervalle ${index + 1}`}
+          </span>
+          <button
+            className="p-2 rounded-full hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={() =>
               onIndexChange(
                 Math.min((maxIntervals || intervals.length) - 1, index + 1)
               )
             }
             disabled={index >= (maxIntervals || intervals.length) - 1}
-            aria-label="Période plus ancienne"
-          >
-            <IconChevronLeft size={20} className={themeColor} />
-          </button>
-          <span className="text-sm font-medium text-white/90">
-            {intervals[0]?.label || `Intervalle ${index + 1}`}
-          </span>
-          <button
-            className="p-2 rounded-full hover:bg-white/10 transition-colors"
-            onClick={() => onIndexChange(Math.max(0, index - 1))}
-            disabled={index === 0}
             aria-label="Période plus récente"
           >
             <IconChevronRight size={20} className={themeColor} />

@@ -97,7 +97,11 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
               className="text-md cursor-pointer text-indigo-400 hover:text-indigo-300 font-medium flex items-center relative hover:after:w-[calc(100%-1rem)] after:absolute after:bottom-0 after:left-0 after:h-px after:bg-current after:transition-all after:duration-300 after:ease-out after:w-0"
             >
               Retour aux chansons jouées
-              <IconChevronRight size={18} className="ml-1" />
+              <IconChevronRight
+                size={18}
+                className="ml-1"
+                data-testid="chevron-right-icon"
+              />
             </button>
           </div>
 
@@ -110,7 +114,11 @@ export default function SongPerformances({ song }: { song: SongBasicData }) {
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <IconMusic size={36} className={styles.similarSongIconText} />
+                <IconMusic
+                  size={36}
+                  className={styles.similarSongIconText}
+                  data-testid="music-icon"
+                />
               )}
             </div>
 
