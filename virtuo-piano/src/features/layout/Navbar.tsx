@@ -6,6 +6,7 @@ import styles from './Navbar.module.css';
 import { LottieIconHandle } from '@/components/ui/LottieIcon';
 import { useRef } from 'react';
 import SignOutButton from '@/components/SignOutButton';
+import AccountButton from '@/components/AccountButton';
 import { Size } from '@/common/constants/Size';
 
 import dynamic from 'next/dynamic';
@@ -159,6 +160,7 @@ export default function Navbar() {
         </ul>
       </div>
       <SignOutButton />
+      <AccountButton />
     </nav>
   );
 }

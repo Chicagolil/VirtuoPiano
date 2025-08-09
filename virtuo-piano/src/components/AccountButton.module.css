@@ -1,10 +1,14 @@
-.signOutButton {
+.accountButton {
+  text-decoration: none;
+}
+
+.button {
   position: fixed;
-  bottom: 20px;
+  bottom: 80px;
   left: 20px;
   display: flex;
   align-items: center;
-  background-color: #ef4444;
+  background: linear-gradient(135deg, #3b82f6, #f97316);
   color: white;
   border: none;
   border-radius: 50px;
@@ -16,8 +20,8 @@
   height: 48px;
 }
 
-.signOutButton:hover {
-  width: 190px;
+.button:hover {
+  width: 180px;
   transform: translateY(-2px);
 }
 
@@ -35,8 +39,24 @@
   opacity: 0;
   transition: opacity 0.3s ease;
   font-size: 16px;
+  font-weight: 500;
 }
 
-.signOutButton:hover .text {
+.button:hover .text {
   opacity: 1;
+}
+
+@media (max-width: 768px) {
+  .button {
+    bottom: 140px;
+    left: 20px;
+  }
+
+  .button:hover {
+    width: 140px;
+  }
+
+  .text {
+    font-size: 14px;
+  }
 }
