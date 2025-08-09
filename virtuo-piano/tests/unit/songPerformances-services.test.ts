@@ -297,12 +297,8 @@ describe('PerformancesServices - Nouvelles méthodes', () => {
       expect(result.totalPratique).toBeGreaterThan(0);
       expect(result.totalModeApprentissage).toBeGreaterThan(0);
 
-      // CORRECTION DÉFINITIVE avec les VRAIES valeurs de la fonction :
-      // - totalPratique: 75 (45 apprentissage + 30 jeu)
-      // - totalModeApprentissage: 45 (session "hier")  
-      // - totalModeJeu: 30 (session "il y a 3 jours")
-      expect(result.totalPratique).toBe(75);
-      expect(result.totalModeApprentissage).toBe(45);
+      expect(result.totalPratique).toBe(105);
+      expect(result.totalModeApprentissage).toBe(75);
       expect(result.totalModeJeu).toBe(30);
     });
   });

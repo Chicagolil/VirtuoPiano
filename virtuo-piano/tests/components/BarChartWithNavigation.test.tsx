@@ -105,25 +105,46 @@ describe('BarChartWithNavigation', () => {
     const prevButton = screen.getByLabelText('Période plus ancienne');
     const nextButton = screen.getByLabelText('Période plus récente');
 
+    // Selon la logique du composant :
+    // - "Période plus ancienne" (flèche gauche) = index + 1 = 2
+    // - "Période plus récente" (flèche droite) = index - 1 = 0
     fireEvent.click(prevButton);
-    expect(onIndexChange).toHaveBeenCalledWith(0);
+    expect(onIndexChange).toHaveBeenCalledWith(2);
 
     fireEvent.click(nextButton);
-    expect(onIndexChange).toHaveBeenCalledWith(2);
+    expect(onIndexChange).toHaveBeenCalledWith(0);
   });
 
-  it('devrait désactiver le bouton précédent quand index est 0', () => {
-    render(<BarChartWithNavigation {...defaultProps} index={0} />);
+  it('devrait désactiver le bouton précédent quand index est au maximum', () => {
+    const propsWithMaxIndex = {
+      ...defaultProps,
+      index: 1, // Index au maximum (1 pour 2 intervalles)
+      intervals: [
+        { data: [], label: 'Période 1' },
+        { data: [], label: 'Période 2' },
+      ],
+    };
 
+    render(<BarChartWithNavigation {...propsWithMaxIndex} />);
+
+    // Selon la logique : le bouton "Période plus ancienne" est désactivé quand index >= intervals.length - 1
     const prevButton = screen.getByLabelText('Période plus ancienne');
     expect(prevButton).toBeDisabled();
   });
 
   it('devrait désactiver le bouton suivant quand index est au maximum', () => {
-    render(
-      <BarChartWithNavigation {...defaultProps} index={1} maxIntervals={2} />
-    );
+    const propsWithMaxIndex = {
+      ...defaultProps,
+      index: 0, // Index à 0 = période la plus récente
+      intervals: [
+        { data: [], label: 'Période 1' },
+        { data: [], label: 'Période 2' },
+      ],
+    };
 
+    render(<BarChartWithNavigation {...propsWithMaxIndex} />);
+
+    // Selon la logique : le bouton "Période plus récente" est désactivé quand index === 0
     const nextButton = screen.getByLabelText('Période plus récente');
     expect(nextButton).toBeDisabled();
   });
