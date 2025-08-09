@@ -5,7 +5,6 @@ import * as Tabs from '@radix-ui/react-tabs';
 import { IconUser } from '@tabler/icons-react';
 
 import ProfilTab from './ProfilTab';
-import PrivacyTab from './PrivacyTab';
 import DataTab from './DataTab';
 
 interface AccountPageProps {
@@ -46,16 +45,6 @@ export default function AccountPage({ user }: AccountPageProps) {
                 </Tabs.Trigger>
                 <Tabs.Trigger
                   className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                    activeTab === 'privacy'
-                      ? 'bg-white/90 text-indigo-600 shadow-sm'
-                      : 'text-white/80 hover:text-white hover:bg-white/10'
-                  }`}
-                  value="privacy"
-                >
-                  Confidentialité
-                </Tabs.Trigger>
-                <Tabs.Trigger
-                  className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                     activeTab === 'data'
                       ? 'bg-white/90 text-indigo-600 shadow-sm'
                       : 'text-white/80 hover:text-white hover:bg-white/10'
@@ -69,10 +58,6 @@ export default function AccountPage({ user }: AccountPageProps) {
           </div>
           <Tabs.Content value="profile" className="focus:outline-none">
             <ProfilTab />
-          </Tabs.Content>
-
-          <Tabs.Content value="privacy" className="focus:outline-none">
-            <PrivacyTab />
           </Tabs.Content>
 
           <Tabs.Content value="data" className="focus:outline-none">
