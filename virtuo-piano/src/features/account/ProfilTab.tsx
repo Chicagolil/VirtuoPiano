@@ -222,13 +222,17 @@ export default function ProfilTab() {
 
         <div className="mt-6 space-y-4">
           <div>
-            <div className="flex justify-between text-sm mb-2">
-              <span className="text-white/70">Progression niveau</span>
-              <span className="text-white font-medium">
+            <div className="flex justify-between items-center mb-2">
+              <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent font-bold text-xl">
                 Niveau {TempUser.level}
               </span>
+              <span className="text-white/70 text-sm">Progression niveau</span>
             </div>
             <ProgressBar value={68} max={100} />
+            <div className="flex justify-between text-sm mt-2">
+              <span className="text-white/60">68% vers le niveau suivant</span>
+              <span className="text-white/60">1,360 / 2,000 XP</span>
+            </div>
           </div>
         </div>
       </div>
