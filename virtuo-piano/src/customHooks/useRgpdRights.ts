@@ -4,6 +4,7 @@ import {
   exportUserDataAction,
   updateUserDataAction,
   getUserDataAction,
+  withdrawConsentAction,
 } from '@/lib/actions/RGPD-actions';
 import { DeleteUserResponse } from '@/lib/services/account-services';
 import { signOut } from 'next-auth/react';
@@ -48,20 +49,40 @@ export const useUpdateUserData = () => {
   });
 };
 
+export const useWithdrawConsent = () => {
+  return useMutation({
+    mutationFn: withdrawConsentAction,
+    onSuccess: (data) => {
+      if (data.success) {
+        setTimeout(() => {
+          signOut({ callbackUrl: '/auth/login' });
+        }, 1000);
+      }
+    },
+    onError: (error) => {
+      console.error('Erreur lors du retrait du consentement:', error);
+    },
+  });
+};
+
 export const useRgpdRights = () => {
   const deleteUserMutation = useDeleteUser();
   const exportUserDataMutation = useExportUserData();
   const updateUserDataMutation = useUpdateUserData();
+  const withdrawConsentMutation = useWithdrawConsent();
 
   return {
     deleteUser: deleteUserMutation,
     exportUserData: exportUserDataMutation,
     updateUserData: updateUserDataMutation,
+    withdrawConsent: withdrawConsentMutation,
     isDeleting: deleteUserMutation.isPending,
     isExporting: exportUserDataMutation.isPending,
     isUpdating: updateUserDataMutation.isPending,
+    isWithdrawing: withdrawConsentMutation.isPending,
     deleteError: deleteUserMutation.error,
     exportError: exportUserDataMutation.error,
     updateError: updateUserDataMutation.error,
+    withdrawError: withdrawConsentMutation.error,
   };
 };

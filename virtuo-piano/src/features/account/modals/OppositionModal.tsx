@@ -1,5 +1,6 @@
 import { IconBan, IconX } from '@tabler/icons-react';
 import toast from 'react-hot-toast';
+import { useRgpdRights } from '@/customHooks/useRgpdRights';
 
 interface OppositionModalProps {
   isOpen: boolean;
@@ -10,17 +11,22 @@ export default function OppositionModal({
   isOpen,
   onClose,
 }: OppositionModalProps) {
+  const { withdrawConsent, isWithdrawing } = useRgpdRights();
+
   if (!isOpen) return null;
 
-  const handleWithdrawConsent = () => {
-    // Ici sera ajoutée la logique de retrait de consentement et redirection
-    console.log('Consentement retiré - redirection vers login');
-    toast.success(
-      'Consentement retiré avec succès. Vous allez être redirigé...'
-    );
-    onClose();
-    // Redirection vers la page de connexion
-    // window.location.href = '/auth/login';
+  const handleWithdrawConsent = async () => {
+    try {
+      const result = await withdrawConsent.mutateAsync();
+      if (result.success) {
+        toast.success(result.message);
+        onClose();
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error) {
+      toast.error('Une erreur est survenue lors du retrait du consentement');
+    }
   };
 
   return (
@@ -85,10 +91,13 @@ export default function OppositionModal({
           </button>
           <button
             onClick={handleWithdrawConsent}
-            className="flex-1 bg-orange-600 hover:bg-orange-700 text-white px-4 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 cursor-pointer"
+            disabled={isWithdrawing}
+            className={`flex-1 bg-orange-600 hover:bg-orange-700 text-white px-4 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 cursor-pointer ${
+              isWithdrawing ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
           >
             <IconBan size={18} />
-            Retirer consentement
+            {isWithdrawing ? 'Traitement...' : 'Retirer consentement'}
           </button>
         </div>
       </div>

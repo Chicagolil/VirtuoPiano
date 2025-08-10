@@ -45,6 +45,11 @@ export interface UpdateUserDataResponse {
   message: string;
 }
 
+export interface WithdrawConsentResponse {
+  success: boolean;
+  message: string;
+}
+
 export class AccountServices {
   static async getUserData(userId: string): Promise<GetUserDataResponse> {
     try {
@@ -386,6 +391,43 @@ export class AccountServices {
       return {
         success: false,
         message: 'Erreur lors de la mise à jour des données',
+      };
+    }
+  }
+
+  static async withdrawConsent(
+    userId: string
+  ): Promise<WithdrawConsentResponse> {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+      });
+
+      if (!user) {
+        return {
+          success: false,
+          message: 'Utilisateur non trouvé',
+        };
+      }
+
+      // Retirer le consentement à la politique de confidentialité
+      await prisma.user.update({
+        where: { id: userId },
+        data: {
+          privacyConsent: false,
+          privacyConsentAt: null,
+        },
+      });
+
+      return {
+        success: true,
+        message: 'Consentement retiré avec succès. Redirection en cours...',
+      };
+    } catch (error) {
+      console.error('Erreur lors du retrait du consentement:', error);
+      return {
+        success: false,
+        message: 'Erreur lors du retrait du consentement',
       };
     }
   }
