@@ -1,6 +1,12 @@
 import { useMutation } from '@tanstack/react-query';
-import { deleteUserAction } from '@/lib/actions/RGPD-actions';
-import { DeleteUserResponse } from '@/lib/services/account-services';
+import {
+  deleteUserAction,
+  exportUserDataAction,
+} from '@/lib/actions/RGPD-actions';
+import {
+  DeleteUserResponse,
+  ExportUserDataResponse,
+} from '@/lib/services/account-services';
 import { signOut } from 'next-auth/react';
 
 export const useDeleteUser = () => {
@@ -8,7 +14,6 @@ export const useDeleteUser = () => {
     mutationFn: deleteUserAction,
     onSuccess: (data: DeleteUserResponse) => {
       if (data.success) {
-        // Déconnecter l'utilisateur après suppression réussie
         signOut({ callbackUrl: '/auth/login' });
       }
     },
@@ -18,13 +23,25 @@ export const useDeleteUser = () => {
   });
 };
 
-// Hook pour gérer les autres droits RGPD (à étendre plus tard)
+export const useExportUserData = () => {
+  return useMutation({
+    mutationFn: exportUserDataAction,
+    onError: (error) => {
+      console.error("Erreur lors de l'export des données:", error);
+    },
+  });
+};
+
 export const useRgpdRights = () => {
   const deleteUserMutation = useDeleteUser();
+  const exportUserDataMutation = useExportUserData();
 
   return {
     deleteUser: deleteUserMutation,
+    exportUserData: exportUserDataMutation,
     isDeleting: deleteUserMutation.isPending,
+    isExporting: exportUserDataMutation.isPending,
     deleteError: deleteUserMutation.error,
+    exportError: exportUserDataMutation.error,
   };
 };
