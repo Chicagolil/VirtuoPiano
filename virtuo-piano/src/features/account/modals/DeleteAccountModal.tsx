@@ -1,4 +1,5 @@
 import { IconTrash, IconX } from '@tabler/icons-react';
+import { useDeleteUser } from '@/customHooks/useRgpdRights';
 
 interface DeleteAccountModalProps {
   isOpen: boolean;
@@ -9,12 +10,12 @@ export default function DeleteAccountModal({
   isOpen,
   onClose,
 }: DeleteAccountModalProps) {
+  const deleteUserMutation = useDeleteUser();
+
   if (!isOpen) return null;
 
   const handleDelete = () => {
-    // Ici sera ajoutée la logique de suppression
-    console.log('Compte supprimé');
-    onClose();
+    deleteUserMutation.mutate();
   };
 
   return (
@@ -64,9 +65,10 @@ export default function DeleteAccountModal({
           </button>
           <button
             onClick={handleDelete}
-            className="flex-1 bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg font-medium transition-colors cursor-pointer"
+            disabled={deleteUserMutation.isPending}
+            className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-red-800 disabled:cursor-not-allowed text-white px-4 py-3 rounded-lg font-medium transition-colors cursor-pointer"
           >
-            Supprimer
+            {deleteUserMutation.isPending ? 'Suppression...' : 'Supprimer'}
           </button>
         </div>
       </div>
