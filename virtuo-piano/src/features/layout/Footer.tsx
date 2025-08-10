@@ -2,10 +2,14 @@
 
 import { useState } from 'react';
 import styles from './Footer.module.css';
-import ContactModal from '@/components/ContactModal';
+import ContactModal from '@/components/modals/ContactModal';
+import AboutModal from '@/components/modals/AboutModal';
+import HelpModal from '@/components/modals/HelpModal';
 
 export default function Footer() {
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+  const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
 
   return (
     <>
@@ -15,12 +19,18 @@ export default function Footer() {
             © 2024 Virtuo Piano. Tous droits réservés.
           </div>
           <div className={styles.linkContainer}>
-            <a href="#" className={styles.link}>
+            <button
+              onClick={() => setIsAboutModalOpen(true)}
+              className={styles.link}
+            >
               À propos
-            </a>
-            <a href="#" className={styles.link}>
+            </button>
+            <button
+              onClick={() => setIsHelpModalOpen(true)}
+              className={styles.link}
+            >
               Aide
-            </a>
+            </button>
             <button
               onClick={() => setIsContactModalOpen(true)}
               className={styles.link}
@@ -34,6 +44,16 @@ export default function Footer() {
       <ContactModal
         isOpen={isContactModalOpen}
         onClose={() => setIsContactModalOpen(false)}
+      />
+
+      <AboutModal
+        isOpen={isAboutModalOpen}
+        onClose={() => setIsAboutModalOpen(false)}
+      />
+
+      <HelpModal
+        isOpen={isHelpModalOpen}
+        onClose={() => setIsHelpModalOpen(false)}
       />
     </>
   );
