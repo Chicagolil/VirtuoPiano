@@ -25,5 +25,15 @@
         }
       ]
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/admin/maintenance?action=warn",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/admin/maintenance?action=delete",
+      "schedule": "0 9 1 * *"
+    }
   ]
 }
