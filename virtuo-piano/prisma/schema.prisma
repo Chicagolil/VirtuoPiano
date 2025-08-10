@@ -45,6 +45,8 @@ model User {
   level         Int       @default(1)
   xp            Int       @default(0) // Points d'expérience
   preferences   String?
+  privacyConsent Boolean  @default(false) // Consentement à la politique de confidentialité
+  privacyConsentAt DateTime? // Date du consentement
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   scores        Scores[]
