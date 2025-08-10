@@ -1,9 +1,17 @@
 import prisma from '@/lib/prisma';
+import argon2 from 'argon2';
 
 export interface DeleteUserResponse {
   success: boolean;
   message: string;
 }
+
+const argon2Config = {
+  type: argon2.argon2id,
+  memoryCost: 65536,
+  timeCost: 3,
+  parallelism: 4,
+};
 
 export interface ExportUserDataResponse {
   success: boolean;
@@ -18,7 +26,67 @@ export interface ExportUserDataResponse {
   message: string;
 }
 
+export interface GetUserDataResponse {
+  success: boolean;
+  data?: {
+    userName: string;
+    email: string;
+    level: number;
+    xp: number;
+  };
+  message: string;
+}
+
+export interface UpdateUserDataRequest {
+  userName?: string;
+  email?: string;
+  currentPassword?: string;
+  newPassword?: string;
+  resetLevel?: boolean;
+}
+
+export interface UpdateUserDataResponse {
+  success: boolean;
+  message: string;
+}
+
 export class AccountServices {
+  static async getUserData(userId: string): Promise<GetUserDataResponse> {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          userName: true,
+          email: true,
+          level: true,
+          xp: true,
+        },
+      });
+
+      if (!user) {
+        return {
+          success: false,
+          message: 'Utilisateur non trouvé',
+        };
+      }
+
+      return {
+        success: true,
+        data: user,
+        message: 'Données utilisateur récupérées avec succès',
+      };
+    } catch (error) {
+      console.error(
+        'Erreur lors de la récupération des données utilisateur:',
+        error
+      );
+      return {
+        success: false,
+        message: 'Erreur lors de la récupération des données utilisateur',
+      };
+    }
+  }
+
   static async deleteUser(userId: string): Promise<DeleteUserResponse> {
     try {
       const user = await prisma.user.findUnique({
@@ -244,6 +312,85 @@ export class AccountServices {
       return {
         success: false,
         message: "Erreur lors de l'export des données",
+      };
+    }
+  }
+
+  static async updateUserData(
+    userId: string,
+    data: UpdateUserDataRequest
+  ): Promise<UpdateUserDataResponse> {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+      });
+
+      if (!user) {
+        return {
+          success: false,
+          message: 'Utilisateur non trouvé',
+        };
+      }
+
+      const updateData: any = {};
+
+      // Vérifier si l'email est déjà utilisé par un autre utilisateur
+      if (data.email && data.email !== user.email) {
+        const existingUser = await prisma.user.findUnique({
+          where: { email: data.email },
+        });
+        if (existingUser) {
+          return {
+            success: false,
+            message: 'Cette adresse email est déjà utilisée',
+          };
+        }
+        updateData.email = data.email;
+      }
+
+      // Mettre à jour le nom d'utilisateur
+      if (data.userName && data.userName !== user.userName) {
+        updateData.userName = data.userName;
+      }
+
+      // Vérifier et mettre à jour le mot de passe
+      if (data.currentPassword && data.newPassword) {
+        const isPasswordValid = await argon2.verify(
+          user.password,
+          data.currentPassword
+        );
+        if (!isPasswordValid) {
+          return {
+            success: false,
+            message: 'Le mot de passe actuel est incorrect',
+          };
+        }
+        updateData.password = await argon2.hash(data.newPassword, argon2Config);
+      }
+
+      // Réinitialiser le niveau si demandé
+      if (data.resetLevel) {
+        updateData.level = 1;
+        updateData.xp = 0;
+      }
+
+      // Mettre à jour l'utilisateur
+      if (Object.keys(updateData).length > 0) {
+        await prisma.user.update({
+          where: { id: userId },
+          data: updateData,
+        });
+      }
+
+      return {
+        success: true,
+        message: 'Données mises à jour avec succès',
+      };
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour des données:', error);
+      return {
+        success: false,
+        message: 'Erreur lors de la mise à jour des données',
       };
     }
   }

@@ -8,6 +8,7 @@ import {
 import { useExportUserData } from '@/customHooks/useRgpdRights';
 import { useState } from 'react';
 import DataPreviewModal from './DataPreviewModal';
+import toast from 'react-hot-toast';
 
 interface ExportDataModalProps {
   isOpen: boolean;
@@ -30,12 +31,16 @@ export default function ExportDataModal({
       if (result.success && result.data) {
         setExportedData(result.data);
         setShowPreview(true);
+        toast.success('Données générées avec succès !');
+      } else {
+        toast.error(`Erreur : ${result.message}`);
       }
     } catch (error) {
       console.error(
         'Erreur lors de la génération de la prévisualisation:',
         error
       );
+      toast.error('Une erreur est survenue lors de la génération des données');
     }
   };
 
@@ -53,6 +58,7 @@ export default function ExportDataModal({
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
+      toast.success('Fichier téléchargé avec succès !');
       onClose();
     }
   };

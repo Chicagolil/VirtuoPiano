@@ -1,4 +1,5 @@
 import { IconBan, IconX } from '@tabler/icons-react';
+import toast from 'react-hot-toast';
 
 interface OppositionModalProps {
   isOpen: boolean;
@@ -14,6 +15,9 @@ export default function OppositionModal({
   const handleWithdrawConsent = () => {
     // Ici sera ajoutée la logique de retrait de consentement et redirection
     console.log('Consentement retiré - redirection vers login');
+    toast.success(
+      'Consentement retiré avec succès. Vous allez être redirigé...'
+    );
     onClose();
     // Redirection vers la page de connexion
     // window.location.href = '/auth/login';
