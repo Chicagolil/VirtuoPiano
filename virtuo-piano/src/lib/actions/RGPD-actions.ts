@@ -11,6 +11,8 @@ import {
 } from '@/lib/services/account-services';
 import { getAuthenticatedUser } from '@/lib/auth/get-authenticated-user';
 import { rectificationSchema } from '@/lib/validations/auth-schemas';
+import { EmailService } from '../services/email-service';
+import prisma from '@/lib/prisma';
 
 export const getUserDataAction = async (): Promise<GetUserDataResponse> => {
   try {
@@ -129,3 +131,162 @@ export const withdrawConsentAction =
       };
     }
   };
+
+export async function getInactiveUsersAction() {
+  try {
+    const user = await getAuthenticatedUser();
+    if (!user) {
+      return {
+        success: false,
+        message: 'Non autorisé',
+      };
+    }
+
+    const result = await AccountServices.getInactiveUsers();
+    return result;
+  } catch (error) {
+    console.error('Erreur dans getInactiveUsersAction:', error);
+    return {
+      success: false,
+      message: 'Erreur lors de la récupération des utilisateurs inactifs',
+    };
+  }
+}
+
+export async function sendInactiveAccountWarningsAction() {
+  try {
+    const user = await getAuthenticatedUser();
+    if (!user) {
+      return {
+        success: false,
+        message: 'Non autorisé',
+      };
+    }
+
+    // Récupérer les utilisateurs qui seront supprimés dans 2 semaines
+    // (donc inactifs depuis 11 mois et 2 semaines)
+    const elevenMonthsTwoWeeksAgo = new Date();
+    elevenMonthsTwoWeeksAgo.setMonth(elevenMonthsTwoWeeksAgo.getMonth() - 11);
+    elevenMonthsTwoWeeksAgo.setDate(elevenMonthsTwoWeeksAgo.getDate() - 14);
+
+    const usersToWarn = await prisma.user.findMany({
+      where: {
+        OR: [
+          {
+            lastLoginAt: {
+              lt: elevenMonthsTwoWeeksAgo,
+            },
+          },
+          {
+            lastLoginAt: null,
+            createdAt: {
+              lt: elevenMonthsTwoWeeksAgo,
+            },
+          },
+        ],
+      },
+      select: {
+        id: true,
+        email: true,
+        userName: true,
+        lastLoginAt: true,
+      },
+    });
+
+    let sentCount = 0;
+    let errorCount = 0;
+
+    for (const user of usersToWarn) {
+      try {
+        const emailSent = await EmailService.sendInactiveAccountWarning(
+          user.email,
+          user.userName,
+          user.lastLoginAt
+        );
+
+        if (emailSent) {
+          sentCount++;
+        } else {
+          errorCount++;
+        }
+      } catch (error) {
+        console.error(
+          `Erreur lors de l'envoi de l'email d'avertissement à ${user.email}:`,
+          error
+        );
+        errorCount++;
+      }
+    }
+
+    return {
+      success: true,
+      message: `${sentCount} emails d'avertissement envoyés avec succès. ${errorCount} erreurs.`,
+      data: {
+        sentCount,
+        errorCount,
+        totalUsers: usersToWarn.length,
+      },
+    };
+  } catch (error) {
+    console.error('Erreur dans sendInactiveAccountWarningsAction:', error);
+    return {
+      success: false,
+      message: "Erreur lors de l'envoi des emails d'avertissement",
+    };
+  }
+}
+
+export async function deleteInactiveUsersAction() {
+  try {
+    const user = await getAuthenticatedUser();
+    if (!user) {
+      return {
+        success: false,
+        message: 'Non autorisé',
+      };
+    }
+
+    // Récupérer les utilisateurs à supprimer AVANT de les supprimer
+    const result = await AccountServices.getUsersToDelete();
+
+    if (!result.success || !result.data || result.data.length === 0) {
+      return {
+        success: true,
+        deletedCount: 0,
+        message: 'Aucun utilisateur inactif à supprimer',
+      };
+    }
+
+    // Envoyer des emails de notification de suppression
+    let notificationSentCount = 0;
+    for (const userData of result.data) {
+      try {
+        await EmailService.sendAccountDeletionNotification(
+          userData.email,
+          userData.userName
+        );
+        notificationSentCount++;
+      } catch (error) {
+        console.error(
+          `Erreur lors de l'envoi de l'email de suppression à ${userData.email}:`,
+          error
+        );
+      }
+    }
+
+    // Supprimer les utilisateurs
+    const deletionResult = await AccountServices.deleteInactiveUsers();
+
+    return {
+      ...deletionResult,
+      notificationSentCount,
+    };
+  } catch (error) {
+    console.error('Erreur dans deleteInactiveUsersAction:', error);
+    return {
+      success: false,
+      deletedCount: 0,
+      message: 'Erreur lors de la suppression des utilisateurs inactifs',
+    };
+  }
+}

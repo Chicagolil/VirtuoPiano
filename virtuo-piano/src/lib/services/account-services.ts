@@ -50,6 +50,26 @@ export interface WithdrawConsentResponse {
   message: string;
 }
 
+export interface InactiveUser {
+  id: string;
+  email: string;
+  userName: string;
+  lastLoginAt: Date | null;
+  createdAt: Date;
+}
+
+export interface InactiveUsersResponse {
+  success: boolean;
+  data?: InactiveUser[];
+  message: string;
+}
+
+export interface DeleteInactiveUsersResponse {
+  success: boolean;
+  deletedCount: number;
+  message: string;
+}
+
 export class AccountServices {
   static async getUserData(userId: string): Promise<GetUserDataResponse> {
     try {
@@ -413,7 +433,6 @@ export class AccountServices {
         };
       }
 
-      // Retirer le consentement à la politique de confidentialité
       await prisma.user.update({
         where: { id: userId },
         data: {
@@ -431,6 +450,177 @@ export class AccountServices {
       return {
         success: false,
         message: 'Erreur lors du retrait du consentement',
+      };
+    }
+  }
+
+  static async getInactiveUsers(): Promise<InactiveUsersResponse> {
+    try {
+      const oneYearAgo = new Date();
+      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
+      const inactiveUsers = await prisma.user.findMany({
+        where: {
+          OR: [
+            { lastLoginAt: { lt: oneYearAgo } },
+            {
+              lastLoginAt: null,
+              createdAt: { lt: oneYearAgo },
+            },
+          ],
+        },
+        select: {
+          id: true,
+          email: true,
+          userName: true,
+          lastLoginAt: true,
+          createdAt: true,
+        },
+      });
+
+      return {
+        success: true,
+        data: inactiveUsers,
+        message: `${inactiveUsers.length} utilisateurs inactifs trouvés`,
+      };
+    } catch (error) {
+      console.error(
+        'Erreur lors de la récupération des utilisateurs inactifs:',
+        error
+      );
+      return {
+        success: false,
+        message: 'Erreur lors de la récupération des utilisateurs inactifs',
+      };
+    }
+  }
+
+  static async getUsersToDelete(): Promise<InactiveUsersResponse> {
+    try {
+      const oneYearAgo = new Date();
+      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
+      const usersToDelete = await prisma.user.findMany({
+        where: {
+          OR: [
+            { lastLoginAt: { lt: oneYearAgo } },
+            {
+              lastLoginAt: null,
+              createdAt: { lt: oneYearAgo },
+            },
+          ],
+        },
+        select: {
+          id: true,
+          email: true,
+          userName: true,
+          lastLoginAt: true,
+          createdAt: true,
+        },
+      });
+
+      return {
+        success: true,
+        data: usersToDelete,
+        message: `${usersToDelete.length} utilisateurs à supprimer trouvés`,
+      };
+    } catch (error) {
+      console.error(
+        'Erreur lors de la récupération des utilisateurs à supprimer:',
+        error
+      );
+      return {
+        success: false,
+        message: 'Erreur lors de la récupération des utilisateurs à supprimer',
+      };
+    }
+  }
+
+  static async deleteInactiveUsers(): Promise<DeleteInactiveUsersResponse> {
+    try {
+      const oneYearAgo = new Date();
+      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
+      // Récupérer les utilisateurs à supprimer
+      const usersToDelete = await prisma.user.findMany({
+        where: {
+          OR: [
+            { lastLoginAt: { lt: oneYearAgo } },
+            {
+              lastLoginAt: null,
+              createdAt: { lt: oneYearAgo },
+            },
+          ],
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      if (usersToDelete.length === 0) {
+        return {
+          success: true,
+          deletedCount: 0,
+          message: 'Aucun utilisateur inactif à supprimer',
+        };
+      }
+
+      let deletedCount = 0;
+
+      // Supprimer chaque utilisateur et ses données associées
+      for (const user of usersToDelete) {
+        try {
+          await prisma.$transaction(async (tx) => {
+            // Supprimer toutes les données liées
+            await tx.scores.deleteMany({
+              where: { user_id: user.id },
+            });
+
+            await tx.usersCompositions.deleteMany({
+              where: { user_id: user.id },
+            });
+
+            await tx.usersFavorites.deleteMany({
+              where: { user_id: user.id },
+            });
+
+            await tx.usersImports.deleteMany({
+              where: { user_id: user.id },
+            });
+
+            await tx.userChallengeProgress.deleteMany({
+              where: { userId: user.id },
+            });
+
+            // Supprimer l'utilisateur
+            await tx.user.delete({
+              where: { id: user.id },
+            });
+          });
+
+          deletedCount++;
+        } catch (error) {
+          console.error(
+            `Erreur lors de la suppression de l'utilisateur ${user.id}:`,
+            error
+          );
+        }
+      }
+
+      return {
+        success: true,
+        deletedCount,
+        message: `${deletedCount} utilisateurs inactifs supprimés avec succès`,
+      };
+    } catch (error) {
+      console.error(
+        'Erreur lors de la suppression des utilisateurs inactifs:',
+        error
+      );
+      return {
+        success: false,
+        deletedCount: 0,
+        message: 'Erreur lors de la suppression des utilisateurs inactifs',
       };
     }
   }

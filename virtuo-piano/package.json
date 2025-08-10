@@ -11,6 +11,7 @@
     "seed": "tsx prisma/seed/seed.ts",
     "studio": "prisma studio",
     "cleanDb": "tsx prisma/scripts/cleanDb.ts",
+    "maintenance": "tsx prisma/scripts/maintenance.ts",
     "vercel-build": "prisma generate && prisma migrate deploy && next build",
     "test": "vitest",
     "test:watch": "vitest watch",
