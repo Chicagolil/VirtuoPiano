@@ -47,6 +47,8 @@ model User {
   preferences   String?
   privacyConsent Boolean  @default(false) // Consentement à la politique de confidentialité
   privacyConsentAt DateTime? // Date du consentement
+  lastLoginAt   DateTime? // Dernière connexion de l'utilisateur
+
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   scores        Scores[]
