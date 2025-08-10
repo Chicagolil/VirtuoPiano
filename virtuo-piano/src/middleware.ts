@@ -12,8 +12,11 @@ export default withAuth(
 
     // Vérifier si la requête est pour une route API
     if (req.nextUrl.pathname.startsWith('/api/')) {
-      // Exclure les routes d'authentification
-      if (req.nextUrl.pathname.startsWith('/api/auth')) {
+      // Exclure les routes d'authentification et de contact
+      if (
+        req.nextUrl.pathname.startsWith('/api/auth') ||
+        req.nextUrl.pathname.startsWith('/api/contact')
+      ) {
         return NextResponse.next();
       }
 
