@@ -18,6 +18,8 @@ export default function ConnexionForm({
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [isRegisteredState, setIsRegistered] = useState(isRegistered);
+  const [privacyConsent, setPrivacyConsent] = useState(false);
+  const [showPrivacyConsent, setShowPrivacyConsent] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,7 +33,14 @@ export default function ConnexionForm({
     });
 
     if (res?.error) {
-      setError('Identifiants invalides');
+      if (res.error === 'PRIVACY_CONSENT_REQUIRED') {
+        setShowPrivacyConsent(true);
+        setError(
+          'Vous devez accepter la politique de confidentialité pour vous connecter.'
+        );
+      } else {
+        setError('Identifiants invalides');
+      }
     } else {
       router.push('/');
     }
@@ -42,6 +51,15 @@ export default function ConnexionForm({
     e.preventDefault();
     setError('');
     setLoading(true);
+
+    // Vérifier le consentement à la politique de confidentialité
+    if (!privacyConsent) {
+      setError(
+        'Vous devez accepter la politique de confidentialité pour continuer'
+      );
+      setLoading(false);
+      return;
+    }
 
     const formData = new FormData(e.currentTarget);
     const email = formData.get('email') as string;
@@ -58,6 +76,7 @@ export default function ConnexionForm({
           email,
           password,
           userName,
+          privacyConsent: true,
         }),
       });
 
@@ -68,6 +87,50 @@ export default function ConnexionForm({
 
       setIsRegistered(true);
       toast.success('Compte créé avec succès');
+    } catch (error) {
+      setError(
+        error instanceof Error ? error.message : 'Une erreur est survenue'
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdatePrivacyConsent = async () => {
+    if (!privacyConsent) {
+      setError(
+        'Vous devez accepter la politique de confidentialité pour continuer'
+      );
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const res = await fetch('/api/auth/update-privacy-consent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          privacyConsent: true,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message || 'Une erreur est survenue');
+      }
+
+      setShowPrivacyConsent(false);
+      setPrivacyConsent(false);
+      toast.success('Politique de confidentialité acceptée avec succès');
+
+      // Rediriger vers la page d'accueil
+      router.push('/');
     } catch (error) {
       setError(
         error instanceof Error ? error.message : 'Une erreur est survenue'
@@ -122,8 +185,42 @@ export default function ConnexionForm({
             onChange={(e) => setPassword(e.target.value)}
             className="w-full p-3 border border-gray-600 rounded bg-black/50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
           />
+
+          {/* Checkbox pour le consentement à la politique de confidentialité (affichée seulement si nécessaire) */}
+          {showPrivacyConsent && (
+            <div className="flex items-start gap-3 p-3 border border-orange-500/50 rounded bg-orange-500/10">
+              <input
+                id="privacyConsentLogin"
+                type="checkbox"
+                checked={privacyConsent}
+                onChange={(e) => setPrivacyConsent(e.target.checked)}
+                className="mt-1 w-4 h-4 text-orange-600 bg-black/50 border border-gray-600 rounded focus:ring-orange-500 focus:ring-2 cursor-pointer"
+                required
+              />
+              <label
+                htmlFor="privacyConsentLogin"
+                className="text-white/90 text-sm cursor-pointer"
+              >
+                J'accepte la{' '}
+                <a
+                  href="/privacy-policy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-orange-400 hover:text-orange-300 underline"
+                >
+                  politique de confidentialité
+                </a>{' '}
+                et j'autorise le traitement de mes données personnelles
+                conformément au RGPD.
+              </label>
+            </div>
+          )}
+
           <button
-            type="submit"
+            type={showPrivacyConsent ? 'button' : 'submit'}
+            onClick={
+              showPrivacyConsent ? handleUpdatePrivacyConsent : undefined
+            }
             disabled={loading}
             className={`w-full p-3 rounded font-medium transition-colors ${
               loading
@@ -142,9 +239,13 @@ export default function ConnexionForm({
                   duration={0.75}
                   className="font-medium [--base-color:theme(colors.orange.500)] [--base-gradient-color:theme(colors.orange.300)] dark:[--base-color:theme(colors.orange.600)] dark:[--base-gradient-color:theme(colors.orange.400)]"
                 >
-                  Connexion en cours...
+                  {showPrivacyConsent
+                    ? 'Mise à jour en cours...'
+                    : 'Connexion en cours...'}
                 </TextShimmer>
               </div>
+            ) : showPrivacyConsent ? (
+              'Accepter et se connecter'
             ) : (
               'Se connecter'
             )}
@@ -186,6 +287,34 @@ export default function ConnexionForm({
                 className="w-full p-3 border border-gray-600 rounded bg-black/50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
                 placeholder="Mot de passe"
               />
+            </div>
+
+            {/* Checkbox pour le consentement à la politique de confidentialité */}
+            <div className="flex items-start gap-3 p-3 border border-gray-600 rounded bg-black/30">
+              <input
+                id="privacyConsent"
+                type="checkbox"
+                checked={privacyConsent}
+                onChange={(e) => setPrivacyConsent(e.target.checked)}
+                className="mt-1 w-4 h-4 text-orange-600 bg-black/50 border border-gray-600 rounded focus:ring-orange-500 focus:ring-2 cursor-pointer"
+                required
+              />
+              <label
+                htmlFor="privacyConsent"
+                className="text-white/80 text-sm cursor-pointer"
+              >
+                J'accepte la{' '}
+                <a
+                  href="/privacy-policy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-orange-400 hover:text-orange-300 underline"
+                >
+                  politique de confidentialité
+                </a>{' '}
+                et j'autorise le traitement de mes données personnelles
+                conformément au RGPD.
+              </label>
             </div>
 
             {error && <p className="text-red-400 text-sm">{error}</p>}

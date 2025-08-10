@@ -79,6 +79,6 @@ export const config = {
     // Protéger toutes les routes API
     '/api/:path*',
     // Protéger toutes les pages sauf celles spécifiées
-    '/((?!_next/static|_next/image|favicon.ico|auth).*)',
+    '/((?!_next/static|_next/image|favicon.ico|auth|privacy-policy).*)',
   ],
 };

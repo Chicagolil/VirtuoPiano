@@ -9,31 +9,7 @@ import {
   AccountServices,
 } from '@/lib/services/account-services';
 import { getAuthenticatedUser } from '@/lib/auth/get-authenticated-user';
-import { z } from 'zod';
-
-// Schémas de validation
-const updateUserDataSchema = z.object({
-  userName: z
-    .string()
-    .min(2, "Le nom d'utilisateur doit contenir au moins 2 caractères")
-    .max(50, "Le nom d'utilisateur ne peut pas dépasser 50 caractères")
-    .optional(),
-  email: z
-    .string()
-    .email('Adresse email invalide')
-    .max(100, "L'email ne peut pas dépasser 100 caractères")
-    .optional(),
-  currentPassword: z
-    .string()
-    .min(1, 'Le mot de passe actuel est requis')
-    .optional(),
-  newPassword: z
-    .string()
-    .min(8, 'Le nouveau mot de passe doit contenir au moins 8 caractères')
-    .max(100, 'Le mot de passe ne peut pas dépasser 100 caractères')
-    .optional(),
-  resetLevel: z.boolean().optional(),
-});
+import { rectificationSchema } from '@/lib/validations/auth-schemas';
 
 export const getUserDataAction = async (): Promise<GetUserDataResponse> => {
   try {
@@ -104,7 +80,7 @@ export const updateUserDataAction = async (
 ): Promise<UpdateUserDataResponse> => {
   try {
     // Validation des données d'entrée
-    const validationResult = updateUserDataSchema.safeParse(data);
+    const validationResult = rectificationSchema.safeParse(data);
     if (!validationResult.success) {
       return {
         success: false,

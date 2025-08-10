@@ -52,6 +52,10 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Identifiants invalides');
         }
 
+        if (!user.privacyConsent) {
+          throw new Error('PRIVACY_CONSENT_REQUIRED');
+        }
+
         return {
           id: user.id,
           email: user.email,

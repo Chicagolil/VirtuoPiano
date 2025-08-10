@@ -1,5 +1,6 @@
 import prisma from '@/lib/prisma';
 import argon2 from 'argon2';
+import { RectificationData } from '@/lib/validations/auth-schemas';
 
 export interface DeleteUserResponse {
   success: boolean;
@@ -37,13 +38,7 @@ export interface GetUserDataResponse {
   message: string;
 }
 
-export interface UpdateUserDataRequest {
-  userName?: string;
-  email?: string;
-  currentPassword?: string;
-  newPassword?: string;
-  resetLevel?: boolean;
-}
+export interface UpdateUserDataRequest extends RectificationData {}
 
 export interface UpdateUserDataResponse {
   success: boolean;
