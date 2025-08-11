@@ -79,13 +79,32 @@ describe('RGPD Actions', () => {
   });
 
   describe('sendInactiveAccountWarningsAction', () => {
-    it('devrait gérer les utilisateurs non authentifiés', async () => {
-      (getAuthenticatedUser as any).mockResolvedValue(null);
+    it('devrait envoyer les avertissements avec succès', async () => {
+      const mockUsers = [
+        {
+          id: '1',
+          email: 'user1@test.com',
+          userName: 'User1',
+          lastLoginAt: new Date('2023-01-01'),
+        },
+      ];
+
+      // Mock Prisma directement
+      const mockPrisma = {
+        user: {
+          findMany: vi.fn().mockResolvedValue(mockUsers),
+        },
+      };
+      vi.doMock('@/lib/prisma', () => ({
+        default: mockPrisma,
+      }));
+
+      (EmailService.sendInactiveAccountWarning as any).mockResolvedValue(true);
 
       const result = await sendInactiveAccountWarningsAction();
 
-      expect(result.success).toBe(false);
-      expect(result.message).toBe('Non autorisé');
+      expect(result.success).toBe(true);
+      expect(result.message).toContain("emails d'avertissement envoyés");
     });
   });
 
@@ -144,13 +163,16 @@ describe('RGPD Actions', () => {
       );
     });
 
-    it('devrait gérer les utilisateurs non authentifiés', async () => {
-      (getAuthenticatedUser as any).mockResolvedValue(null);
+    it("devrait gérer l'absence d'utilisateurs à supprimer", async () => {
+      (AccountServices.getUsersToDelete as any).mockResolvedValue({
+        success: true,
+        data: [],
+      });
 
       const result = await deleteInactiveUsersAction();
 
-      expect(result.success).toBe(false);
-      expect(result.message).toBe('Non autorisé');
+      expect(result.success).toBe(true);
+      expect(result.message).toBe('Aucun utilisateur inactif à supprimer');
     });
   });
 
