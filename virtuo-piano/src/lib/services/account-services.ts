@@ -38,7 +38,7 @@ export interface GetUserDataResponse {
   message: string;
 }
 
-export interface UpdateUserDataRequest extends RectificationData {}
+export type UpdateUserDataRequest = RectificationData;
 
 export interface UpdateUserDataResponse {
   success: boolean;
