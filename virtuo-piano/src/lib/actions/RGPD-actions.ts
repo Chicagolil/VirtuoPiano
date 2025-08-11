@@ -155,13 +155,14 @@ export async function getInactiveUsersAction() {
 
 export async function sendInactiveAccountWarningsAction() {
   try {
-    const user = await getAuthenticatedUser();
-    if (!user) {
-      return {
-        success: false,
-        message: 'Non autorisé',
-      };
-    }
+    // Pour les routes de maintenance, on n'a pas besoin d'authentification
+    // const user = await getAuthenticatedUser();
+    // if (!user) {
+    //   return {
+    //     success: false,
+    //     message: 'Non autorisé',
+    //   };
+    // }
 
     // Récupérer les utilisateurs qui seront supprimés dans 2 semaines
     // (donc inactifs depuis 11 mois et 2 semaines)
@@ -238,13 +239,13 @@ export async function sendInactiveAccountWarningsAction() {
 
 export async function deleteInactiveUsersAction() {
   try {
-    const user = await getAuthenticatedUser();
-    if (!user) {
-      return {
-        success: false,
-        message: 'Non autorisé',
-      };
-    }
+    // const user = await getAuthenticatedUser();
+    // if (!user) {
+    //   return {
+    //     success: false,
+    //     message: 'Non autorisé',
+    //   };
+    // }
 
     // Récupérer les utilisateurs à supprimer AVANT de les supprimer
     const result = await AccountServices.getUsersToDelete();
