@@ -1,18 +1,24 @@
 import { NextResponse } from 'next/server';
 import argon2 from 'argon2';
 import prisma from '@/lib/prisma';
+import { registerSchema } from '@/lib/validations/auth-schemas';
 
 export async function POST(request: Request) {
   try {
-    const { email, password, userName } = await request.json();
+    const body = await request.json();
 
-    // Validation des données
-    if (!email || !password || !userName) {
+    // Validation des données avec Zod
+    const validationResult = registerSchema.safeParse(body);
+    if (!validationResult.success) {
       return NextResponse.json(
-        { message: 'Tous les champs sont requis' },
+        {
+          message: `Erreur de validation: ${validationResult.error.errors[0].message}`,
+        },
         { status: 400 }
       );
     }
+
+    const { email, password, userName, privacyConsent } = validationResult.data;
 
     // Vérifier si l'email existe déjà
     const existingUser = await prisma.user.findUnique({
@@ -40,6 +46,8 @@ export async function POST(request: Request) {
         email,
         password: hashedPassword,
         userName,
+        privacyConsent: true,
+        privacyConsentAt: new Date(),
       },
     });
 

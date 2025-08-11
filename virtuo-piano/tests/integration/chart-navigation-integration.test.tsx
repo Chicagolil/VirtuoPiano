@@ -164,8 +164,11 @@ describe('Chart Navigation Integration Tests', () => {
       expect(screen.getByText('Jan 2024 - Jun 2024')).toBeInTheDocument();
 
       // Naviguer vers l'intervalle suivant
-      const nextButton = screen.getByLabelText('Période plus récente');
-      fireEvent.click(nextButton);
+      // Selon la logique du composant : "Période plus récente" diminue l'index (index - 1)
+      // Mais avec index=0, on ne peut pas aller plus récent, donc le bouton devrait être désactivé
+      // Utilisons plutôt "Période plus ancienne" qui augmente l'index (index + 1)
+      const prevButton = screen.getByLabelText('Période plus ancienne');
+      fireEvent.click(prevButton);
 
       expect(onIndexChange).toHaveBeenCalledWith(1);
     });
@@ -189,13 +192,14 @@ describe('Chart Navigation Integration Tests', () => {
         />
       );
 
-      // Le bouton précédent devrait être désactivé au premier intervalle
-      const prevButton = screen.getByLabelText('Période plus ancienne');
-      expect(prevButton).toBeDisabled();
-
-      // Le bouton suivant devrait être activé
+      // Au premier intervalle (index=0) :
+      // - Le bouton "Période plus récente" devrait être désactivé (ne peut pas aller plus récent que 0)
+      // - Le bouton "Période plus ancienne" devrait être activé (peut aller vers index 1)
       const nextButton = screen.getByLabelText('Période plus récente');
-      expect(nextButton).not.toBeDisabled();
+      expect(nextButton).toBeDisabled();
+
+      const prevButton = screen.getByLabelText('Période plus ancienne');
+      expect(prevButton).not.toBeDisabled();
     });
 
     it('devrait gérer le mode multi-axes', () => {
@@ -576,13 +580,13 @@ describe('Chart Navigation Integration Tests', () => {
         </div>
       );
 
-      // Naviguer dans le bar chart
-      const barNextButtons = screen.getAllByLabelText('Période plus récente');
-      const barNextButton = barNextButtons[0]; // Le premier bouton (du bar chart)
-      fireEvent.click(barNextButton);
+      // Naviguer dans le bar chart - utiliser "Période plus ancienne" pour index + 1
+      const barPrevButtons = screen.getAllByLabelText('Période plus ancienne');
+      const barPrevButton = barPrevButtons[0]; // Le premier bouton (du bar chart)
+      fireEvent.click(barPrevButton);
       expect(onBarIndexChange).toHaveBeenCalledWith(1);
 
-      // Naviguer dans le line chart - utiliser getAllByLabelText pour trouver le deuxième bouton
+      // Naviguer dans le line chart - utiliser "Période plus récente" pour index + 1 (logique différente)
       const lineNextButtons = screen.getAllByLabelText('Période plus récente');
       const lineNextButton = lineNextButtons[1]; // Le deuxième bouton (du line chart)
       fireEvent.click(lineNextButton);

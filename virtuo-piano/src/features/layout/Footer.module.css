@@ -2,7 +2,7 @@
   background-color: transparent;
   backdrop-filter: blur(8px);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 1rem 1.5rem;
+  padding: 1.5rem 2rem;
   color: white;
   box-shadow: 0 -10px 15px -3px rgba(0, 0, 0, 0.1),
     0 -4px 6px -2px rgba(0, 0, 0, 0.05);
@@ -21,43 +21,38 @@
 }
 
 .copyright {
-  font-size: 0.875rem;
+  font-size: 1rem;
   color: rgba(255, 255, 255, 0.7);
 }
 
 .linkContainer {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
-  margin-top: 0.5rem;
+  gap: 2rem;
+  margin-top: 0.75rem;
 }
 
 .link {
-  font-size: 0.875rem;
+  font-size: 1rem;
   color: rgba(255, 255, 255, 0.7);
   text-decoration: none;
   transition: color 0.3s ease;
   position: relative;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
 }
 
 .link:hover {
   color: #7dd3fc;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
 }
 
-.link::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  bottom: -2px;
-  width: 0;
-  height: 1px;
-  background-color: #7dd3fc;
-  transition: width 0.3s ease;
-}
-
-.link:hover::before {
-  width: 100%;
-}
+/* Suppression du soulignement pour garder seulement l'effet des boutons */
 
 @media (min-width: 768px) {
   .container {
@@ -66,6 +61,7 @@
 
   .linkContainer {
     margin-top: 0;
+    gap: 2rem;
   }
 }
 
@@ -76,4 +72,5 @@
 
 :global(.dark) .link:hover {
   color: white;
+  background-color: rgba(255, 255, 255, 0.15);
 }

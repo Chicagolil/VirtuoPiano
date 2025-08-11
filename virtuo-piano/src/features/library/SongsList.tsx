@@ -21,7 +21,7 @@ import { SongList } from '@/lib/services/songs';
 import { toggleFavorite } from '@/lib/actions/songs';
 import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
-import { Spinner } from '@/components/ui/spinner';
+
 // Props pour le composant
 interface SongsListProps {
   songs: SongList[];

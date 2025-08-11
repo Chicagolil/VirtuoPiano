@@ -17,6 +17,10 @@ export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   session: {
     strategy: 'jwt',
+    maxAge: 60 * 60,
+  },
+  jwt: {
+    maxAge: 60 * 60,
   },
   pages: {
     signIn: '/auth/login',
@@ -51,6 +55,16 @@ export const authOptions: NextAuthOptions = {
         if (!isPasswordValid) {
           throw new Error('Identifiants invalides');
         }
+
+        if (!user.privacyConsent) {
+          throw new Error('PRIVACY_CONSENT_REQUIRED');
+        }
+
+        // Mettre à jour la dernière connexion
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { lastLoginAt: new Date() },
+        });
 
         return {
           id: user.id,
