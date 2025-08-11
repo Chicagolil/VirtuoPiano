@@ -388,10 +388,18 @@ describe('useRgpdRights Hooks', () => {
   describe('Gestion des états', () => {
     it('devrait gérer les états de mutation correctement', async () => {
       // Mock les actions pour qu'elles retournent des promesses qui ne se résolvent pas immédiatement
-      mockActions.deleteUserAction.mockImplementation(() => new Promise(() => {}));
-      mockActions.exportUserDataAction.mockImplementation(() => new Promise(() => {}));
-      mockActions.updateUserDataAction.mockImplementation(() => new Promise(() => {}));
-      mockActions.withdrawConsentAction.mockImplementation(() => new Promise(() => {}));
+      mockActions.deleteUserAction.mockImplementation(
+        () => new Promise(() => {})
+      );
+      mockActions.exportUserDataAction.mockImplementation(
+        () => new Promise(() => {})
+      );
+      mockActions.updateUserDataAction.mockImplementation(
+        () => new Promise(() => {})
+      );
+      mockActions.withdrawConsentAction.mockImplementation(
+        () => new Promise(() => {})
+      );
 
       const { result } = renderHook(() => useRgpdRights(), {
         wrapper: createWrapper(),
