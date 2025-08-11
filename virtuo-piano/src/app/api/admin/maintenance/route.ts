@@ -6,6 +6,12 @@ import {
 } from '@/lib/actions/RGPD-actions';
 
 export async function GET(request: NextRequest) {
+  // Vérification de sécurité pour les cron jobs Vercel
+  const authHeader = request.headers.get('authorization');
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return new Response('Unauthorized', { status: 401 });
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const action = searchParams.get('action');

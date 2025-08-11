@@ -29,7 +29,7 @@
   "crons": [
     {
       "path": "/api/admin/maintenance?action=warn",
-      "schedule": "0 9 * * *"
+      "schedule": "* * * * *"
     },
     {
       "path": "/api/admin/maintenance?action=delete",
