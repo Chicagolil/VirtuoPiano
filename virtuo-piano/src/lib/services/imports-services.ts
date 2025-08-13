@@ -178,4 +178,31 @@ export class ImportsServices {
       },
     };
   }
+
+  // Méthode  pour récupérer uniquement les genres
+  static async getImportedSongsGenres(userId: string): Promise<string[]> {
+    const genres = await prisma.usersImports.findMany({
+      where: {
+        user_id: userId,
+      },
+      select: {
+        song: {
+          select: {
+            genre: true,
+          },
+        },
+      },
+    });
+
+    // Extraire et dédupliquer les genres
+    const uniqueGenres = Array.from(
+      new Set(
+        genres
+          .map((item) => item.song.genre)
+          .filter((genre): genre is string => genre !== null)
+      )
+    ).sort();
+
+    return uniqueGenres;
+  }
 }

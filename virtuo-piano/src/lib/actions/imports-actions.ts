@@ -62,8 +62,8 @@ export async function getImportedSongsAction(
   }
 }
 
-// Action simplifiée pour récupérer toutes les chansons sans pagination (utile pour certains cas)
-export async function getAllImportedSongsAction(): Promise<PlayedSong[]> {
+// Action pour récupérer uniquement les genres des chansons importées
+export async function getImportedSongsGenresAction(): Promise<string[]> {
   try {
     const session = await getServerSession(authOptions);
 
@@ -71,17 +71,15 @@ export async function getAllImportedSongsAction(): Promise<PlayedSong[]> {
       throw new Error('Accès non autorisé');
     }
 
-    const result = await ImportsServices.getImportedSongs(session.user.id, {
-      page: 1,
-      limit: 999999, // Récupérer toutes les chansons
-    });
-
-    return result.songs;
+    const genres = await ImportsServices.getImportedSongsGenres(
+      session.user.id
+    );
+    return genres;
   } catch (error) {
     console.error(
-      'Erreur lors de la récupération de toutes les chansons importées:',
+      'Erreur lors de la récupération des genres des chansons importées:',
       error
     );
-    throw new Error('Impossible de récupérer les chansons importées');
+    throw new Error('Impossible de récupérer les genres');
   }
 }

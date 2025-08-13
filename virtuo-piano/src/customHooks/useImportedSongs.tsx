@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   getImportedSongsAction,
-  getAllImportedSongsAction,
+  getImportedSongsGenresAction,
   type ImportedSongsResult,
 } from '@/lib/actions/imports-actions';
 
@@ -86,29 +86,18 @@ export function useImportedSongs(params: UseImportedSongsParams) {
 // Hook pour charger tous les genres (pour les filtres)
 export function useAllGenres() {
   const {
-    data: allSongs,
+    data: allGenres,
     isLoading,
     error,
   } = useQuery({
-    queryKey: ['allImportedSongs'],
-    queryFn: getAllImportedSongsAction,
+    queryKey: ['importedSongsGenres'],
+    queryFn: getImportedSongsGenresAction,
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
   });
 
-  const allGenres = allSongs
-    ? Array.from(
-        new Set(
-          allSongs
-            .filter((song) => song.genre)
-            .map((song) => song.genre)
-            .filter((genre): genre is string => genre !== null)
-        )
-      ).sort()
-    : [];
-
   return {
-    allGenres,
+    allGenres: allGenres || [],
     isLoading,
     error: error ? (error as Error).message : null,
   };

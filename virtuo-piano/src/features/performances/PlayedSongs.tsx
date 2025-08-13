@@ -18,7 +18,7 @@ import SongTypeBadge from '@/components/SongTypeBadge';
 import { castMsToMin } from '@/common/utils/function';
 import {
   getPlayedSongsAction,
-  getAllPlayedSongsAction,
+  getPlayedSongsGenresAction,
   type PlayedSongsResult,
 } from '@/lib/actions/playedSongs-actions';
 import { toggleFavorite } from '@/lib/actions/songs';
@@ -91,16 +91,8 @@ export default function PlayedSongs() {
   useEffect(() => {
     const loadAllGenres = async () => {
       try {
-        const allSongs = await getAllPlayedSongsAction();
-        const uniqueGenres = Array.from(
-          new Set(
-            allSongs
-              .filter((song) => song.genre)
-              .map((song) => song.genre)
-              .filter((genre): genre is string => genre !== null)
-          )
-        ).sort();
-        setAllGenres(uniqueGenres);
+        const genres = await getPlayedSongsGenresAction();
+        setAllGenres(genres);
       } catch (error) {
         console.error('Erreur lors du chargement des genres:', error);
       }
