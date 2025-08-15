@@ -18,7 +18,6 @@ export const seedChallenges = async (prisma: PrismaClient) => {
             requirementType: 'songs_count',
             requirementFilter: { difficulty: 'easy' },
             reward: { xp: 50, badge: 'easy_beginner' },
-            isUnlocked: true,
           },
           {
             level: 2,
@@ -28,7 +27,6 @@ export const seedChallenges = async (prisma: PrismaClient) => {
             requirementType: 'songs_count',
             requirementFilter: { difficulty: 'easy' },
             reward: { xp: 100, badge: 'easy_intermediate' },
-            isUnlocked: false,
             unlockCondition: { previousLevelCompleted: 1 },
           },
           {
@@ -39,7 +37,6 @@ export const seedChallenges = async (prisma: PrismaClient) => {
             requirementType: 'songs_count',
             requirementFilter: { difficulty: 'easy' },
             reward: { xp: 200, badge: 'easy_master' },
-            isUnlocked: false,
             unlockCondition: { previousLevelCompleted: 2 },
           },
         ],
@@ -63,7 +60,6 @@ export const seedChallenges = async (prisma: PrismaClient) => {
             requirement: 120, // en minutes
             requirementType: 'practice_time',
             reward: { xp: 75, badge: 'practice_beginner' },
-            isUnlocked: true,
           },
           {
             level: 2,
@@ -72,7 +68,6 @@ export const seedChallenges = async (prisma: PrismaClient) => {
             requirement: 300,
             requirementType: 'practice_time',
             reward: { xp: 150, badge: 'practice_intermediate' },
-            isUnlocked: false,
             unlockCondition: { previousLevelCompleted: 1 },
           },
           {
@@ -82,7 +77,6 @@ export const seedChallenges = async (prisma: PrismaClient) => {
             requirement: 600,
             requirementType: 'practice_time',
             reward: { xp: 300, badge: 'practice_marathon' },
-            isUnlocked: false,
             unlockCondition: { previousLevelCompleted: 2 },
           },
         ],
@@ -107,7 +101,6 @@ export const seedChallenges = async (prisma: PrismaClient) => {
             requirementType: 'accuracy_songs',
             requirementFilter: { minAccuracy: 80 },
             reward: { xp: 100, badge: 'accuracy_beginner' },
-            isUnlocked: true,
           },
           {
             level: 2,
@@ -117,7 +110,6 @@ export const seedChallenges = async (prisma: PrismaClient) => {
             requirementType: 'accuracy_songs',
             requirementFilter: { minAccuracy: 90 },
             reward: { xp: 200, badge: 'accuracy_intermediate' },
-            isUnlocked: false,
             unlockCondition: { previousLevelCompleted: 1 },
           },
           {
@@ -128,7 +120,6 @@ export const seedChallenges = async (prisma: PrismaClient) => {
             requirementType: 'accuracy_songs',
             requirementFilter: { minAccuracy: 95 },
             reward: { xp: 400, badge: 'accuracy_master' },
-            isUnlocked: false,
             unlockCondition: { previousLevelCompleted: 2 },
           },
         ],
@@ -152,7 +143,6 @@ export const seedChallenges = async (prisma: PrismaClient) => {
             requirement: 3,
             requirementType: 'unique_genres',
             reward: { xp: 80, badge: 'genre_explorer' },
-            isUnlocked: true,
           },
           {
             level: 2,
@@ -161,7 +151,6 @@ export const seedChallenges = async (prisma: PrismaClient) => {
             requirement: 5,
             requirementType: 'unique_genres',
             reward: { xp: 160, badge: 'genre_connoisseur' },
-            isUnlocked: false,
             unlockCondition: { previousLevelCompleted: 1 },
           },
           {
@@ -171,7 +160,6 @@ export const seedChallenges = async (prisma: PrismaClient) => {
             requirement: 8,
             requirementType: 'unique_genres',
             reward: { xp: 320, badge: 'genre_expert' },
-            isUnlocked: false,
             unlockCondition: { previousLevelCompleted: 2 },
           },
         ],
@@ -196,7 +184,6 @@ export const seedChallenges = async (prisma: PrismaClient) => {
             requirementType: 'songs_count',
             requirementFilter: { difficulty: 'intermediate' },
             reward: { xp: 120, badge: 'intermediate_beginner' },
-            isUnlocked: true,
           },
           {
             level: 2,
@@ -206,7 +193,6 @@ export const seedChallenges = async (prisma: PrismaClient) => {
             requirementType: 'songs_count',
             requirementFilter: { difficulty: 'intermediate' },
             reward: { xp: 250, badge: 'intermediate_confirmed' },
-            isUnlocked: false,
             unlockCondition: { previousLevelCompleted: 1 },
           },
           {
@@ -217,7 +203,6 @@ export const seedChallenges = async (prisma: PrismaClient) => {
             requirementType: 'songs_count',
             requirementFilter: { difficulty: 'intermediate' },
             reward: { xp: 500, badge: 'intermediate_master' },
-            isUnlocked: false,
             unlockCondition: { previousLevelCompleted: 2 },
           },
         ],
@@ -242,7 +227,6 @@ export const seedChallenges = async (prisma: PrismaClient) => {
             requirementType: 'songs_count',
             requirementFilter: { difficulty: 'hard' },
             reward: { xp: 200, badge: 'hard_beginner' },
-            isUnlocked: true,
           },
           {
             level: 2,
@@ -252,7 +236,6 @@ export const seedChallenges = async (prisma: PrismaClient) => {
             requirementType: 'songs_count',
             requirementFilter: { difficulty: 'hard' },
             reward: { xp: 400, badge: 'hard_confirmed' },
-            isUnlocked: false,
             unlockCondition: { previousLevelCompleted: 1 },
           },
           {
@@ -263,7 +246,6 @@ export const seedChallenges = async (prisma: PrismaClient) => {
             requirementType: 'songs_count',
             requirementFilter: { difficulty: 'hard' },
             reward: { xp: 800, badge: 'virtuoso' },
-            isUnlocked: false,
             unlockCondition: { previousLevelCompleted: 2 },
           },
         ],
@@ -288,7 +270,6 @@ export const seedChallenges = async (prisma: PrismaClient) => {
             requirement: 3,
             requirementType: 'consecutive_days',
             reward: { xp: 100, badge: 'regular_beginner' },
-            isUnlocked: true,
           },
           {
             level: 2,
@@ -297,7 +278,6 @@ export const seedChallenges = async (prisma: PrismaClient) => {
             requirement: 7,
             requirementType: 'consecutive_days',
             reward: { xp: 250, badge: 'regular_confirmed' },
-            isUnlocked: false,
             unlockCondition: { previousLevelCompleted: 1 },
           },
           {
@@ -307,7 +287,6 @@ export const seedChallenges = async (prisma: PrismaClient) => {
             requirement: 21,
             requirementType: 'consecutive_days',
             reward: { xp: 600, badge: 'regular_master' },
-            isUnlocked: false,
             unlockCondition: { previousLevelCompleted: 2 },
           },
         ],
@@ -331,7 +310,6 @@ export const seedChallenges = async (prisma: PrismaClient) => {
             requirement: 3,
             requirementType: 'unique_composers',
             reward: { xp: 120, badge: 'composer_explorer' },
-            isUnlocked: true,
           },
           {
             level: 2,
@@ -340,7 +318,6 @@ export const seedChallenges = async (prisma: PrismaClient) => {
             requirement: 6,
             requirementType: 'unique_composers',
             reward: { xp: 250, badge: 'composer_connoisseur' },
-            isUnlocked: false,
             unlockCondition: { previousLevelCompleted: 1 },
           },
           {
@@ -350,7 +327,6 @@ export const seedChallenges = async (prisma: PrismaClient) => {
             requirement: 10,
             requirementType: 'unique_composers',
             reward: { xp: 500, badge: 'composer_expert' },
-            isUnlocked: false,
             unlockCondition: { previousLevelCompleted: 2 },
           },
         ],
@@ -374,7 +350,6 @@ export const seedChallenges = async (prisma: PrismaClient) => {
             requirement: 180,
             requirementType: 'weekly_practice_time',
             reward: { xp: 150, badge: 'weekly_beginner' },
-            isUnlocked: true,
           },
           {
             level: 2,
@@ -383,7 +358,6 @@ export const seedChallenges = async (prisma: PrismaClient) => {
             requirement: 420,
             requirementType: 'weekly_practice_time',
             reward: { xp: 300, badge: 'weekly_intermediate' },
-            isUnlocked: false,
             unlockCondition: { previousLevelCompleted: 1 },
           },
           {
@@ -393,7 +367,6 @@ export const seedChallenges = async (prisma: PrismaClient) => {
             requirement: 900,
             requirementType: 'weekly_practice_time',
             reward: { xp: 600, badge: 'weekly_marathon' },
-            isUnlocked: false,
             unlockCondition: { previousLevelCompleted: 2 },
           },
         ],
@@ -417,7 +390,6 @@ export const seedChallenges = async (prisma: PrismaClient) => {
             requirement: 30,
             requirementType: 'single_session_time',
             reward: { xp: 80, badge: 'medium_session' },
-            isUnlocked: true,
           },
           {
             level: 2,
@@ -426,7 +398,6 @@ export const seedChallenges = async (prisma: PrismaClient) => {
             requirement: 60,
             requirementType: 'single_session_time',
             reward: { xp: 180, badge: 'long_session' },
-            isUnlocked: false,
             unlockCondition: { previousLevelCompleted: 1 },
           },
           {
@@ -436,7 +407,6 @@ export const seedChallenges = async (prisma: PrismaClient) => {
             requirement: 120,
             requirementType: 'single_session_time',
             reward: { xp: 400, badge: 'marathon_session' },
-            isUnlocked: false,
             unlockCondition: { previousLevelCompleted: 2 },
           },
         ],
@@ -461,7 +431,6 @@ export const seedChallenges = async (prisma: PrismaClient) => {
             requirementType: 'accuracy_songs',
             requirementFilter: { minAccuracy: 75, difficulty: 'hard' },
             reward: { xp: 200, badge: 'hard_accuracy_beginner' },
-            isUnlocked: true,
           },
           {
             level: 2,
@@ -471,7 +440,6 @@ export const seedChallenges = async (prisma: PrismaClient) => {
             requirementType: 'accuracy_songs',
             requirementFilter: { minAccuracy: 85, difficulty: 'hard' },
             reward: { xp: 400, badge: 'hard_accuracy_intermediate' },
-            isUnlocked: false,
             unlockCondition: { previousLevelCompleted: 1 },
           },
           {
@@ -482,7 +450,6 @@ export const seedChallenges = async (prisma: PrismaClient) => {
             requirementType: 'accuracy_songs',
             requirementFilter: { minAccuracy: 90, difficulty: 'hard' },
             reward: { xp: 800, badge: 'hard_accuracy_master' },
-            isUnlocked: false,
             unlockCondition: { previousLevelCompleted: 2 },
           },
         ],
@@ -506,7 +473,6 @@ export const seedChallenges = async (prisma: PrismaClient) => {
             requirement: 15,
             requirementType: 'unique_songs',
             reward: { xp: 150, badge: 'diverse_repertoire' },
-            isUnlocked: true,
           },
           {
             level: 2,
@@ -515,7 +481,6 @@ export const seedChallenges = async (prisma: PrismaClient) => {
             requirement: 30,
             requirementType: 'unique_songs',
             reward: { xp: 300, badge: 'extended_repertoire' },
-            isUnlocked: false,
             unlockCondition: { previousLevelCompleted: 1 },
           },
           {
@@ -525,7 +490,6 @@ export const seedChallenges = async (prisma: PrismaClient) => {
             requirement: 50,
             requirementType: 'unique_songs',
             reward: { xp: 600, badge: 'complete_repertoire' },
-            isUnlocked: false,
             unlockCondition: { previousLevelCompleted: 2 },
           },
         ],
@@ -549,7 +513,6 @@ export const seedChallenges = async (prisma: PrismaClient) => {
             requirement: 5,
             requirementType: 'score_improvements',
             reward: { xp: 120, badge: 'rapid_progress' },
-            isUnlocked: true,
           },
           {
             level: 2,
@@ -558,7 +521,6 @@ export const seedChallenges = async (prisma: PrismaClient) => {
             requirement: 10,
             requirementType: 'score_improvements',
             reward: { xp: 250, badge: 'very_rapid_progress' },
-            isUnlocked: false,
             unlockCondition: { previousLevelCompleted: 1 },
           },
           {
@@ -568,7 +530,6 @@ export const seedChallenges = async (prisma: PrismaClient) => {
             requirement: 20,
             requirementType: 'score_improvements',
             reward: { xp: 500, badge: 'explosive_progress' },
-            isUnlocked: false,
             unlockCondition: { previousLevelCompleted: 2 },
           },
         ],
@@ -592,7 +553,6 @@ export const seedChallenges = async (prisma: PrismaClient) => {
             requirement: 5,
             requirementType: 'morning_sessions',
             reward: { xp: 100, badge: 'morning_beginner' },
-            isUnlocked: true,
           },
           {
             level: 2,
@@ -601,7 +561,6 @@ export const seedChallenges = async (prisma: PrismaClient) => {
             requirement: 15,
             requirementType: 'morning_sessions',
             reward: { xp: 250, badge: 'morning_confirmed' },
-            isUnlocked: false,
             unlockCondition: { previousLevelCompleted: 1 },
           },
           {
@@ -611,7 +570,6 @@ export const seedChallenges = async (prisma: PrismaClient) => {
             requirement: 30,
             requirementType: 'morning_sessions',
             reward: { xp: 500, badge: 'morning_master' },
-            isUnlocked: false,
             unlockCondition: { previousLevelCompleted: 2 },
           },
         ],
@@ -635,7 +593,6 @@ export const seedChallenges = async (prisma: PrismaClient) => {
             requirement: 5,
             requirementType: 'night_sessions',
             reward: { xp: 100, badge: 'night_beginner' },
-            isUnlocked: true,
           },
           {
             level: 2,
@@ -644,7 +601,6 @@ export const seedChallenges = async (prisma: PrismaClient) => {
             requirement: 15,
             requirementType: 'night_sessions',
             reward: { xp: 250, badge: 'night_confirmed' },
-            isUnlocked: false,
             unlockCondition: { previousLevelCompleted: 1 },
           },
           {
@@ -654,7 +610,6 @@ export const seedChallenges = async (prisma: PrismaClient) => {
             requirement: 30,
             requirementType: 'night_sessions',
             reward: { xp: 500, badge: 'night_master' },
-            isUnlocked: false,
             unlockCondition: { previousLevelCompleted: 2 },
           },
         ],

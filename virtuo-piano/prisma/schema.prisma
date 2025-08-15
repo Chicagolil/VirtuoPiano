@@ -188,8 +188,8 @@ model UserChallengeProgress {
   claimedAt       DateTime?       
   startedAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
-  isUnlocked  Boolean   @default(false) 
-
+  isUnlocked      Boolean         @default(false)
+  
   @@unique([userId, challengeId, levelId])
 }
 
