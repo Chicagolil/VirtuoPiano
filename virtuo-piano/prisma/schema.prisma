@@ -164,7 +164,6 @@ model ChallengeLevel {
   requirementType String 
   requirementFilter Json? 
   reward      Json?     
-  isUnlocked  Boolean   @default(false) 
   unlockCondition Json? 
   autoReward  Boolean   @default(false) 
   createdAt   DateTime  @default(now())
@@ -189,7 +188,8 @@ model UserChallengeProgress {
   claimedAt       DateTime?       
   startedAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
-  
+  isUnlocked  Boolean   @default(false) 
+
   @@unique([userId, challengeId, levelId])
 }
 
