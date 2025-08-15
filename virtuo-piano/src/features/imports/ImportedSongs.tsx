@@ -21,6 +21,7 @@ import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { Spinner } from '@/components/ui/spinner';
 import { useImportedSongs, useAllGenres } from '@/customHooks/useImportedSongs';
+import { convertMidiToSongFormat } from '@/common/utils/function';
 
 export default function ImportedSongs() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -33,6 +34,9 @@ export default function ImportedSongs() {
   const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [isPending, startTransition] = useTransition();
+  const [isDebugModalOpen, setIsDebugModalOpen] = useState(false);
+  const [debugResult, setDebugResult] = useState<any>(null);
+  const [debugError, setDebugError] = useState<string | null>(null);
   const filterMenuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const [filterMenuPosition, setFilterMenuPosition] = useState<
@@ -199,6 +203,23 @@ export default function ImportedSongs() {
     }
   };
 
+  // Fonction de debug pour tester la conversion MIDI
+  const handleDebugMidi = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setDebugError(null);
+      setDebugResult(null);
+      setIsDebugModalOpen(true);
+
+      const result = await convertMidiToSongFormat(file);
+      setDebugResult(result);
+    } catch (error) {
+      setDebugError(error instanceof Error ? error.message : 'Erreur inconnue');
+    }
+  };
+
   return (
     <div className="w-full">
       <div className="space-y-4">
@@ -282,6 +303,23 @@ export default function ImportedSongs() {
             {safeImportedSongsData.pagination.totalSongs !== 1 ? 'x' : ''}{' '}
             importé
             {safeImportedSongsData.pagination.totalSongs !== 1 ? 's' : ''}
+          </div>
+
+          {/* Bouton de debug MIDI */}
+          <div className="flex items-center space-x-2">
+            <input
+              type="file"
+              accept=".mid,.midi"
+              onChange={handleDebugMidi}
+              className="hidden"
+              id="debug-midi-input"
+            />
+            <label
+              htmlFor="debug-midi-input"
+              className="px-3 py-1 bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 text-xs rounded-lg cursor-pointer transition-colors duration-200 border border-orange-500/30"
+            >
+              🎹 Test MIDI
+            </label>
           </div>
         </div>
 
@@ -514,6 +552,169 @@ export default function ImportedSongs() {
           </div>
         )}
       </div>
+
+      {/* Modale de debug MIDI */}
+      {isDebugModalOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-slate-800/95 backdrop-blur-md rounded-2xl border border-white/10 shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            {/* En-tête de la modale */}
+            <div className="bg-gradient-to-r from-orange-500/20 via-red-500/20 to-pink-500/20 p-6 rounded-t-2xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-orange-500/30 to-red-500/30 rounded-lg flex items-center justify-center">
+                    <span className="text-orange-300 text-xl">🎹</span>
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-white">
+                      Debug - Conversion MIDI
+                    </h2>
+                    <p className="text-white/70 text-sm">
+                      Résultat de la conversion du fichier MIDI
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsDebugModalOpen(false)}
+                  className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors duration-200"
+                >
+                  <span className="text-white text-lg">×</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Contenu de la modale */}
+            <div className="p-6">
+              {debugError ? (
+                <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
+                  <h3 className="text-red-300 font-semibold mb-2">
+                    ❌ Erreur de conversion
+                  </h3>
+                  <p className="text-red-200 text-sm">{debugError}</p>
+                </div>
+              ) : debugResult ? (
+                <div className="space-y-6">
+                  {/* Informations générales */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="bg-white/5 rounded-lg p-4">
+                      <h3 className="text-white/80 text-sm font-medium mb-2">
+                        Tempo
+                      </h3>
+                      <p className="text-white text-lg font-semibold">
+                        {debugResult.tempo} BPM
+                      </p>
+                    </div>
+                    <div className="bg-white/5 rounded-lg p-4">
+                      <h3 className="text-white/80 text-sm font-medium mb-2">
+                        Signature rythmique
+                      </h3>
+                      <p className="text-white text-lg font-semibold">
+                        {debugResult.timeSignature}
+                      </p>
+                    </div>
+                    <div className="bg-white/5 rounded-lg p-4">
+                      <h3 className="text-white/80 text-sm font-medium mb-2">
+                        Durée
+                      </h3>
+                      <p className="text-white text-lg font-semibold">
+                        {Math.round(debugResult.duration_ms / 1000)}s
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Informations sur les tracks */}
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <h3 className="text-white/80 text-sm font-medium mb-3">
+                      Informations sur les tracks
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mb-4">
+                      <div>
+                        <span className="text-white/60">
+                          Tracks originales:
+                        </span>
+                        <span className="text-white ml-2 font-semibold">
+                          {debugResult.originalTracksCount}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-white/60">Tracks uniques:</span>
+                        <span className="text-white ml-2 font-semibold">
+                          {debugResult.uniqueTracksCount}
+                        </span>
+                      </div>
+                    </div>
+                    {debugResult.originalTracksCount >
+                      debugResult.uniqueTracksCount && (
+                      <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+                        <p className="text-orange-300 text-sm">
+                          🧹{' '}
+                          {debugResult.originalTracksCount -
+                            debugResult.uniqueTracksCount}{' '}
+                          track(s) en double supprimée(s)
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Statistiques des notes */}
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <h3 className="text-white/80 text-sm font-medium mb-3">
+                      Statistiques des notes
+                    </h3>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                      <div>
+                        <span className="text-white/60">Total notes:</span>
+                        <span className="text-white ml-2 font-semibold">
+                          {debugResult.notes.length}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-white/60">Notes uniques:</span>
+                        <span className="text-white ml-2 font-semibold">
+                          {
+                            new Set(debugResult.notes.map((n: any) => n.note))
+                              .size
+                          }
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-white/60">Vélocité max:</span>
+                        <span className="text-white ml-2 font-semibold">
+                          {Math.max(
+                            ...debugResult.notes.map((n: any) => n.velocity)
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Aperçu des notes */}
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <h3 className="text-white/80 text-sm font-medium mb-3">
+                      Aperçu des notes (premières 20)
+                    </h3>
+                    <div className="bg-slate-900/50 rounded-lg p-3 max-h-60 overflow-y-auto">
+                      <pre className="text-xs text-green-300 font-mono">
+                        {JSON.stringify(
+                          debugResult.notes.slice(0, 20),
+                          null,
+                          2
+                        )}
+                      </pre>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-300"></div>
+                  <span className="text-white/60 ml-3">
+                    Conversion en cours...
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

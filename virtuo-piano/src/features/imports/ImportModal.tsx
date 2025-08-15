@@ -488,7 +488,7 @@ export default function ImportModal({ isOpen, onClose }: ImportModalProps) {
                 <div className="border-2 border-dashed border-white/20 rounded-lg p-4 text-center hover:border-orange-300 transition-colors duration-200">
                   <input
                     type="file"
-                    accept=".mid,.midi,.xml,.musicxml,.pdf"
+                    accept=".mid,.midi"
                     onChange={handleFileChange}
                     className="hidden"
                     id="file-upload"
@@ -501,10 +501,10 @@ export default function ImportModal({ isOpen, onClose }: ImportModalProps) {
                       </div>
                       <div>
                         <p className="text-white text-sm font-medium">
-                          Sélectionner un fichier
+                          Sélectionner un fichier MIDI
                         </p>
                         <p className="text-white/60 text-xs mt-1">
-                          MIDI, MusicXML, PDF
+                          .mid ou .midi uniquement
                         </p>
                       </div>
                     </div>
