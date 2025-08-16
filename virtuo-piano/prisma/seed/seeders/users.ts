@@ -16,7 +16,7 @@ export const seedUsers = async (prisma: PrismaClient) => {
   // Ajouter l'utilisateur spécifique
   users.push({
     userName: 'Chicagolil',
-    email: 'ldevroye@gmail.com',
+    email: 'ldevroye1@gmail.com',
     password: await argon2.hash('Lilian123', argon2Config),
     level: 1,
     preferences: JSON.stringify({
