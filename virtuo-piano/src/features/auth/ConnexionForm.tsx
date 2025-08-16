@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { TextShimmer } from '@/components/ui/text-shimmer';
 import { Spinner } from '@/components/ui/spinner';
 import { toast } from 'react-hot-toast';
+import RateLimitMessage from '@/components/RateLimitMessage';
 
 export default function ConnexionForm({
   isRegistered,
@@ -39,12 +40,16 @@ export default function ConnexionForm({
           'Vous devez accepter la politique de confidentialité pour vous connecter.'
         );
       } else {
-        setError('Identifiants invalides');
+        setError(res.error);
       }
     } else {
       router.push('/');
     }
     setLoading(false);
+  };
+
+  const handleErrorReset = () => {
+    setError('');
   };
 
   const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -169,6 +174,11 @@ export default function ConnexionForm({
           <h2 className="text-2xl font-bold text-white mb-6 text-center">
             Connexion
           </h2>
+
+          {/* Affichage des erreurs de rate limiting */}
+          {error && (
+            <RateLimitMessage error={error} onReset={handleErrorReset} />
+          )}
           <input
             id="email"
             type="email"

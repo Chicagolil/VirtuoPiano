@@ -21,7 +21,7 @@ export const seedScores = async (prisma: PrismaClient) => {
 
   // Trouver Chicagolil et sa chanson
   const chicagolil = await prisma.user.findUnique({
-    where: { email: 'ldevroye@gmail.com' },
+    where: { email: 'ldevroye1@gmail.com' },
   });
 
   const chicagolilSong = await prisma.songs.findFirst({

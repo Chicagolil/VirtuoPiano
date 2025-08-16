@@ -3,6 +3,7 @@ import {
   getInactiveUsersAction,
   sendInactiveAccountWarningsAction,
   deleteInactiveUsersAction,
+  cleanupLoginAttemptsAction,
 } from '@/lib/actions/RGPD-actions';
 
 export async function GET(request: NextRequest) {
@@ -29,12 +30,16 @@ export async function GET(request: NextRequest) {
         const deleteResult = await deleteInactiveUsersAction();
         return NextResponse.json(deleteResult);
 
+      case 'cleanup-login':
+        const cleanupResult = await cleanupLoginAttemptsAction();
+        return NextResponse.json(cleanupResult);
+
       default:
         return NextResponse.json(
           {
             success: false,
             message:
-              'Action non reconnue. Actions disponibles: report, warn, delete',
+              'Action non reconnue. Actions disponibles: report, warn, delete, cleanup-login',
           },
           { status: 400 }
         );
