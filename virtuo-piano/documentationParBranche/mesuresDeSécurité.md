@@ -104,11 +104,159 @@ Remarque: la CSP autorise `script-src 'unsafe-inline' 'unsafe-eval'` et `style-s
 - **Permissions fines**:
   - Si des rôles apparaissent (admin, etc.), ajouter des contrôles RBAC explicites sur les routes sensibles et auditer leur usage.
 
+### Rate Limiting et Protection Anti-Brute Force
+
+#### Architecture et Implémentation
+
+- **Service principal** (`src/lib/services/login-attempts-service.ts`):
+  - **Classe `LoginAttemptsService`** : Service statique encapsulant toute la logique de rate limiting.
+  - **Méthode `recordAttempt()`** : Enregistre chaque tentative (réussie/échouée) avec IP, User-Agent, email et timestamp.
+  - **Méthode `isIPBlockedForEmail()`** : Vérifie si une IP est bloquée pour un email spécifique avec calcul du temps restant.
+  - **Méthode `getClientIP()`** : Extraction robuste de l'IP client (Cloudflare, X-Real-IP, X-Forwarded-For, IP directe).
+  - **Méthode `cleanupOldAttempts()`** : Suppression automatique des tentatives >24h pour optimiser les performances.
+  - **Méthode `getUserLoginStats()`** : Statistiques de connexion par utilisateur (taux de réussite, nombre de tentatives).
+
+#### Configuration et Paramètres
+
+- **Limites de sécurité** :
+  - **Seuil de blocage** : 5 tentatives échouées par combinaison IP/email
+  - **Fenêtre de temps** : 15 minutes pour le comptage des tentatives
+  - **Durée de blocage** : 30 minutes après dépassement du seuil
+  - **Rétention des données** : 24 heures pour les tentatives (nettoyage automatique)
+
+#### Modèle de Données
+
+- **Table `LoginAttempt`** (`prisma/schema.prisma`) :
+  ```prisma
+  model LoginAttempt {
+    id        String   @id @default(uuid())
+    email     String   // Email utilisé pour la tentative
+    ipAddress String   // Adresse IP de la tentative
+    userAgent String?  // User-Agent du navigateur
+    success   Boolean  @default(false) // Si la tentative a réussi
+    createdAt DateTime @default(now())
+
+    // Relation optionnelle avec l'utilisateur (si l'email existe)
+    userId    String?
+    user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+    @@index([email, createdAt])
+    @@index([ipAddress, createdAt])
+    @@index([createdAt])
+  }
+  ```
+
+#### Intégration NextAuth
+
+- **Modification de `src/lib/authoption.ts`** :
+  - **Fonction `authorize()`** : Vérification du blocage avant traitement des identifiants
+  - **Extraction IP** : Utilisation de `LoginAttemptsService.getClientIP()` pour identifier le client
+  - **Enregistrement des tentatives** : Appel de `recordAttempt()` pour chaque tentative (réussie/échouée)
+  - **Messages d'erreur** : Messages spécifiques avec temps restant en cas de blocage
+  - **Mise à jour `lastLoginAt`** : Traçabilité des connexions réussies
+
+#### Interface Utilisateur
+
+- **Composant `RateLimitMessage`** (`src/components/RateLimitMessage.tsx`) :
+  - **Détection automatique** : Reconnaissance des messages de rate limiting via regex
+  - **Compte à rebours** : Timer en temps réel avec formatage MM:SS
+  - **Barre de progression** : Indication visuelle du temps restant
+  - **Auto-réinitialisation** : Effacement automatique du message après expiration
+  - **Design responsive** : Interface adaptée avec icônes et couleurs d'alerte
+
+#### API d'Administration
+
+- **Route `/api/admin/login-attempts`** (`src/app/api/admin/login-attempts/route.ts`) :
+  - **Authentification** : Vérification du niveau admin (level >= 10)
+  - **Filtres** : Par période (jours), email, adresse IP
+  - **Statistiques** : Taux de réussite, tentatives par IP/email, IPs suspectes
+  - **Données récentes** : 50 dernières tentatives avec détails complets
+  - **Sécurité** : Protection par session NextAuth et vérification des permissions
+
+#### Script de Maintenance
+
+- **Intégration dans `prisma/scripts/maintenance.ts`** :
+  - **Fonction `cleanupLoginAttempts()`** : Nettoyage des anciennes tentatives
+  - **Commande `cleanup-login`** : Exécution manuelle du nettoyage
+  - **Commande `full`** : Intégration dans le processus de maintenance complet
+  - **Logs détaillés** : Suivi des opérations de nettoyage
+
+#### Gestion des Erreurs et Robustesse
+
+- **Gestion d'erreurs** :
+  - **Try-catch** : Protection contre les échecs de base de données
+  - **Fallback** : En cas d'erreur, autorisation de la requête pour éviter le blocage
+  - **Logs** : Journalisation des erreurs pour diagnostic
+  - **Performance** : Indexation des champs critiques pour les requêtes rapides
+
+#### Sécurité et Confidentialité
+
+- **Protection des données** :
+  - **Anonymisation** : Pas de stockage de mots de passe ou données sensibles
+  - **Rétention limitée** : Suppression automatique après 24h
+  - **Accès restreint** : API admin protégée par authentification et niveau d'accès
+  - **Conformité RGPD** : Traitement minimal des données personnelles
+
+#### Monitoring et Alertes
+
+- **Surveillance** :
+  - **IPs suspectes** : Détection automatique des IPs avec >5 tentatives échouées
+  - **Taux d'échec** : Calcul du pourcentage de tentatives échouées par IP/email
+  - **Tendances** : Analyse des patterns de tentatives sur différentes périodes
+  - **Alertes** : Possibilité d'intégration avec des systèmes de monitoring externes
+
+#### Fichiers et Dépendances
+
+- **Fichiers créés/modifiés** :
+
+  - `src/lib/services/login-attempts-service.ts` : Service principal (nouveau)
+  - `src/components/RateLimitMessage.tsx` : Composant UI (nouveau)
+  - `src/app/api/admin/login-attempts/route.ts` : API admin (nouveau)
+  - `prisma/schema.prisma` : Modèle LoginAttempt (modifié)
+  - `src/lib/authoption.ts` : Intégration NextAuth (modifié)
+  - `src/features/auth/ConnexionForm.tsx` : Interface utilisateur (modifié)
+  - `prisma/scripts/maintenance.ts` : Script de maintenance (modifié)
+
+- **Migration Prisma** :
+
+  - `20250115123456_add_login_attempts_table` : Création de la table LoginAttempt
+  - Indexation optimisée pour les requêtes de rate limiting
+  - Relations avec le modèle User pour la traçabilité
+
+- **Dépendances utilisées** :
+  - `rate-limiter-flexible` : Bibliothèque de rate limiting (déjà présente)
+  - `prisma` : ORM pour la persistance des données
+  - `next-auth` : Framework d'authentification
+  - `react` : Framework UI pour le composant de message
+
+#### Flux de Fonctionnement
+
+1. **Tentative de connexion** : L'utilisateur soumet ses identifiants
+2. **Vérification du blocage** : `isIPBlockedForEmail()` vérifie si l'IP/email est bloqué
+3. **Traitement des identifiants** : Si non bloqué, vérification des credentials
+4. **Enregistrement de la tentative** : `recordAttempt()` sauvegarde le résultat
+5. **Réponse à l'utilisateur** : Message d'erreur avec temps restant si bloqué
+6. **Interface utilisateur** : Affichage du compte à rebours si applicable
+
+#### Cas d'Usage et Scénarios
+
+- **Attaque brute force** : Blocage automatique après 5 échecs
+- **Utilisateur légitime** : Déblocage automatique après 30 minutes
+- **Tentatives multiples** : Comptage par combinaison IP/email
+- **Changement d'IP** : Nouveau compteur pour chaque IP
+- **Changement d'email** : Nouveau compteur pour chaque email
+- **Connexion réussie** : Réinitialisation du compteur d'échecs
+
 ### Synthèse rapide
 
 - Auth web robuste via NextAuth + `argon2id`, consentement RGPD obligatoire, sessions JWT courtes.
+- **Rate limiting anti-brute force** : 5 tentatives/15min par IP/email, blocage 30min, traçabilité complète.
 - Middleware protège pages et APIs, avec contrôle de Referer et support JWT/API-Key pour Unity.
 - En-têtes de sécurité et CSP déployés au niveau edge et Next.
 - Validations Zod systématiques pour formulaires critiques; schéma DB contraint et traçable.
 - Cron de maintenance sécurisé par `CRON_SECRET` pour gestion de rétention/suppression.
-- Améliorations clés: CSP sans unsafe, CSRF tokens, rate limiting/lockout, HSTS, unification hachage, sanitisation défensive.
+- Améliorations clés: CSP sans unsafe, CSRF tokens, HSTS, unification hachage, sanitisation défensive.
+
+---
+
+**Note de mise à jour** : Le système de rate limiting anti-brute force a été implémenté avec succès. La section "Rate Limiting et Protection Anti-Brute Force" ci-dessus détaille les fonctionnalités ajoutées. La recommandation précédente concernant le rate limiting est maintenant **IMPLÉMENTÉE** pour le formulaire de connexion NextAuth.
