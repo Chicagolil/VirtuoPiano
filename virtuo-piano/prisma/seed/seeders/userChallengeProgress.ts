@@ -7,7 +7,7 @@ export const seedUserChallengeProgress = async (prisma: PrismaClient) => {
 
   // Récupère tous les challenges et leurs niveaux
   const challenges = await prisma.challenge.findMany({
-    include: { levels: true },
+    include: { levels: { orderBy: { level: 'asc' } } },
   });
   if (challenges.length < 1) throw new Error('Pas de challenges trouvés');
 
@@ -19,11 +19,28 @@ export const seedUserChallengeProgress = async (prisma: PrismaClient) => {
         // Détermine l'état de progression selon l'index de l'utilisateur et du niveau
         const progressType = (userIndex + challengeIndex + levelIndex) % 3;
 
+        // Détermine si le niveau est débloqué pour cet utilisateur
+        let isUnlocked = false;
+        
+        if (level.level === 1) {
+          // Le niveau 1 est toujours débloqué
+          isUnlocked = true;
+        } else {
+          // Pour les niveaux suivants, vérifier si le niveau précédent est complété
+          const previousLevel = challenge.levels.find(l => l.level === level.level - 1);
+          if (previousLevel) {
+            // Simuler que le niveau précédent est complété pour certains utilisateurs
+            // (pour démontrer le déblocage progressif)
+            const shouldUnlock = (userIndex + challengeIndex + levelIndex) % 2 === 0;
+            isUnlocked = shouldUnlock;
+          }
+        }
+
         let progressData;
 
         switch (progressType) {
           case 0:
-            // Cas 1 : progression en cours
+            // Cas 1 : progression en cours (niveau débloqué)
             progressData = {
               userId: user.id,
               challengeId: challenge.id,
@@ -36,6 +53,7 @@ export const seedUserChallengeProgress = async (prisma: PrismaClient) => {
               ),
               updatedAt: new Date(),
               isRewardClaimed: false,
+              isUnlocked: isUnlocked,
             };
             break;
 
@@ -56,6 +74,7 @@ export const seedUserChallengeProgress = async (prisma: PrismaClient) => {
               ),
               updatedAt: new Date(),
               isRewardClaimed: false,
+              isUnlocked: true, // Si terminé, forcément débloqué
             };
             break;
 
@@ -80,6 +99,7 @@ export const seedUserChallengeProgress = async (prisma: PrismaClient) => {
               claimedAt: new Date(
                 Date.now() - (challengeIndex + levelIndex + 1) * 1800000
               ),
+              isUnlocked: true, // Si terminé, forcément débloqué
             };
             break;
         }
