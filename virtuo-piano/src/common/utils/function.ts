@@ -1,4 +1,5 @@
 import { DIFFICULTY_RANGES } from '../constants/Difficulties';
+import { Midi } from '@tonejs/midi';
 import { DifficultyRange } from '../types/songs';
 import { SONG_TYPE_RANGE } from '../constants/SongTypes';
 import { SongTypeRange } from '../types/songs';
@@ -34,6 +35,19 @@ export const getPageName = (pathname: string) => {
 
   // Formatage du nom de la page (première lettre en majuscule, reste en minuscule)
   const pageName = segments[segments.length - 1];
+
+  // Traductions FR pour les pages principales
+  const translations: Record<string, string> = {
+    imports: 'Imports',
+    favorites: 'Favoris',
+    leaderboard: 'Classement',
+    performances: 'Performances',
+    library: 'Librairie',
+    settings: 'Paramètres',
+    profile: 'Profil',
+  };
+
+  if (translations[pageName]) return translations[pageName];
   return pageName.charAt(0).toUpperCase() + pageName.slice(1);
 };
 
@@ -208,4 +222,124 @@ export function generateMonthLabels(
   }
 
   return monthLabels;
+}
+
+// Types pour la conversion MIDI
+interface MidiNote {
+  note: string;
+  startBeat: number;
+  durationInBeats: number;
+  track: number;
+}
+
+interface MidiConversionResult {
+  notes: MidiNote[];
+  tempo: number;
+  timeSignature: string;
+  duration_ms: number;
+  originalTracksCount: number;
+  uniqueTracksCount: number;
+}
+
+// Fonction pour détecter et supprimer les tracks en double
+function removeDuplicateTracks(tracks: any[]): any[] {
+  const uniqueTracks: any[] = [];
+  const trackSignatures: Set<string> = new Set();
+
+  for (const track of tracks) {
+    if (track.notes.length === 0) {
+      // Garder les tracks vides (métadonnées)
+      uniqueTracks.push(track);
+      continue;
+    }
+
+    // Créer une signature unique pour cette track basée sur ses notes
+    const trackSignature = createTrackSignature(track);
+
+    if (!trackSignatures.has(trackSignature)) {
+      trackSignatures.add(trackSignature);
+      uniqueTracks.push(track);
+    }
+  }
+
+  return uniqueTracks;
+}
+
+// Fonction pour créer une signature unique d'une track
+function createTrackSignature(track: any): string {
+  // Trier les notes par temps puis par note pour une comparaison cohérente
+  const sortedNotes = track.notes
+    .map((note: any) => ({
+      note: note.name,
+      time: Math.round(note.time * 100) / 100, // Arrondir à 2 décimales
+      duration: Math.round(note.duration * 100) / 100,
+    }))
+    .sort((a: any, b: any) => {
+      if (a.time !== b.time) return a.time - b.time;
+      return a.note.localeCompare(b.note);
+    });
+
+  // Créer une signature JSON de la track
+  return JSON.stringify(sortedNotes);
+}
+
+// Fonction pour convertir un fichier MIDI en format compatible avec la base de données
+export async function convertMidiToSongFormat(
+  midiFile: File
+): Promise<MidiConversionResult> {
+  try {
+    // Lire le fichier MIDI
+    const arrayBuffer = await midiFile.arrayBuffer();
+    const midi = new Midi(arrayBuffer);
+
+    // Extraire les métadonnées
+    const tempo = midi.header.tempos[0]?.bpm || 120;
+    const timeSignature = midi.header.timeSignatures[0]
+      ? `${midi.header.timeSignatures[0].timeSignature[0]}/${midi.header.timeSignatures[0].timeSignature[1]}`
+      : '4/4';
+
+    // Calculer la durée totale en millisecondes
+    const durationSeconds = midi.duration;
+    const duration_ms = Math.round(durationSeconds * 1000);
+
+    // Supprimer les tracks en double avant traitement
+    const uniqueTracks = removeDuplicateTracks(midi.tracks);
+
+    // Convertir toutes les notes en format unifié (en beats)
+    const allNotes: MidiNote[] = [];
+    let trackIndex = 0;
+    const effectivePpq = midi.header.ppq || 480;
+
+    for (const track of uniqueTracks) {
+      // Traiter toutes les tracks qui contiennent des notes
+      if (track.notes.length > 0) {
+        for (const note of track.notes) {
+          const startBeat = (note.ticks ?? 0) / effectivePpq;
+          const durationInBeats = (note.durationTicks ?? 0) / effectivePpq;
+          allNotes.push({
+            note: note.name, // ex: "C4", "F#5"
+            startBeat,
+            durationInBeats,
+            track: trackIndex,
+          });
+        }
+      }
+      trackIndex++;
+    }
+
+    // Trier les notes par position en beats
+    allNotes.sort((a, b) => a.startBeat - b.startBeat);
+
+    return {
+      notes: allNotes,
+      tempo,
+      timeSignature,
+      duration_ms,
+      originalTracksCount: midi.tracks.length,
+      uniqueTracksCount: uniqueTracks.length,
+    };
+  } catch (error) {
+    console.error('Erreur lors de la conversion MIDI:', error);
+    throw new Error('Impossible de convertir le fichier MIDI');
+  }
 }

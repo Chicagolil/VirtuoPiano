@@ -59,8 +59,8 @@ export async function getPlayedSongsAction(
   }
 }
 
-// Action simplifiée pour récupérer toutes les chansons sans pagination (utile pour certains cas)
-export async function getAllPlayedSongsAction(): Promise<PlayedSong[]> {
+// Action pour récupérer uniquement les genres des chansons jouées
+export async function getPlayedSongsGenresAction(): Promise<string[]> {
   try {
     const session = await getServerSession(authOptions);
 
@@ -68,17 +68,15 @@ export async function getAllPlayedSongsAction(): Promise<PlayedSong[]> {
       throw new Error('Accès non autorisé');
     }
 
-    const result = await PerformancesServices.getPlayedSongs(session.user.id, {
-      page: 1,
-      limit: 999999, // Récupérer toutes les chansons
-    });
-
-    return result.songs;
+    const genres = await PerformancesServices.getPlayedSongsGenres(
+      session.user.id
+    );
+    return genres;
   } catch (error) {
     console.error(
-      'Erreur lors de la récupération de toutes les chansons jouées:',
+      'Erreur lors de la récupération des genres des chansons jouées:',
       error
     );
-    throw new Error('Impossible de récupérer les chansons jouées');
+    throw new Error('Impossible de récupérer les genres');
   }
 }

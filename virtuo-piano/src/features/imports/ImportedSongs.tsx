@@ -16,67 +16,64 @@ import styles from '../library/SongList.module.css';
 import DifficultyBadge from '@/components/DifficultyBadge';
 import SongTypeBadge from '@/components/SongTypeBadge';
 import { castMsToMin } from '@/common/utils/function';
-import {
-  getPlayedSongsAction,
-  getPlayedSongsGenresAction,
-  type PlayedSongsResult,
-} from '@/lib/actions/playedSongs-actions';
 import { toggleFavorite } from '@/lib/actions/songs';
 import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { Spinner } from '@/components/ui/spinner';
-import { useSearchCache } from '@/customHooks/useSearchCache';
+import { useImportedSongs, useAllGenres } from '@/customHooks/useImportedSongs';
+import { convertMidiToSongFormat } from '@/common/utils/function';
 
-export default function PlayedSongs() {
+export default function ImportedSongs() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [sortBy, setSortBy] = useState<
-    'title' | 'composer' | 'duration' | 'difficulty' | 'lastPlayed'
-  >('lastPlayed');
+    'title' | 'composer' | 'duration' | 'difficulty'
+  >('title');
   const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [isPending, startTransition] = useTransition();
-  const [allGenres, setAllGenres] = useState<string[]>([]);
-
+  const [isDebugModalOpen, setIsDebugModalOpen] = useState(false);
+  const [debugResult, setDebugResult] = useState<any>(null);
+  const [debugError, setDebugError] = useState<string | null>(null);
   const filterMenuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const [filterMenuPosition, setFilterMenuPosition] = useState<
     'top' | 'bottom'
   >('bottom');
 
-  // Utilisation du custom hook pour la gestion du cache
+  // Utilisation du custom hook React Query pour la gestion du cache
   const {
-    data: playedSongsData,
+    data: importedSongsData,
     isLoading,
     error,
-    clearCache,
-    refetch,
-    hasCache,
-  } = useSearchCache<PlayedSongsResult>({
-    filters: {
-      search: searchQuery.trim(),
-      page: currentPage,
-      genre: activeFilter && activeFilter !== 'Favoris' ? activeFilter : '',
-      favorites: activeFilter === 'Favoris',
-      sortBy,
-      sortOrder,
-    },
-    searchQuery,
-    fetchFunction: async () => {
-      return await getPlayedSongsAction(
-        currentPage,
-        searchQuery || undefined,
-        activeFilter && activeFilter !== 'Favoris' ? activeFilter : undefined,
-        activeFilter === 'Favoris',
-        sortBy,
-        sortOrder
-      );
-    },
+
+    invalidateAndRefetch,
+  } = useImportedSongs({
+    page: currentPage,
+    search: debouncedSearchQuery.trim() || undefined,
+    genre:
+      activeFilter && activeFilter !== 'Favoris' ? activeFilter : undefined,
+    favorites: activeFilter === 'Favoris',
+    sortBy,
+    sortOrder,
   });
 
+  // Hook pour charger tous les genres
+  const { allGenres } = useAllGenres();
+
+  // Debounce pour la recherche
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300); // 300ms de délai
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
   // Valeurs par défaut si pas de données
-  const safePlayedSongsData = playedSongsData || {
+  const safeImportedSongsData = importedSongsData || {
     songs: [],
     pagination: {
       currentPage: 1,
@@ -86,19 +83,6 @@ export default function PlayedSongs() {
       hasPreviousPage: false,
     },
   };
-
-  // Charger tous les genres au montage pour les filtres
-  useEffect(() => {
-    const loadAllGenres = async () => {
-      try {
-        const genres = await getPlayedSongsGenresAction();
-        setAllGenres(genres);
-      } catch (error) {
-        console.error('Erreur lors du chargement des genres:', error);
-      }
-    };
-    loadAllGenres();
-  }, []);
 
   // Afficher les erreurs avec toast
   useEffect(() => {
@@ -154,7 +138,7 @@ export default function PlayedSongs() {
     if (currentPage !== 1) {
       setCurrentPage(1);
     }
-  }, [searchQuery, activeFilter, sortBy, sortOrder]);
+  }, [debouncedSearchQuery, activeFilter, sortBy, sortOrder]);
 
   // Fonction pour gérer le clic sur le bouton favori
   const handleFavoriteClick = (
@@ -169,7 +153,7 @@ export default function PlayedSongs() {
         if (result.success) {
           toast.success(result.message);
           // Recharger les données pour refléter le changement
-          refetch();
+          invalidateAndRefetch();
         } else {
           toast.error(result.message);
         }
@@ -183,21 +167,21 @@ export default function PlayedSongs() {
   };
 
   const handleSongClick = (songId: string) => {
-    router.push(`/performances/${songId}`);
+    router.push(`/library/${songId}`);
   };
 
   // Les chansons sont déjà filtrées côté serveur
-  const filteredSongs = safePlayedSongsData.songs;
+  const filteredSongs = safeImportedSongsData.songs;
 
   // Fonctions de navigation
   const goToNextPage = () => {
-    if (safePlayedSongsData.pagination.hasNextPage) {
+    if (safeImportedSongsData.pagination.hasNextPage) {
       setCurrentPage(currentPage + 1);
     }
   };
 
   const goToPreviousPage = () => {
-    if (safePlayedSongsData.pagination.hasPreviousPage) {
+    if (safeImportedSongsData.pagination.hasPreviousPage) {
       setCurrentPage(currentPage - 1);
     }
   };
@@ -216,6 +200,23 @@ export default function PlayedSongs() {
     } else {
       setSortBy(column);
       setSortOrder('asc');
+    }
+  };
+
+  // Fonction de debug pour tester la conversion MIDI
+  const handleDebugMidi = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setDebugError(null);
+      setDebugResult(null);
+      setIsDebugModalOpen(true);
+
+      const result = await convertMidiToSongFormat(file);
+      setDebugResult(result);
+    } catch (error) {
+      setDebugError(error instanceof Error ? error.message : 'Erreur inconnue');
     }
   };
 
@@ -298,31 +299,22 @@ export default function PlayedSongs() {
           className={`${styles.songCount} flex items-center justify-between`}
         >
           <div>
-            {safePlayedSongsData.pagination.totalSongs} morceau
-            {safePlayedSongsData.pagination.totalSongs !== 1 ? 'x' : ''} joué
-            {safePlayedSongsData.pagination.totalSongs !== 1 ? 's' : ''}
-            {/* Indicateur de cache */}
-            {hasCache && (
-              <span
-                className="ml-2 text-xs text-green-400 opacity-50"
-                title="Données en cache"
-              >
-                📋
-              </span>
-            )}
+            {safeImportedSongsData.pagination.totalSongs} morceau
+            {safeImportedSongsData.pagination.totalSongs !== 1 ? 'x' : ''}{' '}
+            importé
+            {safeImportedSongsData.pagination.totalSongs !== 1 ? 's' : ''}
           </div>
 
-          {/* Bouton pour vider le cache */}
-          <button
-            onClick={() => {
-              clearCache();
-              refetch();
-            }}
-            className="text-xs text-white/50 hover:text-white/70 transition-colors ml-4"
-            title="Actualiser les données"
-          >
-            🔄 Actualiser
-          </button>
+          {/* Bouton de debug MIDI */}
+          <div className="flex items-center space-x-2">
+            <input
+              type="file"
+              accept=".mid,.midi"
+              onChange={handleDebugMidi}
+              className="hidden"
+              id="debug-midi-input"
+            />
+          </div>
         </div>
 
         {/* Tableau des chansons */}
@@ -372,23 +364,13 @@ export default function PlayedSongs() {
                     {sortBy === 'duration' && (sortOrder === 'asc' ? '↑' : '↓')}
                   </button>
                 </th>
-                <th className={styles.tableHeaderCell}>
-                  <button
-                    className={styles.sortButton}
-                    onClick={() => handleSort('lastPlayed')}
-                  >
-                    Dernière lecture
-                    {sortBy === 'lastPlayed' &&
-                      (sortOrder === 'asc' ? '↑' : '↓')}
-                  </button>
-                </th>
                 <th className={styles.tableHeaderCell}></th>
               </tr>
             </thead>
             <tbody className={styles.tableBody}>
               {isLoading ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-12">
+                  <td colSpan={7} className="text-center py-12">
                     <div className="flex justify-center items-center">
                       <Spinner
                         variant="bars"
@@ -437,13 +419,30 @@ export default function PlayedSongs() {
                             />
                           )}
                         </div>
-                        <div className={styles.songDetails}>
+                        <div
+                          className={styles.songDetails}
+                          style={{ textAlign: 'left' }}
+                        >
                           <div className={styles.songTitle}>{song.title}</div>
+                          {song.lastPlayed && (
+                            <div className={styles.songLastPlayed}>
+                              Joué le{' '}
+                              {new Date(song.lastPlayed).toLocaleDateString(
+                                'fr-FR',
+                                {
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric',
+                                }
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </td>
                     <td
                       className={`${styles.tableCell} ${styles.hideOnMobile} ${styles.songComposer}`}
+                      style={{ textAlign: 'left' }}
                     >
                       {song.composer}
                     </td>
@@ -467,22 +466,6 @@ export default function PlayedSongs() {
                       </div>
                     </td>
                     <td className={styles.tableCell}>
-                      <div className={styles.lastPlayedContainer}>
-                        {song.lastPlayed && (
-                          <div className={styles.songLastPlayed}>
-                            {new Date(song.lastPlayed).toLocaleDateString(
-                              'fr-FR',
-                              {
-                                day: '2-digit',
-                                month: '2-digit',
-                                year: 'numeric',
-                              }
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                    <td className={styles.tableCell}>
                       <button className={styles.playButton}>
                         <IconPlayerPlay size={16} />
                       </button>
@@ -495,18 +478,18 @@ export default function PlayedSongs() {
         </div>
 
         {/* Pagination */}
-        {(safePlayedSongsData.pagination.totalSongs > 0 || isLoading) && (
+        {(safeImportedSongsData.pagination.totalSongs > 0 || isLoading) && (
           <div className={styles.paginationContainer}>
             <div className={styles.paginationControls}>
               <button
                 className={`${styles.paginationButton} ${
-                  !safePlayedSongsData.pagination.hasPreviousPage || isLoading
+                  !safeImportedSongsData.pagination.hasPreviousPage || isLoading
                     ? styles.paginationButtonDisabled
                     : ''
                 }`}
                 onClick={goToPreviousPage}
                 disabled={
-                  !safePlayedSongsData.pagination.hasPreviousPage || isLoading
+                  !safeImportedSongsData.pagination.hasPreviousPage || isLoading
                 }
               >
                 <IconChevronLeft size={20} />
@@ -514,17 +497,17 @@ export default function PlayedSongs() {
               <div className={styles.paginationPageInfo}>
                 {isLoading
                   ? 'Chargement...'
-                  : `Page ${safePlayedSongsData.pagination.currentPage} sur ${safePlayedSongsData.pagination.totalPages}`}
+                  : `Page ${safeImportedSongsData.pagination.currentPage} sur ${safeImportedSongsData.pagination.totalPages}`}
               </div>
               <button
                 className={`${styles.paginationButton} ${
-                  !safePlayedSongsData.pagination.hasNextPage || isLoading
+                  !safeImportedSongsData.pagination.hasNextPage || isLoading
                     ? styles.paginationButtonDisabled
                     : ''
                 }`}
                 onClick={goToNextPage}
                 disabled={
-                  !safePlayedSongsData.pagination.hasNextPage || isLoading
+                  !safeImportedSongsData.pagination.hasNextPage || isLoading
                 }
               >
                 <IconChevronRight size={20} />
@@ -534,26 +517,32 @@ export default function PlayedSongs() {
         )}
 
         {/* État vide */}
-        {!isLoading && safePlayedSongsData.pagination.totalSongs === 0 && (
+        {!isLoading && safeImportedSongsData.pagination.totalSongs === 0 && (
           <div className={styles.emptyState}>
             <div className={styles.emptyIcon}>
               <IconMusic size={32} className={styles.emptyIconText} />
             </div>
-            <h3 className={styles.emptyTitle}>Aucune chanson jouée</h3>
+            <h3 className={styles.emptyTitle}>
+              {debouncedSearchQuery || activeFilter
+                ? 'Aucune chanson trouvée.'
+                : 'Aucune chanson importée'}
+            </h3>
             <p className={styles.emptyDescription}>
-              {searchQuery || activeFilter
+              {debouncedSearchQuery || activeFilter
                 ? 'Aucune chanson ne correspond à vos critères de recherche. Essayez de modifier vos filtres ou votre recherche.'
-                : "Vous n'avez encore joué aucune chanson. Commencez à jouer pour voir vos chansons ici !"}
+                : "Vous n'avez encore importé aucune chanson. Commencez à importer pour voir vos chansons ici !"}
             </p>
-            <button
-              className={styles.resetButton}
-              onClick={() => {
-                setSearchQuery('');
-                setActiveFilter(null);
-              }}
-            >
-              Réinitialiser les filtres
-            </button>
+            {debouncedSearchQuery || activeFilter ? (
+              <button
+                className={styles.resetButton}
+                onClick={() => {
+                  setSearchQuery('');
+                  setActiveFilter(null);
+                }}
+              >
+                Réinitialiser les filtres
+              </button>
+            ) : null}
           </div>
         )}
       </div>

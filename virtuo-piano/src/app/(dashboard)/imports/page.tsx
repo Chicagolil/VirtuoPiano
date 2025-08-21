@@ -1,7 +1,8 @@
-import ImportsBento from '@/features/BentoGrid/ImportsBento';
+import { FolderUp } from 'lucide-react';
 import { authOptions } from '@/lib/authoption';
 import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
+import SongImports from '@/features/imports/SongImports';
 
 export default async function ImportsPage() {
   const session = await getServerSession(authOptions);
@@ -9,5 +10,10 @@ export default async function ImportsPage() {
   if (!session?.user?.id) {
     redirect('/auth/login');
   }
-  return <div className="container mx-auto px-4">{/* <ImportsBento /> */}</div>;
+
+  return (
+    <div className="w-full p-4 pt-7">
+      <SongImports />
+    </div>
+  );
 }
