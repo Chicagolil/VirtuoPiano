@@ -12,6 +12,7 @@ import {
 import { getAuthenticatedUser } from '@/lib/auth/get-authenticated-user';
 import { rectificationSchema } from '@/lib/validations/auth-schemas';
 import { EmailService } from '../services/email-service';
+import { LoginAttemptsService } from '../services/login-attempts-service';
 import prisma from '@/lib/prisma';
 
 export const getUserDataAction = async (): Promise<GetUserDataResponse> => {
@@ -155,13 +156,14 @@ export async function getInactiveUsersAction() {
 
 export async function sendInactiveAccountWarningsAction() {
   try {
-    const user = await getAuthenticatedUser();
-    if (!user) {
-      return {
-        success: false,
-        message: 'Non autorisé',
-      };
-    }
+    // Pour les routes de maintenance, on n'a pas besoin d'authentification
+    // const user = await getAuthenticatedUser();
+    // if (!user) {
+    //   return {
+    //     success: false,
+    //     message: 'Non autorisé',
+    //   };
+    // }
 
     // Récupérer les utilisateurs qui seront supprimés dans 2 semaines
     // (donc inactifs depuis 11 mois et 2 semaines)
@@ -238,13 +240,13 @@ export async function sendInactiveAccountWarningsAction() {
 
 export async function deleteInactiveUsersAction() {
   try {
-    const user = await getAuthenticatedUser();
-    if (!user) {
-      return {
-        success: false,
-        message: 'Non autorisé',
-      };
-    }
+    // const user = await getAuthenticatedUser();
+    // if (!user) {
+    //   return {
+    //     success: false,
+    //     message: 'Non autorisé',
+    //   };
+    // }
 
     // Récupérer les utilisateurs à supprimer AVANT de les supprimer
     const result = await AccountServices.getUsersToDelete();
@@ -287,6 +289,60 @@ export async function deleteInactiveUsersAction() {
       success: false,
       deletedCount: 0,
       message: 'Erreur lors de la suppression des utilisateurs inactifs',
+    };
+  }
+}
+
+export async function cleanupLoginAttemptsAction() {
+  try {
+    // const user = await getAuthenticatedUser();
+    // if (!user) {
+    //   return {
+    //     success: false,
+    //     message: 'Non autorisé',
+    //   };
+    // }
+
+    console.log(
+      '🧹 Début du nettoyage des anciennes tentatives de connexion...'
+    );
+
+    // Compter les tentatives avant nettoyage pour le rapport
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const attemptsToDelete = await prisma.loginAttempt.count({
+      where: {
+        createdAt: {
+          lt: twentyFourHoursAgo,
+        },
+      },
+    });
+
+    if (attemptsToDelete === 0) {
+      return {
+        success: true,
+        deletedCount: 0,
+        message: 'Aucune ancienne tentative de connexion à supprimer',
+      };
+    }
+
+    // Effectuer le nettoyage
+    await LoginAttemptsService.cleanupOldAttempts();
+
+    console.log(
+      `✅ ${attemptsToDelete} anciennes tentatives de connexion supprimées`
+    );
+
+    return {
+      success: true,
+      deletedCount: attemptsToDelete,
+      message: `${attemptsToDelete} anciennes tentatives de connexion supprimées avec succès`,
+    };
+  } catch (error) {
+    console.error('Erreur dans cleanupLoginAttemptsAction:', error);
+    return {
+      success: false,
+      deletedCount: 0,
+      message: 'Erreur lors du nettoyage des anciennes tentatives de connexion',
     };
   }
 }

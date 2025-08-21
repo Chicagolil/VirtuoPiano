@@ -3,9 +3,16 @@ import {
   getInactiveUsersAction,
   sendInactiveAccountWarningsAction,
   deleteInactiveUsersAction,
+  cleanupLoginAttemptsAction,
 } from '@/lib/actions/RGPD-actions';
 
 export async function GET(request: NextRequest) {
+  // Vérification de sécurité pour les cron jobs Vercel
+  const authHeader = request.headers.get('authorization');
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return new Response('Unauthorized', { status: 401 });
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const action = searchParams.get('action');
@@ -23,12 +30,16 @@ export async function GET(request: NextRequest) {
         const deleteResult = await deleteInactiveUsersAction();
         return NextResponse.json(deleteResult);
 
+      case 'cleanup-login':
+        const cleanupResult = await cleanupLoginAttemptsAction();
+        return NextResponse.json(cleanupResult);
+
       default:
         return NextResponse.json(
           {
             success: false,
             message:
-              'Action non reconnue. Actions disponibles: report, warn, delete',
+              'Action non reconnue. Actions disponibles: report, warn, delete, cleanup-login',
           },
           { status: 400 }
         );

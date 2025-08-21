@@ -29,11 +29,15 @@
   "crons": [
     {
       "path": "/api/admin/maintenance?action=warn",
-      "schedule": "0 9 * * *"
+      "schedule": "* * * * *"
     },
     {
       "path": "/api/admin/maintenance?action=delete",
       "schedule": "0 9 1 * *"
+    },
+    {
+      "path": "/api/admin/maintenance?action=cleanup-login",
+      "schedule": "0 2 * * *"
     }
   ]
 }

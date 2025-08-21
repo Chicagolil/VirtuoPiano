@@ -2,6 +2,7 @@
 
 import { AccountServices } from '../../src/lib/services/account-services';
 import { EmailService } from '../../src/lib/services/email-service';
+import { LoginAttemptsService } from '../../src/lib/services/login-attempts-service';
 import prisma from '../../src/lib/prisma';
 
 /**
@@ -172,6 +173,21 @@ async function generateInactiveUsersReport() {
   }
 }
 
+async function cleanupLoginAttempts() {
+  console.log('🧹 Nettoyage des anciennes tentatives de connexion...');
+
+  try {
+    await LoginAttemptsService.cleanupOldAttempts();
+    console.log('✅ Anciennes tentatives de connexion nettoyées');
+  } catch (error) {
+    console.error(
+      '❌ Erreur lors du nettoyage des tentatives de connexion:',
+      error
+    );
+    throw error;
+  }
+}
+
 async function main() {
   const command = process.argv[2];
 
@@ -196,6 +212,11 @@ async function main() {
         console.log('🔄 Exécution complète du processus de maintenance...');
         await sendWarningEmails();
         await deleteInactiveAccounts();
+        await cleanupLoginAttempts();
+        break;
+
+      case 'cleanup-login':
+        await cleanupLoginAttempts();
         break;
 
       default:
@@ -206,13 +227,15 @@ Commandes disponibles:
   warn    - Envoyer les emails d'avertissement aux utilisateurs inactifs
   delete  - Supprimer les comptes inactifs depuis 1 an
   report  - Générer un rapport des utilisateurs inactifs
-  full    - Exécuter le processus complet (warn + delete)
+  full    - Exécuter le processus complet (warn + delete + cleanup)
+  cleanup-login - Nettoyer les anciennes tentatives de connexion
 
 Exemples:
   npm run maintenance warn
   npm run maintenance delete
   npm run maintenance report
   npm run maintenance full
+  npm run maintenance cleanup-login
         `);
         break;
     }
@@ -232,4 +255,5 @@ export {
   sendWarningEmails,
   deleteInactiveAccounts,
   generateInactiveUsersReport,
+  cleanupLoginAttempts,
 };
