@@ -29,6 +29,7 @@ type PianoRollProps = {
   height?: number; // viewport height
   width?: number | string; // viewport width (e.g., 900 or '100%')
   readOnly?: boolean; // disable editing and toolbar when true
+  noteFillColor?: string; // single color for all notes
 };
 
 type InteractionState =
@@ -120,6 +121,7 @@ export default function PianoRoll(props: PianoRollProps) {
     height = 420,
     width = '100%',
     readOnly = false,
+    noteFillColor = '#fa8c16',
   } = props;
 
   const stepsPerBar = stepsPerBeat * beatsPerBar; // 16 by default
@@ -152,19 +154,7 @@ export default function PianoRoll(props: PianoRollProps) {
   const beatLine = '#353535';
   const barLine = '#444';
 
-  const noteColor = (pitch: number) => {
-    // simple palette based on pitch groups for visual variety
-    const palette = [
-      '#ff4d4f',
-      '#fa8c16',
-      '#fadb14',
-      '#52c41a',
-      '#40a9ff',
-      '#9254de',
-      '#eb2f96',
-    ];
-    return palette[pitch % palette.length];
-  };
+  // All notes share the same color (configurable via prop)
 
   const toStep = (x: number) => Math.floor((x - keyboardWidth) / stepWidth);
   const toPitch = (y: number) =>
@@ -308,7 +298,7 @@ export default function PianoRoll(props: PianoRollProps) {
       const w = n.duration * stepWidth;
       const h = rowHeight - 2;
       const isHovered = i === hoveredNoteIndex;
-      ctx.fillStyle = noteColor(n.pitch);
+      ctx.fillStyle = noteFillColor;
       ctx.globalAlpha = isHovered ? 0.9 : 0.8;
       ctx.fillRect(x + 1, y + 1, w - 2, h);
       ctx.globalAlpha = 1;

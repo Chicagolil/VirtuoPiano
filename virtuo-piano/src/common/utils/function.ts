@@ -35,6 +35,19 @@ export const getPageName = (pathname: string) => {
 
   // Formatage du nom de la page (première lettre en majuscule, reste en minuscule)
   const pageName = segments[segments.length - 1];
+
+  // Traductions FR pour les pages principales
+  const translations: Record<string, string> = {
+    imports: 'Imports',
+    favorites: 'Favoris',
+    leaderboard: 'Classement',
+    performances: 'Performances',
+    library: 'Librairie',
+    settings: 'Paramètres',
+    profile: 'Profil',
+  };
+
+  if (translations[pageName]) return translations[pageName];
   return pageName.charAt(0).toUpperCase() + pageName.slice(1);
 };
 

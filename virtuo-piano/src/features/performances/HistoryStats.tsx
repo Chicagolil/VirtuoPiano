@@ -12,6 +12,7 @@ import { ScoreSummary } from '@/components/cards/ScoreCard';
 import { getFilteredSessions } from '@/lib/actions/history-actions';
 import { Spinner } from '@/components/ui/spinner';
 import { useSearchCache } from '@/customHooks/useSearchCache';
+import { useRouter } from 'next/navigation';
 
 const SESSIONS_PER_PAGE = 30;
 
@@ -23,6 +24,7 @@ type SessionsResult = {
 };
 
 export default function HistoryStats() {
+  const router = useRouter();
   // Lire les filtres depuis sessionStorage au mount
   const getInitialFilters = () => {
     if (typeof window !== 'undefined') {
@@ -467,7 +469,11 @@ export default function HistoryStats() {
           </div>
           <div className="grid cursor-pointer grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {allScores.map((score) => (
-              <ScoreCard key={score.id} score={score} />
+              <ScoreCard
+                key={score.id}
+                score={score}
+                onClick={() => router.push(`/performances/session/${score.id}`)}
+              />
             ))}
           </div>
 

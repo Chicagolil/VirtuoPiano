@@ -146,17 +146,6 @@ export default function Navbar() {
               </span>
             </Link>
           </li>
-          <li className={pathname === '/pageTest' ? styles.active : ''}>
-            <Link href="/pageTest">
-              <span
-                className={`${styles.menuItem} ${styles.menuItemWithIcon} ${
-                  pathname === '/pageTest' ? styles.active : ''
-                }`}
-              >
-                Page Test
-              </span>
-            </Link>
-          </li>
         </ul>
       </div>
       <SignOutButton />

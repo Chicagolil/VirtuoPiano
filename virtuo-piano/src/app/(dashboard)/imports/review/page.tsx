@@ -327,7 +327,7 @@ export default function ImportReviewPage() {
                   {notes.length} notes
                 </span>
               </div>
-              <div style={{ marginTop: 24, maxWidth: 2000, margin: '0 auto' }}>
+              <div style={{ marginTop: 24, maxWidth: 1900, margin: '0 auto' }}>
                 <PianoRollViewer
                   notes={notes}
                   width={'100%'}
