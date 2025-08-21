@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { X, Upload, Music, FileText, User, Clock } from 'lucide-react';
 
 interface ImportModalProps {
@@ -12,19 +13,42 @@ export default function ImportModal({ isOpen, onClose }: ImportModalProps) {
   const [formData, setFormData] = useState({
     title: '',
     composer: '',
-    difficulty: 'intermediate',
+    difficulty: '5',
     genre: '',
     songType: 'song',
-    key: 'C',
+    key: 'C major',
     image: null as File | null,
     file: null as File | null,
   });
+  const router = useRouter();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implémenter la logique d'import
-    console.log('Import data:', formData);
-    onClose();
+    // Préparer les données pour la page de récapitulatif
+    const imageUrl = formData.image
+      ? URL.createObjectURL(formData.image)
+      : null;
+    const midiUrl = formData.file ? URL.createObjectURL(formData.file) : null;
+
+    const payload = {
+      title: formData.title,
+      composer: formData.composer,
+      difficulty: formData.difficulty,
+      genre: formData.genre,
+      songType: formData.songType,
+      key: formData.key,
+      imageUrl,
+      imageName: formData.image?.name ?? null,
+      midiUrl,
+      midiName: formData.file?.name ?? null,
+    };
+
+    try {
+      sessionStorage.setItem('importReview:data', JSON.stringify(payload));
+      router.push('/imports/review');
+    } catch (err) {
+      console.error('Impossible de préparer la page de récapitulatif:', err);
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -114,7 +138,7 @@ export default function ImportModal({ isOpen, onClose }: ImportModalProps) {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-white/80 mb-2">
-                  Niveau de difficulté
+                  Niveau de difficulté (1 à 10)
                 </label>
                 <select
                   value={formData.difficulty}
@@ -133,30 +157,17 @@ export default function ImportModal({ isOpen, onClose }: ImportModalProps) {
                     paddingRight: '2.5rem',
                   }}
                 >
-                  <option
-                    value="beginner"
-                    className="bg-slate-800 text-white hover:bg-slate-700"
-                  >
-                    Débutant
-                  </option>
-                  <option
-                    value="intermediate"
-                    className="bg-slate-800 text-white hover:bg-slate-700"
-                  >
-                    Intermédiaire
-                  </option>
-                  <option
-                    value="advanced"
-                    className="bg-slate-800 text-white hover:bg-slate-700"
-                  >
-                    Avancé
-                  </option>
-                  <option
-                    value="expert"
-                    className="bg-slate-800 text-white hover:bg-slate-700"
-                  >
-                    Expert
-                  </option>
+                  {Array.from({ length: 10 }, (_, i) => String(i + 1)).map(
+                    (v) => (
+                      <option
+                        key={v}
+                        value={v}
+                        className="bg-slate-800 text-white hover:bg-slate-700"
+                      >
+                        {v}
+                      </option>
+                    )
+                  )}
                 </select>
               </div>
               <div>
@@ -187,34 +198,28 @@ export default function ImportModal({ isOpen, onClose }: ImportModalProps) {
                     Chanson
                   </option>
                   <option
-                    value="arpeggios"
+                    value="arpeggioEx"
                     className="bg-slate-800 text-white hover:bg-slate-700"
                   >
                     Arpèges
                   </option>
                   <option
-                    value="scales"
+                    value="scaleEx"
                     className="bg-slate-800 text-white hover:bg-slate-700"
                   >
                     Gammes
                   </option>
                   <option
-                    value="chords"
+                    value="chordEx"
                     className="bg-slate-800 text-white hover:bg-slate-700"
                   >
                     Accords
                   </option>
                   <option
-                    value="exercise"
+                    value="rythmEx"
                     className="bg-slate-800 text-white hover:bg-slate-700"
                   >
-                    Exercice
-                  </option>
-                  <option
-                    value="etude"
-                    className="bg-slate-800 text-white hover:bg-slate-700"
-                  >
-                    Étude
+                    Exercice rythmique
                   </option>
                 </select>
               </div>
@@ -240,181 +245,181 @@ export default function ImportModal({ isOpen, onClose }: ImportModalProps) {
                   }}
                 >
                   <option
-                    value="C"
+                    value="C major"
                     className="bg-slate-800 text-white hover:bg-slate-700"
                   >
                     Do majeur
                   </option>
                   <option
-                    value="G"
+                    value="G major"
                     className="bg-slate-800 text-white hover:bg-slate-700"
                   >
                     Sol majeur
                   </option>
                   <option
-                    value="D"
+                    value="D major"
                     className="bg-slate-800 text-white hover:bg-slate-700"
                   >
                     Ré majeur
                   </option>
                   <option
-                    value="A"
+                    value="A major"
                     className="bg-slate-800 text-white hover:bg-slate-700"
                   >
                     La majeur
                   </option>
                   <option
-                    value="E"
+                    value="E major"
                     className="bg-slate-800 text-white hover:bg-slate-700"
                   >
                     Mi majeur
                   </option>
                   <option
-                    value="B"
+                    value="B major"
                     className="bg-slate-800 text-white hover:bg-slate-700"
                   >
                     Si majeur
                   </option>
                   <option
-                    value="F#"
+                    value="F# major"
                     className="bg-slate-800 text-white hover:bg-slate-700"
                   >
                     Fa# majeur
                   </option>
                   <option
-                    value="C#"
+                    value="C# major"
                     className="bg-slate-800 text-white hover:bg-slate-700"
                   >
                     Do# majeur
                   </option>
                   <option
-                    value="F"
+                    value="F major"
                     className="bg-slate-800 text-white hover:bg-slate-700"
                   >
                     Fa majeur
                   </option>
                   <option
-                    value="Bb"
+                    value="Bb major"
                     className="bg-slate-800 text-white hover:bg-slate-700"
                   >
                     Sib majeur
                   </option>
                   <option
-                    value="Eb"
+                    value="Eb major"
                     className="bg-slate-800 text-white hover:bg-slate-700"
                   >
                     Mib majeur
                   </option>
                   <option
-                    value="Ab"
+                    value="Ab major"
                     className="bg-slate-800 text-white hover:bg-slate-700"
                   >
                     Lab majeur
                   </option>
                   <option
-                    value="Db"
+                    value="Db major"
                     className="bg-slate-800 text-white hover:bg-slate-700"
                   >
                     Réb majeur
                   </option>
                   <option
-                    value="Gb"
+                    value="Gb major"
                     className="bg-slate-800 text-white hover:bg-slate-700"
                   >
                     Solb majeur
                   </option>
                   <option
-                    value="Cb"
+                    value="Cb major"
                     className="bg-slate-800 text-white hover:bg-slate-700"
                   >
                     Dob majeur
                   </option>
                   <option
-                    value="Am"
+                    value="A minor"
                     className="bg-slate-800 text-white hover:bg-slate-700"
                   >
                     La mineur
                   </option>
                   <option
-                    value="Em"
+                    value="E minor"
                     className="bg-slate-800 text-white hover:bg-slate-700"
                   >
                     Mi mineur
                   </option>
                   <option
-                    value="Bm"
+                    value="B minor"
                     className="bg-slate-800 text-white hover:bg-slate-700"
                   >
                     Si mineur
                   </option>
                   <option
-                    value="F#m"
+                    value="F# minor"
                     className="bg-slate-800 text-white hover:bg-slate-700"
                   >
                     Fa# mineur
                   </option>
                   <option
-                    value="C#m"
+                    value="C# minor"
                     className="bg-slate-800 text-white hover:bg-slate-700"
                   >
                     Do# mineur
                   </option>
                   <option
-                    value="G#m"
+                    value="G# minor"
                     className="bg-slate-800 text-white hover:bg-slate-700"
                   >
                     Sol# mineur
                   </option>
                   <option
-                    value="D#m"
+                    value="D# minor"
                     className="bg-slate-800 text-white hover:bg-slate-700"
                   >
                     Ré# mineur
                   </option>
                   <option
-                    value="A#m"
+                    value="A# minor"
                     className="bg-slate-800 text-white hover:bg-slate-700"
                   >
                     La# mineur
                   </option>
                   <option
-                    value="Dm"
+                    value="D minor"
                     className="bg-slate-800 text-white hover:bg-slate-700"
                   >
                     Ré mineur
                   </option>
                   <option
-                    value="Gm"
+                    value="G minor"
                     className="bg-slate-800 text-white hover:bg-slate-700"
                   >
                     Sol mineur
                   </option>
                   <option
-                    value="Cm"
+                    value="C minor"
                     className="bg-slate-800 text-white hover:bg-slate-700"
                   >
                     Do mineur
                   </option>
                   <option
-                    value="Fm"
+                    value="F minor"
                     className="bg-slate-800 text-white hover:bg-slate-700"
                   >
                     Fa mineur
                   </option>
                   <option
-                    value="Bbm"
+                    value="Bb minor"
                     className="bg-slate-800 text-white hover:bg-slate-700"
                   >
                     Sib mineur
                   </option>
                   <option
-                    value="Ebm"
+                    value="Eb minor"
                     className="bg-slate-800 text-white hover:bg-slate-700"
                   >
                     Mib mineur
                   </option>
                   <option
-                    value="Abm"
+                    value="Ab minor"
                     className="bg-slate-800 text-white hover:bg-slate-700"
                   >
                     Lab mineur

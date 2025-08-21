@@ -5,6 +5,11 @@ import { PlayedSong } from '../types';
 import { ImportsServices } from '../services/imports-services';
 import { authOptions } from '../authoption';
 
+import {
+  createImportSchema,
+  type CreateImportInput,
+} from '@/lib/validations/imports-schemas';
+
 export type ImportedSongsResult = {
   songs: PlayedSong[];
   pagination: {
@@ -81,5 +86,26 @@ export async function getImportedSongsGenresAction(): Promise<string[]> {
       error
     );
     throw new Error('Impossible de récupérer les genres');
+  }
+}
+
+export async function createImportedSongAction(
+  input: unknown
+): Promise<{ success: boolean; songId?: string; message?: string }> {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return { success: false, message: 'Accès non autorisé' };
+    }
+
+    const parsed = createImportSchema.parse(input);
+    const result = await ImportsServices.createImportedSong(
+      session.user.id,
+      parsed
+    );
+    return { success: true, songId: result.songId };
+  } catch (error: any) {
+    console.error("Erreur lors de la création de l'import:", error);
+    return { success: false, message: error?.message || 'Erreur inconnue' };
   }
 }

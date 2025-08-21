@@ -214,9 +214,8 @@ export function generateMonthLabels(
 // Types pour la conversion MIDI
 interface MidiNote {
   note: string;
-  time: number;
-  duration: number;
-  velocity: number;
+  startBeat: number;
+  durationInBeats: number;
   track: number;
 }
 
@@ -258,10 +257,9 @@ function createTrackSignature(track: any): string {
   // Trier les notes par temps puis par note pour une comparaison cohérente
   const sortedNotes = track.notes
     .map((note: any) => ({
-      note: note.name + note.octave,
+      note: note.name,
       time: Math.round(note.time * 100) / 100, // Arrondir à 2 décimales
       duration: Math.round(note.duration * 100) / 100,
-      velocity: Math.round(note.velocity * 100) / 100,
     }))
     .sort((a: any, b: any) => {
       if (a.time !== b.time) return a.time - b.time;
@@ -294,19 +292,21 @@ export async function convertMidiToSongFormat(
     // Supprimer les tracks en double avant traitement
     const uniqueTracks = removeDuplicateTracks(midi.tracks);
 
-    // Convertir toutes les notes en format unifié
+    // Convertir toutes les notes en format unifié (en beats)
     const allNotes: MidiNote[] = [];
     let trackIndex = 0;
+    const effectivePpq = midi.header.ppq || 480;
 
     for (const track of uniqueTracks) {
       // Traiter toutes les tracks qui contiennent des notes
       if (track.notes.length > 0) {
         for (const note of track.notes) {
+          const startBeat = (note.ticks ?? 0) / effectivePpq;
+          const durationInBeats = (note.durationTicks ?? 0) / effectivePpq;
           allNotes.push({
-            note: note.name + note.octave, // ex: "C4", "F#5"
-            time: note.time,
-            duration: note.duration,
-            velocity: note.velocity,
+            note: note.name, // ex: "C4", "F#5"
+            startBeat,
+            durationInBeats,
             track: trackIndex,
           });
         }
@@ -314,8 +314,8 @@ export async function convertMidiToSongFormat(
       trackIndex++;
     }
 
-    // Trier les notes par temps
-    allNotes.sort((a, b) => a.time - b.time);
+    // Trier les notes par position en beats
+    allNotes.sort((a, b) => a.startBeat - b.startBeat);
 
     return {
       notes: allNotes,

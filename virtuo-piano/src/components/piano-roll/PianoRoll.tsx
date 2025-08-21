@@ -123,8 +123,8 @@ export default function PianoRoll(props: PianoRollProps) {
   } = props;
 
   const stepsPerBar = stepsPerBeat * beatsPerBar; // 16 by default
-  const stepWidth = 24; // px per step → zoomed view
-  const rowHeight = 18; // px per semitone row
+  const [stepWidth, setStepWidth] = useState<number>(24); // px per step (horizontal zoom)
+  const [rowHeight, setRowHeight] = useState<number>(18); // px per semitone row (vertical zoom)
   const keyboardWidth = 64; // left piano keyboard width
 
   const [numBars, setNumBars] = useState<number>(bars);
@@ -338,6 +338,67 @@ export default function PianoRoll(props: PianoRollProps) {
   useEffect(() => {
     onChange?.(notes);
   }, [notes, onChange]);
+
+  // Zoom handling: Ctrl/⌘ + wheel → horizontal zoom, Alt + wheel → vertical zoom
+  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    const container = containerRef.current;
+    if (!container) return;
+    const isHorizontalZoom = e.ctrlKey || e.metaKey;
+    const isVerticalZoom = e.altKey && !isHorizontalZoom;
+    if (!isHorizontalZoom && !isVerticalZoom) return; // normal scroll
+
+    e.preventDefault();
+    const rect = container.getBoundingClientRect();
+    const pointerX = e.clientX - rect.left; // within container
+    const pointerY = e.clientY - rect.top;
+
+    if (isHorizontalZoom) {
+      const MIN_STEP = 6;
+      const MAX_STEP = 48;
+      // Anchor: current step under cursor
+      const anchorX = container.scrollLeft + pointerX - keyboardWidth;
+      const anchorStep = anchorX > 0 ? anchorX / stepWidth : 0;
+      const factor = e.deltaY > 0 ? 0.9 : 1.1;
+      const next = clamp(stepWidth * factor, MIN_STEP, MAX_STEP);
+      if (next === stepWidth) return;
+      setStepWidth(next);
+      // Preserve anchor under cursor
+      const newAnchorX = anchorStep * next;
+      const newScrollLeft = Math.max(0, keyboardWidth + newAnchorX - pointerX);
+      // Schedule after state applied
+      requestAnimationFrame(() => {
+        container.scrollLeft = newScrollLeft;
+      });
+      return;
+    }
+
+    if (isVerticalZoom) {
+      const MIN_ROW = 12;
+      const MAX_ROW = 36;
+      const anchorY = container.scrollTop + pointerY;
+      const anchorRow = anchorY / rowHeight;
+      const factor = e.deltaY > 0 ? 0.9 : 1.1;
+      const next = clamp(rowHeight * factor, MIN_ROW, MAX_ROW);
+      if (next === rowHeight) return;
+      setRowHeight(next);
+      const newAnchorY = anchorRow * next;
+      const newScrollTop = Math.max(0, newAnchorY - pointerY);
+      requestAnimationFrame(() => {
+        container.scrollTop = newScrollTop;
+      });
+    }
+  };
+
+  // Auto-étendre la longueur (nombre de mesures) pour couvrir toutes les notes affichées
+  useEffect(() => {
+    if (!notes || notes.length === 0) return;
+    const farthestStepExclusive = notes.reduce(
+      (max, n) => Math.max(max, n.start + n.duration),
+      0
+    );
+    const requiredBars = Math.ceil((farthestStepExclusive + 1) / stepsPerBar);
+    setNumBars((prev) => (requiredBars > prev ? requiredBars : prev));
+  }, [notes, stepsPerBar]);
 
   const handleMouseMove = (
     e: React.MouseEvent<HTMLCanvasElement, MouseEvent>
@@ -590,6 +651,53 @@ export default function PianoRoll(props: PianoRollProps) {
     >
       {!readOnly && toolbar}
       <div
+        style={{
+          display: 'flex',
+          gap: 8,
+          padding: '8px 12px',
+          alignItems: 'center',
+          background: '#151515',
+          borderBottom: '1px solid #2b2b2b',
+        }}
+      >
+        <div style={{ color: '#ddd', fontSize: 12, marginRight: 4 }}>Zoom</div>
+        <button
+          onClick={() => setStepWidth((v) => Math.max(6, v / 1.1))}
+          style={buttonStyle}
+        >
+          − H
+        </button>
+        <button
+          onClick={() => setStepWidth((v) => Math.min(48, v * 1.1))}
+          style={buttonStyle}
+        >
+          + H
+        </button>
+        <div style={{ width: 8 }} />
+        <button
+          onClick={() => setRowHeight((v) => Math.max(12, v / 1.1))}
+          style={buttonStyle}
+        >
+          − V
+        </button>
+        <button
+          onClick={() => setRowHeight((v) => Math.min(36, v * 1.1))}
+          style={buttonStyle}
+        >
+          + V
+        </button>
+        <div style={{ width: 8 }} />
+        <button
+          onClick={() => {
+            setStepWidth(24);
+            setRowHeight(18);
+          }}
+          style={buttonStyle}
+        >
+          Reset
+        </button>
+      </div>
+      <div
         ref={containerRef}
         style={{
           width: typeof width === 'number' ? `${width}px` : width,
@@ -598,6 +706,7 @@ export default function PianoRoll(props: PianoRollProps) {
           position: 'relative',
           background: gridBg,
         }}
+        onWheel={handleWheel}
       >
         <canvas
           ref={canvasRef}

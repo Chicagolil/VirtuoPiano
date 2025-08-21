@@ -1,5 +1,8 @@
 import prisma from '@/lib/prisma';
 import { PlayedSong } from '../types';
+import { uploadImage } from '@/lib/cloudinary';
+import { CreateImportInput } from '@/lib/validations/imports-schemas';
+import { SourceType, SongType } from '@prisma/client';
 
 export class ImportsServices {
   static async getImportedSongs(
@@ -204,5 +207,64 @@ export class ImportsServices {
     ).sort();
 
     return uniqueGenres;
+  }
+
+  static async createImportedSong(
+    userId: string,
+    input: CreateImportInput
+  ): Promise<{ success: boolean; songId: string }> {
+    // Uploader l'image si fournie (Data URL)
+    let imageUrl: string | undefined;
+    if (input.imageDataUrl) {
+      imageUrl = await uploadImage(input.imageDataUrl);
+    }
+
+    // Trouver ou créer la Key
+    const key = await prisma.key.upsert({
+      where: { name: input.keyName },
+      update: {},
+      create: { name: input.keyName, notes: [] },
+    });
+
+    // Conserver uniquement les pistes sélectionnées
+    const selectedTracks = input.tracks.filter((t) =>
+      input.selectedTrackIds.includes(t.track)
+    );
+
+    // Notes combinées triées par startBeat
+    const combinedNotes = selectedTracks
+      .flatMap((t) => t.notes)
+      .sort((a, b) => a.startBeat - b.startBeat);
+
+    const tempo = input.midiMeta.tempo;
+    const timeSignature = input.midiMeta.timeSignature;
+    const duration_ms = input.midiMeta.duration_ms;
+
+    const song = await prisma.songs.create({
+      data: {
+        imageUrl,
+        title: input.title,
+        composer: input.composer || null,
+        genre: input.genre || null,
+        tempo,
+        duration_ms,
+        notes: combinedNotes as any,
+        timeSignature,
+        SourceType: 'import' as SourceType,
+        Level: input.difficulty,
+        SongType: input.songType as SongType,
+        key_id: key.id,
+      },
+    });
+
+    // Lier à l'utilisateur
+    await prisma.usersImports.create({
+      data: {
+        user_id: userId,
+        song_id: song.id,
+      },
+    });
+
+    return { success: true, songId: song.id };
   }
 }
