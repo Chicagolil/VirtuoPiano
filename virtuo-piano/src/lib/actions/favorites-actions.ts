@@ -81,3 +81,4 @@ export async function getFavoriteSongsGenresAction(): Promise<string[]> {
     throw new Error('Impossible de récupérer les genres');
   }
 }
+

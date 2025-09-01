@@ -1,20 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
+import { Hands } from '@prisma/client';
 
-// Schéma de validation pour le mode JEU
-const unityGameScoreSchema = z.object({
+// Schéma de validation pour le mode APPRENTISSAGE
+const unityLearningScoreSchema = z.object({
   userId: z.string().min(1, "L'ID utilisateur est requis"),
   songId: z.string().min(1, "L'ID de la chanson est requis"),
-  totalPoints: z
+  correctNotes: z
     .number()
     .int()
-    .min(0, 'Les points totaux doivent être positifs'),
-  maxMultiplier: z
+    .min(0, 'Le nombre de notes correctes doit être positif'),
+  missedNotes: z
     .number()
     .int()
-    .min(1, 'Le multiplicateur maximum doit être positif'),
-  maxCombo: z.number().int().min(0, 'Le combo maximum doit être positif'),
+    .min(0, 'Le nombre de notes manquées doit être positif'),
+  wrongNotes: z
+    .number()
+    .int()
+    .min(0, 'Le nombre de notes incorrectes doit être positif'),
+  hands: z.enum(['right', 'left', 'both']).optional(),
+  selectedTempo: z.number().int().min(1).optional(),
   sessionStartTime: z.string().datetime('Format de date invalide'),
   sessionEndTime: z.string().datetime('Format de date invalide'),
 });
@@ -24,7 +30,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     // Validation des données
-    const validatedData = unityGameScoreSchema.parse(body);
+    const validatedData = unityLearningScoreSchema.parse(body);
 
     // Vérifier que l'utilisateur existe
     const user = await prisma.user.findUnique({
@@ -56,13 +62,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Trouver ou créer le mode Jeu
+    // Trouver ou créer le mode Apprentissage
     const gameMode = await prisma.gameMode.upsert({
-      where: { name: 'Jeu' },
+      where: { name: 'Apprentissage' },
       update: {},
       create: {
-        name: 'Jeu',
-        description: 'Jeu mode',
+        name: 'Apprentissage',
+        description: 'Mode apprentissage',
       },
     });
 
@@ -81,18 +87,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Créer le score pour le mode jeu
+    // Créer le score pour le mode apprentissage
     const score = await prisma.scores.create({
       data: {
-        totalPoints: validatedData.totalPoints,
-        maxMultiplier: validatedData.maxMultiplier,
-        maxCombo: validatedData.maxCombo,
-        // Champs d'apprentissage à null pour le mode jeu
-        correctNotes: null,
-        missedNotes: null,
-        wrongNotes: null,
-        hands: null,
-        selectedTempo: null,
+        correctNotes: validatedData.correctNotes,
+        missedNotes: validatedData.missedNotes,
+        wrongNotes: validatedData.wrongNotes,
+        hands: validatedData.hands as Hands,
+        selectedTempo: validatedData.selectedTempo,
+        // Champs de jeu à null pour le mode apprentissage
+        totalPoints: null,
+        maxMultiplier: null,
+        maxCombo: null,
         sessionStartTime,
         sessionEndTime,
         user_id: validatedData.userId,
@@ -122,20 +128,42 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Calculer les statistiques de performance
+    const totalNotes =
+      validatedData.correctNotes +
+      validatedData.missedNotes +
+      validatedData.wrongNotes;
+    const accuracy =
+      totalNotes > 0
+        ? Math.round((validatedData.correctNotes / totalNotes) * 100)
+        : 0;
+    const performance =
+      totalNotes > 0
+        ? Math.round(
+            (validatedData.correctNotes /
+              (validatedData.correctNotes + validatedData.wrongNotes)) *
+              100
+          )
+        : 0;
+
     return NextResponse.json({
       success: true,
       scoreId: score.id,
-      message: 'Score de jeu enregistré avec succès',
+      message: "Score d'apprentissage enregistré avec succès",
       score: {
         id: score.id,
-        totalPoints: score.totalPoints,
-        maxMultiplier: score.maxMultiplier,
-        maxCombo: score.maxCombo,
+        correctNotes: score.correctNotes,
+        missedNotes: score.missedNotes,
+        wrongNotes: score.wrongNotes,
+        hands: score.hands,
+        selectedTempo: score.selectedTempo,
         sessionStartTime: score.sessionStartTime.toISOString(),
         sessionEndTime: score.sessionEndTime.toISOString(),
         duration: Math.round(
           (sessionEndTime.getTime() - sessionStartTime.getTime()) / 1000
         ), // en secondes
+        accuracy,
+        performance,
         song: {
           id: score.song.id,
           title: score.song.title,
@@ -145,7 +173,7 @@ export async function POST(request: NextRequest) {
           id: score.mode.id,
           name: score.mode.name,
         },
-        modeType: 'Jeu',
+        modeType: 'Apprentissage',
         user: {
           id: score.user.id,
           userName: score.user.userName,
@@ -154,7 +182,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error(
-      "Erreur lors de l'enregistrement du score de jeu Unity:",
+      "Erreur lors de l'enregistrement du score d'apprentissage Unity:",
       error
     );
 
@@ -175,7 +203,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: "Erreur lors de l'enregistrement du score de jeu",
+        error: "Erreur lors de l'enregistrement du score d'apprentissage",
         details: error instanceof Error ? error.message : 'Erreur inconnue',
       },
       { status: 500 }
