@@ -2,7 +2,8 @@ import React from 'react';
 import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
 import { authOptions } from '@/lib/authoption';
-import { Heart } from 'lucide-react';
+import { Heart, Music } from 'lucide-react';
+import FavoritesList from '@/features/favorites/FavoritesList';
 
 export default async function FavoritesPage() {
   const session = await getServerSession(authOptions);
@@ -24,14 +25,13 @@ export default async function FavoritesPage() {
           </div>
         </div>
         <div className="space-y-6">
-          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
-            <h2 className="text-white font-semibold mb-2">Page en travaux</h2>
-            <p className="text-white/70 text-sm">
-              Cette section affichera vos morceaux favoris avec un accès rapide,
-              des tris et filtres, et des recommandations basées sur vos
-              habitudes de jeu.
-            </p>
+          <div className="flex items-center space-x-3 mb-4">
+            <Music size={20} className="text-blue-300" />
+            <h3 className="text-lg font-semibold text-white">
+              Mes chansons favorites
+            </h3>
           </div>
+          <FavoritesList />
         </div>
       </div>
     </div>
