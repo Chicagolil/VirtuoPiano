@@ -15,10 +15,16 @@ export default function Header() {
   const isSongPage =
     pathname.startsWith('/library/') && pathname !== '/library';
   const isPerformancePage = pathname.startsWith('/performances/');
+  const isPerformanceSessionPage = pathname.startsWith('/performances/session');
 
   useEffect(() => {
+    // Sur la page de session, pas de titre de chanson à charger
+    if (isPerformanceSessionPage) {
+      setIsLoadingSong(false);
+      return;
+    }
     if (isSongPage || isPerformancePage) {
-      // Si nous sommes sur une page de chanson mais qu'aucune chanson n'est chargée
+      // Si nous sommes sur une page nécessitant une chanson mais qu'aucune n'est chargée
       if (!currentSong) {
         setIsLoadingSong(true);
       } else {
@@ -27,10 +33,13 @@ export default function Header() {
     } else {
       setIsLoadingSong(false);
     }
-  }, [currentSong, isSongPage, isPerformancePage]);
+  }, [currentSong, isSongPage, isPerformancePage, isPerformanceSessionPage]);
 
   // Déterminer le titre à afficher
   const getDisplayTitle = () => {
+    if (isPerformanceSessionPage) {
+      return 'Session';
+    }
     if ((isSongPage || isPerformancePage) && isLoadingSong) {
       return 'Chargement...';
     }

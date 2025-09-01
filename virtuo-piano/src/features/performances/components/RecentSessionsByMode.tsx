@@ -143,9 +143,13 @@ export default function RecentSessionsByMode({
               <span className="ml-2 text-white/50">sur {total} total</span>
             )}
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 cursor-pointer">
             {sessions.map((score) => (
-              <ScoreCard key={score.id} score={score} />
+              <ScoreCard
+                key={score.id}
+                score={score}
+                onClick={() => router.push(`/performances/session/${score.id}`)}
+              />
             ))}
           </div>
           {hasMore && (

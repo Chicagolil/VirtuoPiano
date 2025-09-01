@@ -1,8 +1,23 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  act,
+} from '@testing-library/react';
 import HistoryStats from '@/features/performances/HistoryStats';
 import { useSearchCache } from '@/customHooks/useSearchCache';
 import { getFilteredSessions } from '@/lib/actions/history-actions';
+
+// Mock de Next.js router
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    refresh: vi.fn(),
+    pathname: '/performances',
+  }),
+}));
 
 // Mock des dépendances
 vi.mock('@/customHooks/useSearchCache', () => ({
@@ -96,56 +111,76 @@ describe('HistoryStats Component (Refactored)', () => {
   });
 
   describe('Rendu de base', () => {
-    it("devrait afficher le titre avec l'icône", () => {
-      render(<HistoryStats />);
+    it("devrait afficher le titre avec l'icône", async () => {
+      await act(async () => {
+        render(<HistoryStats />);
+      });
 
-      expect(screen.getByText('Toutes les sessions')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText('Toutes les sessions')).toBeInTheDocument();
+      });
     });
 
-    it('devrait afficher la liste des sessions', () => {
-      render(<HistoryStats />);
+    it('devrait afficher la liste des sessions', async () => {
+      await act(async () => {
+        render(<HistoryStats />);
+      });
 
-      expect(screen.getByText('Sonate au clair de lune')).toBeInTheDocument();
-      expect(screen.getByText('Für Elise')).toBeInTheDocument();
-      expect(screen.getAllByText('Beethoven')).toHaveLength(2);
+      await waitFor(() => {
+        expect(screen.getByText('Sonate au clair de lune')).toBeInTheDocument();
+        expect(screen.getByText('Für Elise')).toBeInTheDocument();
+        expect(screen.getAllByText('Beethoven')).toHaveLength(2);
+      });
     });
 
-    it("devrait afficher le bouton d'actualisation", () => {
-      render(<HistoryStats />);
+    it("devrait afficher le bouton d'actualisation", async () => {
+      await act(async () => {
+        render(<HistoryStats />);
+      });
 
-      const refreshButton = screen.getByText('🔄 Actualiser');
-      expect(refreshButton).toBeInTheDocument();
+      await waitFor(() => {
+        const refreshButton = screen.getByText('🔄 Actualiser');
+        expect(refreshButton).toBeInTheDocument();
+      });
     });
 
-    it("devrait afficher l'indicateur de nombre de sessions", () => {
-      render(<HistoryStats />);
+    it("devrait afficher l'indicateur de nombre de sessions", async () => {
+      await act(async () => {
+        render(<HistoryStats />);
+      });
 
-      expect(screen.getByText('sur 50 total')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText('sur 50 total')).toBeInTheDocument();
+      });
     });
   });
 
   describe('État de chargement', () => {
-    it('devrait afficher le spinner pendant le chargement initial', () => {
+    it('devrait afficher le spinner pendant le chargement initial', async () => {
       mockUseSearchCache.mockReturnValue({
         ...mockSearchCacheDefault,
         isLoading: true,
         data: null,
       });
 
-      render(<HistoryStats />);
+      await act(async () => {
+        render(<HistoryStats />);
+      });
 
       // Le spinner personnalisé est affiché avec le titre "Loading..."
       expect(screen.getByTitle('Loading...')).toBeInTheDocument();
     });
 
-    it('ne devrait pas afficher les sessions pendant le chargement', () => {
+    it('ne devrait pas afficher les sessions pendant le chargement', async () => {
       mockUseSearchCache.mockReturnValue({
         ...mockSearchCacheDefault,
         isLoading: true,
         data: null,
       });
 
-      render(<HistoryStats />);
+      await act(async () => {
+        render(<HistoryStats />);
+      });
 
       expect(
         screen.queryByText('Sonate au clair de lune')
@@ -154,7 +189,7 @@ describe('HistoryStats Component (Refactored)', () => {
   });
 
   describe('État vide', () => {
-    it("devrait afficher un message quand aucune session n'est trouvée", () => {
+    it("devrait afficher un message quand aucune session n'est trouvée", async () => {
       mockUseSearchCache.mockReturnValue({
         ...mockSearchCacheDefault,
         data: {
@@ -164,11 +199,15 @@ describe('HistoryStats Component (Refactored)', () => {
         },
       });
 
-      render(<HistoryStats />);
+      await act(async () => {
+        render(<HistoryStats />);
+      });
 
-      expect(
-        screen.getByText('Aucune session trouvée dans votre historique')
-      ).toBeInTheDocument();
+      await waitFor(() => {
+        expect(
+          screen.getByText('Aucune session trouvée dans votre historique')
+        ).toBeInTheDocument();
+      });
     });
 
     it('devrait afficher un bouton de réinitialisation des filtres', () => {
@@ -688,7 +727,7 @@ describe('HistoryStats Component (Refactored)', () => {
   });
 
   describe('Types et validation', () => {
-    it('devrait gérer correctement les sessions avec des données partielles', () => {
+    it('devrait gérer correctement les sessions avec des données partielles', async () => {
       const incompleteSessionsData = {
         sessions: [
           {
@@ -718,8 +757,13 @@ describe('HistoryStats Component (Refactored)', () => {
         data: incompleteSessionsData,
       });
 
-      expect(() => render(<HistoryStats />)).not.toThrow();
-      expect(screen.getByText('Test Song')).toBeInTheDocument();
+      await act(async () => {
+        render(<HistoryStats />);
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText('Test Song')).toBeInTheDocument();
+      });
     });
   });
 });

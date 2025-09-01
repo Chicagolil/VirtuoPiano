@@ -21,6 +21,7 @@ import { SongList } from '@/lib/services/songs';
 import { toggleFavorite } from '@/lib/actions/songs';
 import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
+import PreviewModal from './PreviewModal';
 
 // Props pour le composant
 interface SongsListProps {
@@ -39,6 +40,7 @@ export function SongsList({ songs }: SongsListProps) {
   const songsPerPage = 20;
   const [isPending, startTransition] = useTransition();
   const [localSongs, setLocalSongs] = useState<SongList[]>(songs);
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
 
   const filterMenuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -148,6 +150,14 @@ export function SongsList({ songs }: SongsListProps) {
 
   const handleSongClick = (songId: string) => {
     router.push(`/library/${songId}`);
+  };
+
+  const handlePreviewClick = () => {
+    setIsPreviewModalOpen(true);
+  };
+
+  const handleClosePreviewModal = () => {
+    setIsPreviewModalOpen(false);
   };
 
   // Filtrer et trier les chansons
@@ -447,7 +457,10 @@ export function SongsList({ songs }: SongsListProps) {
                     </div>
                   </td>
                   <td className={styles.tableCell}>
-                    <button className={styles.playButton}>
+                    <button
+                      className={styles.playButton}
+                      onClick={() => handlePreviewClick()}
+                    >
                       <IconPlayerPlay size={16} />
                     </button>
                   </td>
@@ -510,6 +523,12 @@ export function SongsList({ songs }: SongsListProps) {
             </button>
           </div>
         )}
+
+        {/* Modale de prévisualisation */}
+        <PreviewModal
+          isOpen={isPreviewModalOpen}
+          onClose={handleClosePreviewModal}
+        />
       </div>
     </div>
   );

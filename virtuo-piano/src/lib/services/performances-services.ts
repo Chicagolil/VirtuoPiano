@@ -2321,4 +2321,41 @@ export class PerformancesServices {
 
     return { records };
   }
+
+  // Méthode pour récupérer uniquement les genres des chansons jouées
+  static async getPlayedSongsGenres(userId: string): Promise<string[]> {
+    const genres = await prisma.scores.groupBy({
+      by: ['song_id'],
+      where: {
+        user_id: userId,
+      },
+      _max: {
+        sessionStartTime: true,
+      },
+    });
+
+    // Récupérer les genres des chansons jouées
+    const songIds = genres.map((g) => g.song_id);
+    const songs = await prisma.songs.findMany({
+      where: {
+        id: {
+          in: songIds,
+        },
+      },
+      select: {
+        genre: true,
+      },
+    });
+
+    // Extraire et dédupliquer les genres
+    const uniqueGenres = Array.from(
+      new Set(
+        songs
+          .map((song) => song.genre)
+          .filter((genre): genre is string => genre !== null)
+      )
+    ).sort();
+
+    return uniqueGenres;
+  }
 }

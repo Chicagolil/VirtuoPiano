@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   getPlayedSongsAction,
-  getAllPlayedSongsAction,
   PlayedSongsResult,
 } from '@/lib/actions/playedSongs-actions';
 import {
@@ -353,51 +352,6 @@ describe('PlayedSongs Actions', () => {
       mockGetServerSession.mockResolvedValue(null);
 
       await expect(getPlayedSongsAction()).rejects.toThrow(
-        'Impossible de récupérer les chansons jouées'
-      );
-    });
-  });
-
-  describe('getAllPlayedSongsAction', () => {
-    it('devrait retourner toutes les chansons jouées sans pagination', async () => {
-      const mockSongs = [mockPlayedSong];
-      const mockResult = {
-        songs: mockSongs,
-        pagination: {
-          currentPage: 1,
-          totalPages: 1,
-          totalSongs: 1,
-          hasNextPage: false,
-          hasPreviousPage: false,
-        },
-      };
-      mockPerformancesServices.getPlayedSongs.mockResolvedValue(mockResult);
-
-      const result = await getAllPlayedSongsAction();
-
-      expect(result).toEqual(mockSongs);
-      expect(mockPerformancesServices.getPlayedSongs).toHaveBeenCalledWith(
-        'user123',
-        {
-          page: 1,
-          limit: 999999,
-        }
-      );
-    });
-
-    it('devrait propager les erreurs du service', async () => {
-      const mockError = new Error('Service error');
-      mockPerformancesServices.getPlayedSongs.mockRejectedValue(mockError);
-
-      await expect(getAllPlayedSongsAction()).rejects.toThrow(
-        'Impossible de récupérer les chansons jouées'
-      );
-    });
-
-    it('devrait rejeter si aucune session utilisateur', async () => {
-      mockGetServerSession.mockResolvedValue(null);
-
-      await expect(getAllPlayedSongsAction()).rejects.toThrow(
         'Impossible de récupérer les chansons jouées'
       );
     });
