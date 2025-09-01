@@ -13,6 +13,8 @@ import {
   FileText,
   Layers,
   AlertTriangle,
+  Clock,
+  Timer,
 } from 'lucide-react';
 import { useCreateImport } from '@/customHooks/useCreateImport';
 import { toast } from 'react-hot-toast';
@@ -255,6 +257,16 @@ export default function ImportReviewPage() {
               icon={<Key className="text-orange-300" size={18} />}
               value={data.key}
               label="Gamme"
+            />
+            <InfoTile
+              icon={<Timer className="text-orange-300" size={18} />}
+              value={midiMeta ? `${midiMeta.tempo} BPM` : '—'}
+              label="Tempo"
+            />
+            <InfoTile
+              icon={<Clock className="text-orange-300" size={18} />}
+              value={midiMeta ? midiMeta.timeSignature : '—'}
+              label="Signature temporelle"
             />
             <InfoTile
               icon={<FileText className="text-orange-300" size={18} />}
