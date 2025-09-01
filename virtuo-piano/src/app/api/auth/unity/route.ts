@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import argon2 from 'argon2';
-import jwt from 'jsonwebtoken';
+import * as jose from 'jose';
 
 export async function POST(request: Request) {
   try {
@@ -42,15 +42,17 @@ export async function POST(request: Request) {
     }
 
     // Créer le token JWT
-    const token = jwt.sign(
-      {
-        id: user.id,
-        email: user.email,
-        userName: user.userName,
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: '7d' }
+    const secret = new TextEncoder().encode(
+      process.env.JWT_SECRET || 'votre-secret-jwt'
     );
+    const token = await new jose.SignJWT({
+      id: user.id,
+      email: user.email,
+      userName: user.userName,
+    })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setExpirationTime('7d')
+      .sign(secret);
 
     return NextResponse.json({
       token,

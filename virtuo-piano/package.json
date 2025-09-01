@@ -58,6 +58,7 @@
     "framer-motion": "^12.6.5",
     "gsap": "^3.12.7",
     "html-midi-player": "^1.6.0",
+    "jose": "^6.1.0",
     "jsdom": "^26.1.0",
     "jsonwebtoken": "^9.0.2",
     "lottie-react": "^2.4.1",
