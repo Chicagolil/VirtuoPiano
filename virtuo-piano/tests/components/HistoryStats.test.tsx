@@ -1,7 +1,16 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import HistoryStats from '@/features/performances/HistoryStats';
+
+// Mock de Next.js router
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    refresh: vi.fn(),
+    pathname: '/performances',
+  }),
+}));
 
 // Mock simple pour éviter les erreurs d'IntersectionObserver
 const mockIntersectionObserver = vi.fn();
@@ -71,39 +80,53 @@ describe('HistoryStats Component', () => {
     vi.restoreAllMocks();
   });
 
-  it('should render the component structure', () => {
-    render(<HistoryStats />);
+  it('should render the component structure', async () => {
+    await act(async () => {
+      render(<HistoryStats />);
+    });
 
-    expect(screen.getByText('Toutes les sessions')).toBeInTheDocument();
-    expect(
-      screen.getByPlaceholderText(
+    await waitFor(() => {
+      expect(screen.getByText('Toutes les sessions')).toBeInTheDocument();
+      expect(
+        screen.getByPlaceholderText(
+          "Rechercher par nom de musique ou d'artiste..."
+        )
+      ).toBeInTheDocument();
+      expect(screen.getByText('Tous')).toBeInTheDocument();
+      expect(screen.getByText('Apprentissage')).toBeInTheDocument();
+      expect(screen.getByText('Jeu')).toBeInTheDocument();
+    });
+  });
+
+  it('should display search input with correct placeholder', async () => {
+    await act(async () => {
+      render(<HistoryStats />);
+    });
+
+    await waitFor(() => {
+      const searchInput = screen.getByPlaceholderText(
         "Rechercher par nom de musique ou d'artiste..."
-      )
-    ).toBeInTheDocument();
-    expect(screen.getByText('Tous')).toBeInTheDocument();
-    expect(screen.getByText('Apprentissage')).toBeInTheDocument();
-    expect(screen.getByText('Jeu')).toBeInTheDocument();
+      );
+      expect(searchInput).toBeInTheDocument();
+    });
   });
 
-  it('should display search input with correct placeholder', () => {
-    render(<HistoryStats />);
+  it('should display mode filter buttons', async () => {
+    await act(async () => {
+      render(<HistoryStats />);
+    });
 
-    const searchInput = screen.getByPlaceholderText(
-      "Rechercher par nom de musique ou d'artiste..."
-    );
-    expect(searchInput).toBeInTheDocument();
-  });
-
-  it('should display mode filter buttons', () => {
-    render(<HistoryStats />);
-
-    expect(screen.getByText('Tous')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Tous')).toBeInTheDocument();
+    });
     expect(screen.getByText('Apprentissage')).toBeInTheDocument();
     expect(screen.getByText('Jeu')).toBeInTheDocument();
   });
 
   it('should display session count', async () => {
-    render(<HistoryStats />);
+    await act(async () => {
+      render(<HistoryStats />);
+    });
 
     // Temporairement, testons ce qui s'affiche réellement
     await waitFor(
@@ -118,7 +141,9 @@ describe('HistoryStats Component', () => {
   });
 
   it('should display session cards', async () => {
-    render(<HistoryStats />);
+    await act(async () => {
+      render(<HistoryStats />);
+    });
 
     // Testons l'état "aucune session" pour l'instant
     await waitFor(
@@ -132,23 +157,39 @@ describe('HistoryStats Component', () => {
   });
 
   it('should allow typing in search input', async () => {
-    render(<HistoryStats />);
+    await act(async () => {
+      render(<HistoryStats />);
+    });
 
-    const searchInput = screen.getByPlaceholderText(
-      "Rechercher par nom de musique ou d'artiste..."
-    );
-    await user.type(searchInput, 'Debussy');
+    await waitFor(() => {
+      const searchInput = screen.getByPlaceholderText(
+        "Rechercher par nom de musique ou d'artiste..."
+      );
+      user.type(searchInput, 'Debussy');
+    });
 
-    expect(searchInput).toHaveValue('Debussy');
+    await waitFor(() => {
+      const searchInput = screen.getByPlaceholderText(
+        "Rechercher par nom de musique ou d'artiste..."
+      );
+      expect(searchInput).toHaveValue('Debussy');
+    });
   });
 
   it('should render mode buttons as clickable', async () => {
-    render(<HistoryStats />);
+    await act(async () => {
+      render(<HistoryStats />);
+    });
 
-    const learningButton = screen.getByText('Apprentissage');
-    await user.click(learningButton);
+    await waitFor(() => {
+      const learningButton = screen.getByText('Apprentissage');
+      user.click(learningButton);
+    });
 
-    // Button should still be in the document after click
-    expect(learningButton).toBeInTheDocument();
+    await waitFor(() => {
+      const learningButton = screen.getByText('Apprentissage');
+      // Button should still be in the document after click
+      expect(learningButton).toBeInTheDocument();
+    });
   });
 });

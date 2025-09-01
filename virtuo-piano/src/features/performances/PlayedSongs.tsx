@@ -214,7 +214,7 @@ export default function PlayedSongs() {
   const availableFilters = [
     { id: 'all', label: 'Tous' },
     { id: 'Favoris', label: 'Favoris' },
-    ...allGenres.map((genre) => ({ id: genre, label: genre })),
+    ...(allGenres || []).map((genre) => ({ id: genre, label: genre })),
   ];
 
   // Gestion du tri
