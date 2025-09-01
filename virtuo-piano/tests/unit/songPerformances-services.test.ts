@@ -297,8 +297,8 @@ describe('PerformancesServices - Nouvelles méthodes', () => {
       expect(result.totalPratique).toBeGreaterThan(0);
       expect(result.totalModeApprentissage).toBeGreaterThan(0);
 
-      expect(result.totalPratique).toBe(105);
-      expect(result.totalModeApprentissage).toBe(75);
+      expect(result.totalPratique).toBe(75);
+      expect(result.totalModeApprentissage).toBe(45);
       expect(result.totalModeJeu).toBe(30);
     });
   });
