@@ -25,6 +25,7 @@ import { PIE_CHART_COLORS } from '@/common/constants/generalStats';
 import PracticeTimeTile from './PracticeTimeTile';
 import StartedSongsTile from './StartedSongsTile';
 import { Spinner } from '@/components/ui/spinner';
+import { useRouter } from 'next/navigation';
 
 const achievements = [
   {
@@ -74,6 +75,8 @@ export default function GeneralStats({
   const [error, setError] = useState<string | null>(null);
   const [scoresError, setScoresError] = useState<string | null>(null);
   const [hasMoreSessions, setHasMoreSessions] = useState(true);
+
+  const router = useRouter();
 
   const loadMoreSessions = async () => {
     try {
@@ -232,7 +235,13 @@ export default function GeneralStats({
           <>
             <div className="grid cursor-pointer grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {recentScores.map((score) => (
-                <ScoreCard key={score.id} score={score} />
+                <ScoreCard
+                  key={score.id}
+                  score={score}
+                  onClick={() =>
+                    router.push(`/performances/session/${score.id}`)
+                  }
+                />
               ))}
             </div>
 
