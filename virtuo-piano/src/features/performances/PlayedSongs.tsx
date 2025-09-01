@@ -18,7 +18,7 @@ import SongTypeBadge from '@/components/SongTypeBadge';
 import { castMsToMin } from '@/common/utils/function';
 import {
   getPlayedSongsAction,
-  getAllPlayedSongsAction,
+  getPlayedSongsGenresAction,
   type PlayedSongsResult,
 } from '@/lib/actions/playedSongs-actions';
 import { toggleFavorite } from '@/lib/actions/songs';
@@ -26,6 +26,7 @@ import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { Spinner } from '@/components/ui/spinner';
 import { useSearchCache } from '@/customHooks/useSearchCache';
+import PreviewModal from '../library/PreviewModal';
 
 export default function PlayedSongs() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -38,7 +39,7 @@ export default function PlayedSongs() {
   const [currentPage, setCurrentPage] = useState(1);
   const [isPending, startTransition] = useTransition();
   const [allGenres, setAllGenres] = useState<string[]>([]);
-
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const filterMenuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const [filterMenuPosition, setFilterMenuPosition] = useState<
@@ -91,16 +92,8 @@ export default function PlayedSongs() {
   useEffect(() => {
     const loadAllGenres = async () => {
       try {
-        const allSongs = await getAllPlayedSongsAction();
-        const uniqueGenres = Array.from(
-          new Set(
-            allSongs
-              .filter((song) => song.genre)
-              .map((song) => song.genre)
-              .filter((genre): genre is string => genre !== null)
-          )
-        ).sort();
-        setAllGenres(uniqueGenres);
+        const genres = await getPlayedSongsGenresAction();
+        setAllGenres(genres);
       } catch (error) {
         console.error('Erreur lors du chargement des genres:', error);
       }
@@ -194,6 +187,13 @@ export default function PlayedSongs() {
     router.push(`/performances/${songId}`);
   };
 
+  const handlePreviewClick = () => {
+    setIsPreviewModalOpen(true);
+  };
+
+  const handleClosePreviewModal = () => {
+    setIsPreviewModalOpen(false);
+  };
   // Les chansons sont déjà filtrées côté serveur
   const filteredSongs = safePlayedSongsData.songs;
 
@@ -214,7 +214,7 @@ export default function PlayedSongs() {
   const availableFilters = [
     { id: 'all', label: 'Tous' },
     { id: 'Favoris', label: 'Favoris' },
-    ...allGenres.map((genre) => ({ id: genre, label: genre })),
+    ...(allGenres || []).map((genre) => ({ id: genre, label: genre })),
   ];
 
   // Gestion du tri
@@ -491,7 +491,10 @@ export default function PlayedSongs() {
                       </div>
                     </td>
                     <td className={styles.tableCell}>
-                      <button className={styles.playButton}>
+                      <button
+                        className={styles.playButton}
+                        onClick={() => handlePreviewClick()}
+                      >
                         <IconPlayerPlay size={16} />
                       </button>
                     </td>
@@ -565,6 +568,10 @@ export default function PlayedSongs() {
           </div>
         )}
       </div>
+      <PreviewModal
+        isOpen={isPreviewModalOpen}
+        onClose={handleClosePreviewModal}
+      />
     </div>
   );
 }

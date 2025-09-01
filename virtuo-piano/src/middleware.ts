@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
-import jwt from 'jsonwebtoken';
+import * as jose from 'jose';
 
 export default async function middleware(req: NextRequest) {
   // Exclure complètement la route de maintenance pour les cron jobs
@@ -19,11 +19,15 @@ export default async function middleware(req: NextRequest) {
       return NextResponse.next();
     }
 
-    // Vérifier le Referer pour les routes API
+    // Vérifier le Referer pour les routes API (sauf pour Unity)
     const referer = req.headers.get('referer');
+    const isUnityRequest =
+      req.headers.get('x-api-key') || req.headers.get('authorization');
+
     if (
-      !referer ||
-      !referer.includes(process.env.NEXT_PUBLIC_APP_URL || 'localhost:3000')
+      !isUnityRequest &&
+      (!referer ||
+        !referer.includes(process.env.NEXT_PUBLIC_APP_URL || 'localhost:3000'))
     ) {
       return NextResponse.json(
         { error: 'Accès non autorisé' },
@@ -31,28 +35,46 @@ export default async function middleware(req: NextRequest) {
       );
     }
 
-    // Vérifier l'authentification par API key pour Unity
+    // Vérifier l'authentification par API key pour Unity (uniquement pour contourner le referer)
     const apiKey = req.headers.get('x-api-key');
-    if (apiKey) {
-      if (apiKey === process.env.UNITY_API_KEY) {
-        return NextResponse.next();
-      }
-    }
+    const hasValidApiKey = apiKey && apiKey === process.env.UNITY_API_KEY;
 
     // Vérifier l'authentification par token JWT pour Unity
     const authHeader = req.headers.get('authorization');
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.split(' ')[1];
+      console.log(
+        '🔍 Middleware - Token reçu:',
+        token.substring(0, 50) + '...'
+      );
+      console.log(
+        '🔍 Middleware - JWT_SECRET défini:',
+        !!process.env.JWT_SECRET
+      );
+
       try {
-        const decoded = jwt.verify(
-          token,
+        const secret = new TextEncoder().encode(
           process.env.JWT_SECRET || 'votre-secret-jwt'
         );
-        req.headers.set('x-user-id', (decoded as any).id);
+        const { payload } = await jose.jwtVerify(token, secret);
+        console.log('🔍 Middleware - Token décodé avec succès:', payload);
+        req.headers.set('x-user-id', payload.id as string);
         return NextResponse.next();
       } catch (error) {
+        console.error(
+          '🔍 Middleware - Erreur de vérification du token:',
+          error
+        );
         return NextResponse.json({ error: 'Token invalide' }, { status: 401 });
       }
+    }
+
+    // Si c'est une requête Unity avec API key valide mais sans token JWT, refuser l'accès
+    if (hasValidApiKey) {
+      return NextResponse.json(
+        { error: "Token d'authentification requis" },
+        { status: 401 }
+      );
     }
 
     // Si pas d'API key ni de token JWT valide, vérifier le token JWT pour l'authentification web

@@ -11,7 +11,10 @@ import { toast } from 'react-hot-toast';
 import PlayedSongs from '@/features/performances/PlayedSongs';
 import { useSearchCache } from '@/customHooks/useSearchCache';
 import { toggleFavorite } from '@/lib/actions/songs';
-import { getAllPlayedSongsAction } from '@/lib/actions/playedSongs-actions';
+import {
+  getPlayedSongsAction,
+  getPlayedSongsGenresAction,
+} from '@/lib/actions/playedSongs-actions';
 
 // Mock des dépendances
 vi.mock('next/navigation', () => ({
@@ -34,13 +37,15 @@ vi.mock('@/lib/actions/songs', () => ({
 }));
 
 vi.mock('@/lib/actions/playedSongs-actions', () => ({
-  getAllPlayedSongsAction: vi.fn(),
+  getPlayedSongsAction: vi.fn(),
+  getPlayedSongsGenresAction: vi.fn(),
 }));
 
 const mockUseRouter = vi.mocked(useRouter);
 const mockUseSearchCache = vi.mocked(useSearchCache);
 const mockToggleFavorite = vi.mocked(toggleFavorite);
-const mockGetAllPlayedSongsAction = vi.mocked(getAllPlayedSongsAction);
+const mockGetPlayedSongsAction = vi.mocked(getPlayedSongsAction);
+const mockGetPlayedSongsGenresAction = vi.mocked(getPlayedSongsGenresAction);
 const mockToast = vi.mocked(toast);
 
 // Fonctions utilitaires pour trouver les boutons sans nom accessible
@@ -145,9 +150,11 @@ describe('PlayedSongs Component', () => {
     vi.clearAllMocks();
     mockUseRouter.mockReturnValue({ push: mockPush } as any);
     mockUseSearchCache.mockReturnValue(mockSearchCacheDefault);
-    mockGetAllPlayedSongsAction.mockResolvedValue([
-      mockPlayedSongsData.songs[0],
-      mockPlayedSongsData.songs[1],
+    mockGetPlayedSongsAction.mockResolvedValue(mockPlayedSongsData);
+    mockGetPlayedSongsGenresAction.mockResolvedValue([
+      'Classical',
+      'Jazz',
+      'Pop',
     ]);
   });
 
@@ -156,76 +163,106 @@ describe('PlayedSongs Component', () => {
   });
 
   describe('Rendu de base', () => {
-    it('devrait afficher la liste des chansons jouées', () => {
-      render(<PlayedSongs />);
+    it('devrait afficher la liste des chansons jouées', async () => {
+      await act(async () => {
+        render(<PlayedSongs />);
+      });
 
-      expect(screen.getByText('Sonate au clair de lune')).toBeInTheDocument();
-      expect(screen.getByText('Für Elise')).toBeInTheDocument();
-      expect(screen.getAllByText('Beethoven')).toHaveLength(2);
+      await waitFor(() => {
+        expect(screen.getByText('Sonate au clair de lune')).toBeInTheDocument();
+        expect(screen.getByText('Für Elise')).toBeInTheDocument();
+        expect(screen.getAllByText('Beethoven')).toHaveLength(2);
+      });
     });
 
-    it('devrait afficher les informations de pagination', () => {
-      render(<PlayedSongs />);
+    it('devrait afficher les informations de pagination', async () => {
+      await act(async () => {
+        render(<PlayedSongs />);
+      });
 
-      expect(screen.getByText('2 morceaux joués')).toBeInTheDocument();
-      expect(screen.getByText('Page 1 sur 1')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText('2 morceaux joués')).toBeInTheDocument();
+        expect(screen.getByText('Page 1 sur 1')).toBeInTheDocument();
+      });
     });
 
-    it('devrait afficher la barre de recherche', () => {
-      render(<PlayedSongs />);
+    it('devrait afficher la barre de recherche', async () => {
+      await act(async () => {
+        render(<PlayedSongs />);
+      });
 
-      const searchInput = screen.getByPlaceholderText(
-        'Rechercher par titre ou compositeur...'
-      );
-      expect(searchInput).toBeInTheDocument();
+      await waitFor(() => {
+        const searchInput = screen.getByPlaceholderText(
+          'Rechercher par titre ou compositeur...'
+        );
+        expect(searchInput).toBeInTheDocument();
+      });
     });
 
-    it('devrait afficher le bouton de filtres', () => {
-      render(<PlayedSongs />);
+    it('devrait afficher le bouton de filtres', async () => {
+      await act(async () => {
+        render(<PlayedSongs />);
+      });
 
-      const filterButton = getFilterButton();
-      expect(filterButton).toBeTruthy();
-      expect(filterButton).toBeInTheDocument();
+      await waitFor(() => {
+        const filterButton = getFilterButton();
+        expect(filterButton).toBeTruthy();
+        expect(filterButton).toBeInTheDocument();
+      });
     });
 
-    it('devrait afficher les en-têtes de colonnes', () => {
-      render(<PlayedSongs />);
+    it('devrait afficher les en-têtes de colonnes', async () => {
+      await act(async () => {
+        render(<PlayedSongs />);
+      });
 
-      expect(screen.getByText('Titre')).toBeInTheDocument();
-      expect(screen.getByText('Compositeur')).toBeInTheDocument();
-      expect(screen.getByText('Durée')).toBeInTheDocument();
-      expect(screen.getByText(/Dernière lecture/)).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText('Titre')).toBeInTheDocument();
+        expect(screen.getByText('Compositeur')).toBeInTheDocument();
+        expect(screen.getByText('Durée')).toBeInTheDocument();
+        expect(screen.getByText(/Dernière lecture/)).toBeInTheDocument();
+      });
     });
 
-    it('devrait afficher les boutons de favoris', () => {
-      render(<PlayedSongs />);
+    it('devrait afficher les boutons de favoris', async () => {
+      await act(async () => {
+        render(<PlayedSongs />);
+      });
 
-      const favoriteButtons = getFavoriteButtons();
-      expect(favoriteButtons).toHaveLength(2);
+      await waitFor(() => {
+        const favoriteButtons = getFavoriteButtons();
+        expect(favoriteButtons).toHaveLength(2);
+      });
     });
   });
 
   describe('État de chargement', () => {
-    it('devrait afficher le spinner pendant le chargement', () => {
+    it('devrait afficher le spinner pendant le chargement', async () => {
       mockUseSearchCache.mockReturnValue({
         ...mockSearchCacheDefault,
         isLoading: true,
         data: null,
       });
 
-      render(<PlayedSongs />);
+      await act(async () => {
+        render(<PlayedSongs />);
+      });
 
-      expect(screen.getByTitle('Loading...')).toBeInTheDocument();
+      expect(screen.getByText('Chargement...')).toBeInTheDocument();
     });
   });
 
   describe('Filtres', () => {
     it('devrait ouvrir le menu des filtres', async () => {
-      render(<PlayedSongs />);
+      await act(async () => {
+        render(<PlayedSongs />);
+      });
 
-      const filterButton = getFilterButton();
-      expect(filterButton).toBeTruthy();
-      fireEvent.click(filterButton!);
+      await waitFor(() => {
+        const filterButton = getFilterButton();
+        expect(filterButton).toBeTruthy();
+        fireEvent.click(filterButton!);
+      });
 
       await waitFor(() => {
         expect(screen.getByText('Tous')).toBeInTheDocument();
@@ -278,18 +315,22 @@ describe('PlayedSongs Component', () => {
   });
 
   describe('Tri', () => {
-    it('devrait afficher les indicateurs de tri', () => {
-      render(<PlayedSongs />);
+    it('devrait afficher les indicateurs de tri', async () => {
+      await act(async () => {
+        render(<PlayedSongs />);
+      });
 
-      // Le tri par défaut est par dernière lecture, descendant
-      expect(screen.getByText(/Dernière lecture/)).toBeInTheDocument();
-      // L'indicateur est affiché avec le texte
-      expect(screen.getByText(/↓/)).toBeInTheDocument();
+      await waitFor(() => {
+        // Le tri par défaut est par dernière lecture, descendant
+        expect(screen.getByText(/Dernière lecture/)).toBeInTheDocument();
+        // L'indicateur est affiché avec le texte
+        expect(screen.getByText(/↓/)).toBeInTheDocument();
+      });
     });
   });
 
   describe('Pagination', () => {
-    it('devrait afficher les boutons de pagination', () => {
+    it('devrait afficher les boutons de pagination', async () => {
       const multiPageData = {
         ...mockPlayedSongsData,
         pagination: {
@@ -306,34 +347,46 @@ describe('PlayedSongs Component', () => {
         data: multiPageData,
       });
 
-      render(<PlayedSongs />);
+      await act(async () => {
+        render(<PlayedSongs />);
+      });
 
-      expect(screen.getByText('Page 2 sur 5')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText('Page 2 sur 5')).toBeInTheDocument();
 
-      const paginationButtons = getPaginationButtons();
-      const prevButton = paginationButtons[0];
-      const nextButton = paginationButtons[1];
+        const paginationButtons = getPaginationButtons();
+        const prevButton = paginationButtons[0];
+        const nextButton = paginationButtons[1];
 
-      expect(prevButton).toBeInTheDocument();
-      expect(nextButton).toBeInTheDocument();
-      expect(prevButton).not.toBeDisabled();
-      expect(nextButton).not.toBeDisabled();
+        expect(prevButton).toBeInTheDocument();
+        expect(nextButton).toBeInTheDocument();
+        expect(prevButton).not.toBeDisabled();
+        expect(nextButton).not.toBeDisabled();
+      });
     });
 
-    it('devrait désactiver le bouton précédent sur la première page', () => {
-      render(<PlayedSongs />);
+    it('devrait désactiver le bouton précédent sur la première page', async () => {
+      await act(async () => {
+        render(<PlayedSongs />);
+      });
 
-      const paginationButtons = getPaginationButtons();
-      const prevButton = paginationButtons[0];
-      expect(prevButton).toBeDisabled();
+      await waitFor(() => {
+        const paginationButtons = getPaginationButtons();
+        const prevButton = paginationButtons[0];
+        expect(prevButton).toBeDisabled();
+      });
     });
 
-    it('devrait désactiver le bouton suivant sur la dernière page', () => {
-      render(<PlayedSongs />);
+    it('devrait désactiver le bouton suivant sur la dernière page', async () => {
+      await act(async () => {
+        render(<PlayedSongs />);
+      });
 
-      const paginationButtons = getPaginationButtons();
-      const nextButton = paginationButtons[1];
-      expect(nextButton).toBeDisabled();
+      await waitFor(() => {
+        const paginationButtons = getPaginationButtons();
+        const nextButton = paginationButtons[1];
+        expect(nextButton).toBeDisabled();
+      });
     });
 
     it('devrait naviguer vers la page suivante', async () => {
@@ -353,11 +406,15 @@ describe('PlayedSongs Component', () => {
         data: multiPageData,
       });
 
-      render(<PlayedSongs />);
+      await act(async () => {
+        render(<PlayedSongs />);
+      });
 
-      const paginationButtons = getPaginationButtons();
-      const nextButton = paginationButtons[1];
-      fireEvent.click(nextButton);
+      await waitFor(() => {
+        const paginationButtons = getPaginationButtons();
+        const nextButton = paginationButtons[1];
+        fireEvent.click(nextButton);
+      });
 
       await waitFor(() => {
         expect(mockUseSearchCache).toHaveBeenLastCalledWith(
@@ -378,11 +435,14 @@ describe('PlayedSongs Component', () => {
         message: 'Ajouté aux favoris',
       });
 
-      render(<PlayedSongs />);
+      await act(async () => {
+        render(<PlayedSongs />);
+      });
 
-      const favoriteButtons = getFavoriteButtons();
-
-      fireEvent.click(favoriteButtons[0]);
+      await waitFor(() => {
+        const favoriteButtons = getFavoriteButtons();
+        fireEvent.click(favoriteButtons[0]);
+      });
 
       await waitFor(() => {
         expect(mockToggleFavorite).toHaveBeenCalledWith('song1');
@@ -401,11 +461,14 @@ describe('PlayedSongs Component', () => {
         refetch: mockRefetch,
       });
 
-      render(<PlayedSongs />);
+      await act(async () => {
+        render(<PlayedSongs />);
+      });
 
-      const favoriteButtons = getFavoriteButtons();
-
-      fireEvent.click(favoriteButtons[0]);
+      await waitFor(() => {
+        const favoriteButtons = getFavoriteButtons();
+        fireEvent.click(favoriteButtons[0]);
+      });
 
       await waitFor(() => {
         expect(mockRefetch).toHaveBeenCalled();
@@ -418,11 +481,14 @@ describe('PlayedSongs Component', () => {
         message: 'Erreur lors de la modification',
       });
 
-      render(<PlayedSongs />);
+      await act(async () => {
+        render(<PlayedSongs />);
+      });
 
-      const favoriteButtons = getFavoriteButtons();
-
-      fireEvent.click(favoriteButtons[0]);
+      await waitFor(() => {
+        const favoriteButtons = getFavoriteButtons();
+        fireEvent.click(favoriteButtons[0]);
+      });
 
       await waitFor(() => {
         expect(mockToast.error).toHaveBeenCalledWith(
@@ -433,12 +499,18 @@ describe('PlayedSongs Component', () => {
   });
 
   describe('Responsive design', () => {
-    it('devrait cacher certaines colonnes sur mobile', () => {
-      render(<PlayedSongs />);
+    it('devrait cacher certaines colonnes sur mobile', async () => {
+      await act(async () => {
+        render(<PlayedSongs />);
+      });
 
-      // Les colonnes avec hideOnMobile devraient avoir la classe appropriée
-      const composerHeader = screen.getByText('Compositeur');
-      expect(composerHeader.closest('th')?.className).toContain('hideOnMobile');
+      await waitFor(() => {
+        // Les colonnes avec hideOnMobile devraient avoir la classe appropriée
+        const composerHeader = screen.getByText('Compositeur');
+        expect(composerHeader.closest('th')?.className).toContain(
+          'hideOnMobile'
+        );
+      });
     });
   });
 });

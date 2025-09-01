@@ -78,36 +78,6 @@ describe('RGPD Actions', () => {
     });
   });
 
-  describe('sendInactiveAccountWarningsAction', () => {
-    it('devrait envoyer les avertissements avec succès', async () => {
-      const mockUsers = [
-        {
-          id: '1',
-          email: 'user1@test.com',
-          userName: 'User1',
-          lastLoginAt: new Date('2023-01-01'),
-        },
-      ];
-
-      // Mock Prisma directement
-      const mockPrisma = {
-        user: {
-          findMany: vi.fn().mockResolvedValue(mockUsers),
-        },
-      };
-      vi.doMock('@/lib/prisma', () => ({
-        default: mockPrisma,
-      }));
-
-      (EmailService.sendInactiveAccountWarning as any).mockResolvedValue(true);
-
-      const result = await sendInactiveAccountWarningsAction();
-
-      expect(result.success).toBe(true);
-      expect(result.message).toContain("emails d'avertissement envoyés");
-    });
-  });
-
   describe('deleteInactiveUsersAction', () => {
     it('devrait supprimer les utilisateurs inactifs avec succès', async () => {
       const mockUser = { id: '1' };

@@ -98,7 +98,7 @@ export default function InfoTile({
                 <button
                   key={interval.key}
                   onClick={() => onIntervalChange(interval.key)}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                  className={`px-3 cursor-pointer py-1.5 text-xs font-medium rounded-md transition-colors ${
                     selectedInterval === interval.key
                       ? 'bg-indigo-500/30 text-indigo-300'
                       : 'bg-white/5 text-white/70 hover:bg-white/10'

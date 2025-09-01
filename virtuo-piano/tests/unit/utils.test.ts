@@ -133,8 +133,8 @@ describe('Fonctions utilitaires', () => {
     });
 
     it('devrait extraire et formater correctement le nom de la page', () => {
-      expect(getPageName('/library')).toBe('Library');
-      expect(getPageName('/profile/settings')).toBe('Settings');
+      expect(getPageName('/library')).toBe('Librairie');
+      expect(getPageName('/profile/settings')).toBe('Paramètres');
       expect(getPageName('/songs/123')).toBe('123');
     });
 

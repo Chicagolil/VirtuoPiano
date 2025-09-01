@@ -27,7 +27,13 @@ export interface ScoreSummary {
   hands?: string;
 }
 
-export default function ScoreCard({ score }: { score: ScoreSummary }) {
+export default function ScoreCard({
+  score,
+  onClick,
+}: {
+  score: ScoreSummary;
+  onClick: () => void;
+}) {
   return (
     <div
       className={`group bg-white/3 shadow-sm rounded-xl p-4 border ${
@@ -35,6 +41,7 @@ export default function ScoreCard({ score }: { score: ScoreSummary }) {
           ? 'border-indigo-200/10 dark:border-indigo-900/10'
           : 'border-purple-200/10 dark:border-purple-900/10'
       } hover:shadow-md transition-shadow`}
+      onClick={onClick}
     >
       <div className="flex items-start">
         <div className="flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-700 mr-3">

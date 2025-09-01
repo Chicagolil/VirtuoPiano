@@ -1,0 +1,3667 @@
+﻿# Différences de la Pull Request #45 - Imports de chansons via modale avec fichier midi + visualisation avec piano roll
+
+## Fichier: virtuo-piano/package-lock.json
+- **Statut:** modified
+- **Additions:** 2056
+- **Deletions:** 96
+- **Changes:** 2152
+
+### Différences:
+
+
+---
+## Fichier: virtuo-piano/package.json
+- **Statut:** modified
+- **Additions:** 5
+- **Deletions:** 0
+- **Changes:** 5
+
+### Différences:
+@@ -44,6 +44,7 @@
+     "@testing-library/jest-dom": "^6.6.3",
+     "@testing-library/react": "^16.3.0",
+     "@tippyjs/react": "^4.2.6",
++    "@tonejs/midi": "^2.0.28",
+     "@types/bcryptjs": "^2.4.6",
+     "@types/jsonwebtoken": "^9.0.9",
+     "@types/nodemailer": "^6.4.17",
+@@ -56,6 +57,7 @@
+     "clsx": "^2.1.1",
+     "framer-motion": "^12.6.5",
+     "gsap": "^3.12.7",
++    "html-midi-player": "^1.6.0",
+     "jsdom": "^26.1.0",
+     "jsonwebtoken": "^9.0.2",
+     "lottie-react": "^2.4.1",
+@@ -65,12 +67,15 @@
+     "next-cloudinary": "^6.16.0",
+     "next-themes": "^0.4.6",
+     "nodemailer": "^6.10.1",
++    "piano-visualizer": "^1.0.22",
++    "pixi-piano-roll": "^1.2.3",
+     "rate-limiter-flexible": "^7.1.1",
+     "react": "^19.0.0",
+     "react-chartjs-2": "^5.3.0",
+     "react-dom": "^19.0.0",
+     "react-hot-toast": "^2.5.2",
+     "react-icons": "^5.5.0",
++    "react-piano": "^3.1.3",
+     "recharts": "^2.15.2",
+     "tailwind-merge": "^3.2.0",
+     "tailwindcss-animate": "^1.0.7",
+
+---
+## Fichier: virtuo-piano/prisma/schema.prisma
+- **Statut:** modified
+- **Additions:** 0
+- **Deletions:** 1
+- **Changes:** 1
+
+### Différences:
+@@ -48,7 +48,6 @@ model User {
+   privacyConsent Boolean  @default(false) // Consentement à la politique de confidentialité
+   privacyConsentAt DateTime? // Date du consentement
+   lastLoginAt   DateTime? // Dernière connexion de l'utilisateur
+-
+   createdAt     DateTime  @default(now())
+   updatedAt     DateTime  @updatedAt
+   scores        Scores[]
+
+---
+## Fichier: virtuo-piano/src/app/(dashboard)/favorites/page.tsx
+- **Statut:** modified
+- **Additions:** 27
+- **Deletions:** 4
+- **Changes:** 31
+
+### Différences:
+@@ -1,16 +1,39 @@
+ import React from 'react';
+-import FavoritesBento from '@/features/BentoGrid/FavoritesBento';
+ import { getServerSession } from 'next-auth';
+ import { redirect } from 'next/navigation';
+ import { authOptions } from '@/lib/authoption';
+-import { getPracticeTimeComparison } from '@/lib/actions/generalStats-actions';
+-import { getRecentSessions } from '@/lib/actions/history-actions';
++import { Heart } from 'lucide-react';
+ 
+ export default async function FavoritesPage() {
+   const session = await getServerSession(authOptions);
+ 
+   if (!session?.user?.id) {
+     redirect('/auth/login');
+   }
+-  return <div className="container mx-auto">{/* <FavoritesBento /> */}</div>;
++  return (
++    <div className="w-full p-4 pt-7">
++      <div className="max-w-[98.5%] mx-auto bg-transparent shadow-md rounded-2xl p-6 border border-slate-200/20 dark:border-slate-700/20">
++        <div className="bg-gradient-to-r from-blue-500/20 via-indigo-500/20 to-orange-400/20 rounded-t-xl p-6 mb-6 -mx-6 -mt-6">
++          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
++            <div>
++              <h1 className="text-xl font-bold text-white flex items-center">
++                <Heart size={28} className="mr-2 text-orange-300" />
++                Retrouvez vos morceaux favoris
++              </h1>
++            </div>
++          </div>
++        </div>
++        <div className="space-y-6">
++          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
++            <h2 className="text-white font-semibold mb-2">Page en travaux</h2>
++            <p className="text-white/70 text-sm">
++              Cette section affichera vos morceaux favoris avec un accès rapide,
++              des tris et filtres, et des recommandations basées sur vos
++              habitudes de jeu.
++            </p>
++          </div>
++        </div>
++      </div>
++    </div>
++  );
+ }
+
+---
+## Fichier: virtuo-piano/src/app/(dashboard)/imports/page.tsx
+- **Statut:** modified
+- **Additions:** 8
+- **Deletions:** 2
+- **Changes:** 10
+
+### Différences:
+@@ -1,13 +1,19 @@
+-import ImportsBento from '@/features/BentoGrid/ImportsBento';
++import { FolderUp } from 'lucide-react';
+ import { authOptions } from '@/lib/authoption';
+ import { getServerSession } from 'next-auth';
+ import { redirect } from 'next/navigation';
++import SongImports from '@/features/imports/SongImports';
+ 
+ export default async function ImportsPage() {
+   const session = await getServerSession(authOptions);
+ 
+   if (!session?.user?.id) {
+     redirect('/auth/login');
+   }
+-  return <div className="container mx-auto px-4">{/* <ImportsBento /> */}</div>;
++
++  return (
++    <div className="w-full p-4 pt-7">
++      <SongImports />
++    </div>
++  );
+ }
+
+---
+## Fichier: virtuo-piano/src/app/(dashboard)/imports/review/page.tsx
+- **Statut:** added
+- **Additions:** 363
+- **Deletions:** 0
+- **Changes:** 363
+
+### Différences:
+@@ -0,0 +1,363 @@
++'use client';
++
++import React, { useEffect, useMemo, useState } from 'react';
++import { useRouter } from 'next/navigation';
++import dynamic from 'next/dynamic';
++import { convertMidiToSongFormat } from '@/common/utils/function';
++import InfoTile from '@/features/performances/components/InfoTile';
++import {
++  Music,
++  Gauge,
++  Tags,
++  Key,
++  FileText,
++  Layers,
++  AlertTriangle,
++} from 'lucide-react';
++import { useCreateImport } from '@/customHooks/useCreateImport';
++import { toast } from 'react-hot-toast';
++
++const PianoRollViewer = dynamic(
++  () => import('@/components/piano-roll/PianoRollViewer'),
++  { ssr: false }
++);
++
++type ReviewData = {
++  title: string;
++  composer: string;
++  difficulty: string;
++  genre: string;
++  songType: string;
++  key: string;
++  imageUrl: string | null;
++  imageName: string | null;
++  midiUrl: string | null;
++  midiName: string | null;
++};
++
++export default function ImportReviewPage() {
++  const router = useRouter();
++  const [data, setData] = useState<ReviewData | null>(null);
++  const [tracksNotes, setTracksNotes] = useState<
++    Array<{ track: number; notes: any[] }>
++  >([]);
++  const [loading, setLoading] = useState(false);
++  const [error, setError] = useState<string | null>(null);
++  const [selectedTracks, setSelectedTracks] = useState<Set<number>>(new Set());
++  const [midiMeta, setMidiMeta] = useState<{
++    tempo: number;
++    timeSignature: string;
++    duration_ms: number;
++  } | null>(null);
++  const createImport = useCreateImport();
++
++  useEffect(() => {
++    try {
++      const raw = sessionStorage.getItem('importReview:data');
++      if (!raw) {
++        router.push('/imports');
++        return;
++      }
++      const parsed: ReviewData = JSON.parse(raw);
++      setData(parsed);
++    } catch (err) {
++      router.push('/imports');
++    }
++  }, [router]);
++
++  useEffect(() => {
++    const loadMidi = async () => {
++      if (!data?.midiUrl) return;
++      setLoading(true);
++      setError(null);
++      try {
++        const resp = await fetch(data.midiUrl);
++        const blob = await resp.blob();
++        const file = new File([blob], data.midiName || 'song.mid', {
++          type: 'audio/midi',
++        });
++        const result = await convertMidiToSongFormat(file);
++        setMidiMeta({
++          tempo: result.tempo,
++          timeSignature: result.timeSignature,
++          duration_ms: result.duration_ms,
++        });
++        // Regrouper par track
++        const grouped = new Map<number, any[]>();
++        for (const n of result.notes) {
++          const arr = grouped.get(n.track) || [];
++          arr.push({
++            note: n.note,
++            startBeat: n.startBeat,
++            durationInBeats: n.durationInBeats,
++          });
++          grouped.set(n.track, arr);
++        }
++        const list = Array.from(grouped.entries())
++          .sort((a, b) => a[0] - b[0])
++          .map(([track, notes]) => ({ track, notes }));
++        setTracksNotes(list);
++      } catch (e) {
++        setError('Impossible de lire le MIDI');
++      } finally {
++        setLoading(false);
++      }
++    };
++    loadMidi();
++  }, [data]);
++
++  // Sélectionner toutes les pistes par défaut lorsque chargées
++  useEffect(() => {
++    if (tracksNotes.length > 0) {
++      setSelectedTracks(new Set(tracksNotes.map((t) => t.track)));
++    } else {
++      setSelectedTracks(new Set());
++    }
++  }, [tracksNotes]);
++
++  const toggleTrack = (track: number) => {
++    setSelectedTracks((prev) => {
++      const next = new Set(prev);
++      if (next.has(track)) next.delete(track);
++      else next.add(track);
++      return next;
++    });
++  };
++
++  const blobUrlToDataUrl = async (blobUrl: string): Promise<string> => {
++    const resp = await fetch(blobUrl);
++    const blob = await resp.blob();
++    return await new Promise((resolve, reject) => {
++      const reader = new FileReader();
++      reader.onloadend = () => {
++        if (typeof reader.result === 'string') resolve(reader.result);
++        else reject(new Error('Conversion image échouée'));
++      };
++      reader.onerror = reject;
++      reader.readAsDataURL(blob);
++    });
++  };
++
++  const handleConfirm = async () => {
++    if (!data || !midiMeta) {
++      toast.error('Données incomplètes pour créer la chanson');
++      return;
++    }
++    const selectedTrackIds = tracksNotes
++      .filter((t) => selectedTracks.has(t.track))
++      .map((t) => t.track);
++    if (selectedTrackIds.length === 0) {
++      toast.error('Sélectionnez au moins une piste');
++      return;
++    }
++
++    let imageDataUrl: string | null = null;
++    try {
++      if (data.imageUrl) {
++        imageDataUrl = await blobUrlToDataUrl(data.imageUrl);
++      }
++    } catch (e) {
++      console.warn(
++        "Impossible de convertir l'image en Data URL, poursuite sans image."
++      );
++    }
++
++    const payload = {
++      title: data.title,
++      composer: data.composer || null,
++      difficulty: parseInt(data.difficulty, 10),
++      genre: data.genre || null,
++      songType: data.songType,
++      keyName: data.key,
++      imageDataUrl: imageDataUrl,
++      midiMeta: midiMeta,
++      tracks: tracksNotes,
++      selectedTrackIds,
++    };
++
++    try {
++      const res = await createImport.mutateAsync(payload);
++      if (res?.success) {
++        toast.success('Chanson importée avec succès');
++        router.push('/imports');
++      } else {
++        toast.error(res?.message || "Échec de l'import");
++      }
++    } catch (e: any) {
++      toast.error(e?.message || "Erreur lors de l'import");
++    }
++  };
++
++  if (!data) return null;
++
++  return (
++    <div className="max-w-[98.5%] mx-auto bg-transparent shadow-md rounded-2xl p-6 border border-slate-200/20 dark:border-slate-700/20">
++      <div className="bg-gradient-to-r from-blue-500/20 via-indigo-500/20 to-orange-400/20 rounded-t-xl p-8 mb-6 -mx-6 -mt-6">
++        <div className="flex items-center justify-between gap-4">
++          <div className="flex items-center space-x-3">
++            <div className="w-10 h-10 bg-gradient-to-br from-blue-500/30 to-orange-500/30 rounded-lg flex items-center justify-center">
++              <Music size={20} className="text-orange-300" />
++            </div>
++            <div>
++              <h1 className="text-xl font-bold text-white">
++                Récapitulatif de l'import
++              </h1>
++              <p className="text-white/70 text-sm">
++                Vérifiez les informations avant de finaliser
++              </p>
++            </div>
++          </div>
++        </div>
++      </div>
++
++      <div className="space-y-6">
++        {/* Informations générales en haut */}
++        <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
++          <div className="flex flex-col items-center">
++            {data.imageUrl ? (
++              <img
++                src={data.imageUrl}
++                alt={data.title}
++                className="w-48 h-48 object-cover rounded-lg"
++              />
++            ) : (
++              <div className="w-48 h-48 bg-white/10 rounded-lg flex items-center justify-center text-white/60">
++                Pas d'image
++              </div>
++            )}
++            <div className="mt-4 text-center">
++              <div className="text-lg font-semibold text-white">
++                {data.title}
++              </div>
++              {data.composer && (
++                <div className="text-white/70 text-sm">{data.composer}</div>
++              )}
++            </div>
++          </div>
++
++          <div className="mt-6 grid grid-cols-2 md:grid-cols-3 gap-3">
++            <InfoTile
++              icon={<Gauge className="text-orange-300" size={18} />}
++              value={data.difficulty}
++              label="Difficulté"
++            />
++            <InfoTile
++              icon={<Tags className="text-orange-300" size={18} />}
++              value={data.genre || '—'}
++              label="Genre"
++            />
++            <InfoTile
++              icon={<Music className="text-orange-300" size={18} />}
++              value={data.songType}
++              label="Type"
++            />
++            <InfoTile
++              icon={<Key className="text-orange-300" size={18} />}
++              value={data.key}
++              label="Gamme"
++            />
++            <InfoTile
++              icon={<FileText className="text-orange-300" size={18} />}
++              value={data.midiName || '—'}
++              label="Fichier MIDI"
++            />
++            <InfoTile
++              icon={<Layers className="text-orange-300" size={18} />}
++              value={tracksNotes.length}
++              label="Pistes détectées"
++            />
++            <InfoTile
++              icon={<Layers className="text-orange-300" size={18} />}
++              value={selectedTracks.size}
++              label="Pistes sélectionnées"
++            />
++          </div>
++        </div>
++
++        {/* Note d'avertissement et Piano rolls en dessous en une seule colonne */}
++        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 text-yellow-200 text-sm flex items-start gap-3">
++          <AlertTriangle size={18} className="text-yellow-300 mt-0.5" />
++          <div>
++            <div className="font-medium">Attention</div>
++            <p>
++              Veuillez bien choisir les pistes à conserver, car elles auront un
++              impact sur votre expérience de jeu.
++            </p>
++            <p className="mt-1">
++              Idéalement, choisissez un fichier MIDI ne contenant que du piano
++              sinon le nombre de pistes peut devenir très important.
++            </p>
++          </div>
++        </div>
++        {loading ? (
++          <div className="bg-white/5 rounded-lg p-6 text-white/70">
++            Chargement du MIDI...
++          </div>
++        ) : error ? (
++          <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 text-red-200">
++            {error}
++          </div>
++        ) : tracksNotes.length === 0 ? (
++          <div className="bg-white/5 rounded-lg p-6 text-white/70">
++            Aucune piste détectée
++          </div>
++        ) : (
++          tracksNotes.map(({ track, notes }) => (
++            <div
++              key={track}
++              className="bg-white/5 rounded-xl p-4 border border-white/10"
++            >
++              <div className="flex items-center justify-between mb-3">
++                <div className="flex items-center gap-3">
++                  <input
++                    id={`track-${track}`}
++                    type="checkbox"
++                    className="h-4 w-4 rounded border-white/20 bg-transparent"
++                    checked={selectedTracks.has(track)}
++                    onChange={() => toggleTrack(track)}
++                  />
++                  <label
++                    htmlFor={`track-${track}`}
++                    className="text-white/90 font-semibold cursor-pointer"
++                  >
++                    Piste #{track}
++                  </label>
++                </div>
++                <span className="text-white/60 text-sm">
++                  {notes.length} notes
++                </span>
++              </div>
++              <div style={{ marginTop: 24, maxWidth: 1900, margin: '0 auto' }}>
++                <PianoRollViewer
++                  notes={notes}
++                  width={'100%'}
++                  minPitch={12}
++                  maxPitch={108}
++                  height={600}
++                />
++              </div>
++            </div>
++          ))
++        )}
++
++        <div className="flex items-center justify-end space-x-3 pt-4 border-t border-white/10">
++          <button
++            onClick={() => router.push('/imports')}
++            className="px-6 py-2 text-white/70 hover:text-white border border-white/20 hover:border-white/30 rounded-lg transition-colors duration-200"
++          >
++            Retour
++          </button>
++          <button
++            onClick={handleConfirm}
++            disabled={createImport.isPending}
++            className="px-6 py-2 bg-gradient-to-r from-blue-500 to-orange-500 hover:from-blue-600 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-all duration-200 transform hover:scale-105"
++          >
++            {createImport.isPending
++              ? 'Enregistrement...'
++              : "Confirmer l'import"}
++          </button>
++        </div>
++      </div>
++    </div>
++  );
++}
+
+---
+## Fichier: virtuo-piano/src/app/(dashboard)/leaderboard/page.tsx
+- **Statut:** modified
+- **Additions:** 26
+- **Deletions:** 5
+- **Changes:** 31
+
+### Différences:
+@@ -1,9 +1,8 @@
+ import React from 'react';
+-import LeaderboardBento from '@/features/BentoGrid/LeaderboardBento';
+ import { authOptions } from '@/lib/authoption';
+ import { redirect } from 'next/navigation';
+ import { getServerSession } from 'next-auth';
+-import { UserList } from './UserList';
++import { Trophy } from 'lucide-react';
+ 
+ export default async function LeaderboardPage() {
+   const session = await getServerSession(authOptions);
+@@ -12,9 +11,31 @@ export default async function LeaderboardPage() {
+     redirect('/auth/login');
+   }
+   return (
+-    <div className="container mx-auto">
+-      {/* <LeaderboardBento /> */}
+-      <UserList />
++    <div className="w-full p-4 pt-7">
++      <div className="max-w-[98.5%] mx-auto bg-transparent shadow-md rounded-2xl p-6 border border-slate-200/20 dark:border-slate-700/20">
++        <div className="bg-gradient-to-r from-blue-500/20 via-indigo-500/20 to-orange-400/20 rounded-t-xl p-6 mb-6 -mx-6 -mt-6">
++          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
++            <div>
++              <h1 className="text-xl font-bold text-white flex items-center">
++                <Trophy size={28} className="mr-2 text-orange-300" />
++                Classement
++              </h1>
++            </div>
++          </div>
++        </div>
++        <div className="space-y-6">
++          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
++            <h2 className="text-white font-semibold mb-2">Page en travaux</h2>
++            <p className="text-white/70 text-sm">
++              Cette page présentera les classements globaux entre les joueurs,
++              avec des filtres par période et par mode de jeu.
++            </p>
++            <p className="text-white/70 text-sm mt-2">
++              Vous pourrez également voir le classement pour chaque chanson.
++            </p>
++          </div>
++        </div>
++      </div>
+     </div>
+   );
+ }
+
+---
+## Fichier: virtuo-piano/src/app/(dashboard)/pageTest/page.tsx
+- **Statut:** removed
+- **Additions:** 0
+- **Deletions:** 9
+- **Changes:** 9
+
+### Différences:
+@@ -1,9 +0,0 @@
+-import BentoShadcnExample from '@/features/BentoGrid/BentoShadcnExample';
+-
+-export default async function LibraryPage() {
+-  return (
+-    <div>
+-      <BentoShadcnExample />
+-    </div>
+-  );
+-}
+
+---
+## Fichier: virtuo-piano/src/app/(dashboard)/performances/session/[id]/page.tsx
+- **Statut:** added
+- **Additions:** 41
+- **Deletions:** 0
+- **Changes:** 41
+
+### Différences:
+@@ -0,0 +1,41 @@
++import React from 'react';
++import { getServerSession } from 'next-auth';
++import { redirect } from 'next/navigation';
++import { authOptions } from '@/lib/authoption';
++import { IconMusic } from '@tabler/icons-react';
++
++export default async function FavoritesPage() {
++  const session = await getServerSession(authOptions);
++
++  if (!session?.user?.id) {
++    redirect('/auth/login');
++  }
++  return (
++    <div className="w-full p-4 pt-7">
++      <div className="max-w-[98.5%] mx-auto bg-transparent shadow-md rounded-2xl p-6 border border-slate-200/20 dark:border-slate-700/20">
++        <div className="bg-gradient-to-r from-blue-500/20 via-indigo-500/20 to-orange-400/20 rounded-t-xl p-6 mb-6 -mx-6 -mt-6">
++          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
++            <div>
++              <h1 className="text-xl font-bold text-white flex items-center">
++                <IconMusic size={28} className="mr-2 text-orange-300" />
++                Détails de la session
++              </h1>
++            </div>
++          </div>
++        </div>
++        <div className="space-y-6">
++          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
++            <h2 className="text-white font-semibold mb-2">Page en travaux</h2>
++            <p className="text-white/70 text-sm">
++              Cette page affichera les détails pour chaque session de jeu.
++            </p>
++            <p className="text-white/70 text-sm mt-2">
++              Vous pourrez voir les détails comme la distribution des notes, les
++              notes obtenues, les erreurs commises, la durée de la session, etc.
++            </p>
++          </div>
++        </div>
++      </div>
++    </div>
++  );
++}
+
+---
+## Fichier: virtuo-piano/src/common/utils/function.ts
+- **Statut:** modified
+- **Additions:** 134
+- **Deletions:** 0
+- **Changes:** 134
+
+### Différences:
+@@ -1,4 +1,5 @@
+ import { DIFFICULTY_RANGES } from '../constants/Difficulties';
++import { Midi } from '@tonejs/midi';
+ import { DifficultyRange } from '../types/songs';
+ import { SONG_TYPE_RANGE } from '../constants/SongTypes';
+ import { SongTypeRange } from '../types/songs';
+@@ -34,6 +35,19 @@ export const getPageName = (pathname: string) => {
+ 
+   // Formatage du nom de la page (première lettre en majuscule, reste en minuscule)
+   const pageName = segments[segments.length - 1];
++
++  // Traductions FR pour les pages principales
++  const translations: Record<string, string> = {
++    imports: 'Imports',
++    favorites: 'Favoris',
++    leaderboard: 'Classement',
++    performances: 'Performances',
++    library: 'Librairie',
++    settings: 'Paramètres',
++    profile: 'Profil',
++  };
++
++  if (translations[pageName]) return translations[pageName];
+   return pageName.charAt(0).toUpperCase() + pageName.slice(1);
+ };
+ 
+@@ -209,3 +223,123 @@ export function generateMonthLabels(
+ 
+   return monthLabels;
+ }
++
++// Types pour la conversion MIDI
++interface MidiNote {
++  note: string;
++  startBeat: number;
++  durationInBeats: number;
++  track: number;
++}
++
++interface MidiConversionResult {
++  notes: MidiNote[];
++  tempo: number;
++  timeSignature: string;
++  duration_ms: number;
++  originalTracksCount: number;
++  uniqueTracksCount: number;
++}
++
++// Fonction pour détecter et supprimer les tracks en double
++function removeDuplicateTracks(tracks: any[]): any[] {
++  const uniqueTracks: any[] = [];
++  const trackSignatures: Set<string> = new Set();
++
++  for (const track of tracks) {
++    if (track.notes.length === 0) {
++      // Garder les tracks vides (métadonnées)
++      uniqueTracks.push(track);
++      continue;
++    }
++
++    // Créer une signature unique pour cette track basée sur ses notes
++    const trackSignature = createTrackSignature(track);
++
++    if (!trackSignatures.has(trackSignature)) {
++      trackSignatures.add(trackSignature);
++      uniqueTracks.push(track);
++    }
++  }
++
++  return uniqueTracks;
++}
++
++// Fonction pour créer une signature unique d'une track
++function createTrackSignature(track: any): string {
++  // Trier les notes par temps puis par note pour une comparaison cohérente
++  const sortedNotes = track.notes
++    .map((note: any) => ({
++      note: note.name,
++      time: Math.round(note.time * 100) / 100, // Arrondir à 2 décimales
++      duration: Math.round(note.duration * 100) / 100,
++    }))
++    .sort((a: any, b: any) => {
++      if (a.time !== b.time) return a.time - b.time;
++      return a.note.localeCompare(b.note);
++    });
++
++  // Créer une signature JSON de la track
++  return JSON.stringify(sortedNotes);
++}
++
++// Fonction pour convertir un fichier MIDI en format compatible avec la base de données
++export async function convertMidiToSongFormat(
++  midiFile: File
++): Promise<MidiConversionResult> {
++  try {
++    // Lire le fichier MIDI
++    const arrayBuffer = await midiFile.arrayBuffer();
++    const midi = new Midi(arrayBuffer);
++
++    // Extraire les métadonnées
++    const tempo = midi.header.tempos[0]?.bpm || 120;
++    const timeSignature = midi.header.timeSignatures[0]
++      ? `${midi.header.timeSignatures[0].timeSignature[0]}/${midi.header.timeSignatures[0].timeSignature[1]}`
++      : '4/4';
++
++    // Calculer la durée totale en millisecondes
++    const durationSeconds = midi.duration;
++    const duration_ms = Math.round(durationSeconds * 1000);
++
++    // Supprimer les tracks en double avant traitement
++    const uniqueTracks = removeDuplicateTracks(midi.tracks);
++
++    // Convertir toutes les notes en format unifié (en beats)
++    const allNotes: MidiNote[] = [];
++    let trackIndex = 0;
++    const effectivePpq = midi.header.ppq || 480;
++
++    for (const track of uniqueTracks) {
++      // Traiter toutes les tracks qui contiennent des notes
++      if (track.notes.length > 0) {
++        for (const note of track.notes) {
++          const startBeat = (note.ticks ?? 0) / effectivePpq;
++          const durationInBeats = (note.durationTicks ?? 0) / effectivePpq;
++          allNotes.push({
++            note: note.name, // ex: "C4", "F#5"
++            startBeat,
++            durationInBeats,
++            track: trackIndex,
++          });
++        }
++      }
++      trackIndex++;
++    }
++
++    // Trier les notes par position en beats
++    allNotes.sort((a, b) => a.startBeat - b.startBeat);
++
++    return {
++      notes: allNotes,
++      tempo,
++      timeSignature,
++      duration_ms,
++      originalTracksCount: midi.tracks.length,
++      uniqueTracksCount: uniqueTracks.length,
++    };
++  } catch (error) {
++    console.error('Erreur lors de la conversion MIDI:', error);
++    throw new Error('Impossible de convertir le fichier MIDI');
++  }
++}
+
+---
+## Fichier: virtuo-piano/src/components/cards/ScoreCard.tsx
+- **Statut:** modified
+- **Additions:** 8
+- **Deletions:** 1
+- **Changes:** 9
+
+### Différences:
+@@ -27,14 +27,21 @@ export interface ScoreSummary {
+   hands?: string;
+ }
+ 
+-export default function ScoreCard({ score }: { score: ScoreSummary }) {
++export default function ScoreCard({
++  score,
++  onClick,
++}: {
++  score: ScoreSummary;
++  onClick: () => void;
++}) {
+   return (
+     <div
+       className={`group bg-white/3 shadow-sm rounded-xl p-4 border ${
+         score.mode === 'learning'
+           ? 'border-indigo-200/10 dark:border-indigo-900/10'
+           : 'border-purple-200/10 dark:border-purple-900/10'
+       } hover:shadow-md transition-shadow`}
++      onClick={onClick}
+     >
+       <div className="flex items-start">
+         <div className="flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-700 mr-3">
+
+---
+## Fichier: virtuo-piano/src/components/piano-roll/PianoRoll.tsx
+- **Statut:** added
+- **Additions:** 724
+- **Deletions:** 0
+- **Changes:** 724
+
+### Différences:
+@@ -0,0 +1,724 @@
++'use client';
++
++import React, { useCallback, useEffect, useRef, useState } from 'react';
++import { Midi } from '@tonejs/midi';
++
++export type PianoRollNote = {
++  pitch: number; // MIDI number 0-127
++  start: number; // grid step index (1 step = 1/16 note)
++  duration: number; // in steps
++  velocity?: number; // 0..1
++};
++
++type ExternalNote = {
++  note: string;
++  startBeat: number;
++  durationInBeats: number;
++};
++
++type PianoRollProps = {
++  initialNotes?: Array<PianoRollNote | ExternalNote>;
++  minPitch?: number; // inclusive
++  maxPitch?: number; // inclusive
++  bars?: number; // total bars in the canvas
++  stepsPerBeat?: number; // default 4 (sixteenth notes)
++  beatsPerBar?: number; // default 4
++  tempo?: number; // BPM for MIDI export
++  ppq?: number; // pulses per quarter for MIDI export
++  onChange?: (notes: PianoRollNote[]) => void;
++  height?: number; // viewport height
++  width?: number | string; // viewport width (e.g., 900 or '100%')
++  readOnly?: boolean; // disable editing and toolbar when true
++  noteFillColor?: string; // single color for all notes
++};
++
++type InteractionState =
++  | { type: 'idle' }
++  | { type: 'creating'; pitch: number; startStep: number; currentStep: number }
++  | {
++      type: 'dragging';
++      noteIndex: number;
++      dragStartXStep: number;
++      noteStartAtDrag: number;
++      notePitchAtDrag: number;
++    }
++  | {
++      type: 'resizing';
++      noteIndex: number;
++      resizeAnchor: 'left' | 'right';
++      dragStartXStep: number;
++      originalStart: number;
++      originalDuration: number;
++    };
++
++const clamp = (v: number, min: number, max: number) =>
++  Math.max(min, Math.min(max, v));
++
++// Convert a note name like "C#4" to MIDI number
++function noteNameToMidi(name: string): number | null {
++  const match = name.trim().match(/^([A-Ga-g])([#b]?)(-?\d+)$/);
++  if (!match) return null;
++  const letter = match[1].toUpperCase();
++  const accidental = match[2];
++  const octave = parseInt(match[3], 10);
++  const baseMap: Record<string, number> = {
++    C: 0,
++    D: 2,
++    E: 4,
++    F: 5,
++    G: 7,
++    A: 9,
++    B: 11,
++  };
++  let semitone = baseMap[letter];
++  if (semitone === undefined) return null;
++  if (accidental === '#') semitone += 1;
++  if (accidental === 'b') semitone -= 1;
++  if (semitone < 0) semitone += 12;
++  if (semitone > 11) semitone -= 12;
++  const midi = (octave + 1) * 12 + semitone;
++  return clamp(midi, 0, 127);
++}
++
++// Normalize incoming notes (either internal or external shape) to internal shape
++function convertToInternal(
++  items: Array<PianoRollNote | ExternalNote>,
++  stepsPerBeat: number
++): PianoRollNote[] {
++  const out: PianoRollNote[] = [];
++  for (const it of items || []) {
++    if (typeof (it as any).pitch === 'number') {
++      const n = it as PianoRollNote;
++      out.push({
++        pitch: n.pitch,
++        start: n.start,
++        duration: n.duration,
++        velocity: n.velocity,
++      });
++      continue;
++    }
++    const e = it as ExternalNote;
++    const midi = noteNameToMidi(e.note);
++    if (midi == null) continue;
++    const start = Math.max(0, Math.round(e.startBeat * stepsPerBeat));
++    const duration = Math.max(1, Math.round(e.durationInBeats * stepsPerBeat));
++    out.push({ pitch: midi, start, duration, velocity: 0.9 });
++  }
++  return out;
++}
++
++export default function PianoRoll(props: PianoRollProps) {
++  const {
++    initialNotes = [],
++    minPitch = 36, // C2
++    maxPitch = 84, // C6
++    bars = 16,
++    stepsPerBeat = 4,
++    beatsPerBar = 4,
++    tempo = 120,
++    ppq = 480,
++    onChange,
++    height = 420,
++    width = '100%',
++    readOnly = false,
++    noteFillColor = '#fa8c16',
++  } = props;
++
++  const stepsPerBar = stepsPerBeat * beatsPerBar; // 16 by default
++  const [stepWidth, setStepWidth] = useState<number>(24); // px per step (horizontal zoom)
++  const [rowHeight, setRowHeight] = useState<number>(18); // px per semitone row (vertical zoom)
++  const keyboardWidth = 64; // left piano keyboard width
++
++  const [numBars, setNumBars] = useState<number>(bars);
++  const totalSteps = numBars * stepsPerBar;
++  const numRows = maxPitch - minPitch + 1;
++  const canvasWidth = keyboardWidth + totalSteps * stepWidth;
++  const canvasHeight = numRows * rowHeight;
++
++  const containerRef = useRef<HTMLDivElement | null>(null);
++  const canvasRef = useRef<HTMLCanvasElement | null>(null);
++
++  const [notes, setNotes] = useState<PianoRollNote[]>(() =>
++    convertToInternal(
++      initialNotes as Array<PianoRollNote | ExternalNote>,
++      stepsPerBeat
++    )
++  );
++  const [interaction, setInteraction] = useState<InteractionState>({
++    type: 'idle',
++  });
++  const [hoveredNoteIndex, setHoveredNoteIndex] = useState<number | null>(null);
++
++  const gridBg = '#1f1f1f';
++  const gridLine = '#2b2b2b';
++  const beatLine = '#353535';
++  const barLine = '#444';
++
++  // All notes share the same color (configurable via prop)
++
++  const toStep = (x: number) => Math.floor((x - keyboardWidth) / stepWidth);
++  const toPitch = (y: number) =>
++    clamp(maxPitch - Math.floor(y / rowHeight), minPitch, maxPitch);
++
++  const midiToNoteName = (midi: number) => {
++    const names = [
++      'C',
++      'C#',
++      'D',
++      'D#',
++      'E',
++      'F',
++      'F#',
++      'G',
++      'G#',
++      'A',
++      'A#',
++      'B',
++    ];
++    const name = names[midi % 12];
++    const octave = Math.floor(midi / 12) - 1;
++    return `${name}${octave}`;
++  };
++
++  // removed useCallback version (now defined earlier before useState)
++
++  const isBlack = (midiNote: number) => {
++    const pc = midiNote % 12;
++    return pc === 1 || pc === 3 || pc === 6 || pc === 8 || pc === 10;
++  };
++
++  const ensureCapacity = useCallback(
++    (requiredStepInclusive: number) => {
++      if (requiredStepInclusive < totalSteps) return;
++      const requiredBars = Math.ceil((requiredStepInclusive + 1) / stepsPerBar);
++      setNumBars((prev) => (requiredBars + 1 > prev ? requiredBars + 1 : prev));
++    },
++    [totalSteps, stepsPerBar]
++  );
++
++  const getMousePos = (e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
++    const rect = e.currentTarget.getBoundingClientRect();
++    // rect already reflects the current scroll offset inside the container,
++    // so do NOT add container.scrollLeft/Top here to avoid double counting
++    const x = e.clientX - rect.left;
++    const y = e.clientY - rect.top;
++    return { x, y };
++  };
++
++  const noteAt = (pitch: number, step: number) => {
++    for (let i = 0; i < notes.length; i += 1) {
++      const n = notes[i];
++      if (n.pitch !== pitch) continue;
++      if (step >= n.start && step < n.start + n.duration) return i;
++    }
++    return -1;
++  };
++
++  const draw = useCallback(() => {
++    const canvas = canvasRef.current;
++    if (!canvas) return;
++    const ctx = canvas.getContext('2d');
++    if (!ctx) return;
++
++    // respect device pixel ratio for crisp rendering
++    const dpr = window.devicePixelRatio || 1;
++    const cssW = canvasWidth;
++    const cssH = canvasHeight;
++    if (
++      canvas.width !== Math.floor(cssW * dpr) ||
++      canvas.height !== Math.floor(cssH * dpr)
++    ) {
++      canvas.width = Math.floor(cssW * dpr);
++      canvas.height = Math.floor(cssH * dpr);
++      canvas.style.width = `${cssW}px`;
++      canvas.style.height = `${cssH}px`;
++    }
++    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
++
++    // background
++    ctx.fillStyle = gridBg;
++    ctx.fillRect(0, 0, cssW, cssH);
++
++    // keyboard background
++    ctx.fillStyle = '#101010';
++    ctx.fillRect(0, 0, keyboardWidth, cssH);
++
++    // piano keys and labels
++    for (let p = maxPitch; p >= minPitch; p -= 1) {
++      const y = (maxPitch - p) * rowHeight;
++      ctx.fillStyle = isBlack(p) ? '#222' : '#eee';
++      ctx.fillRect(0, y, keyboardWidth - 1, rowHeight);
++      ctx.strokeStyle = isBlack(p) ? '#333' : '#ccc';
++      ctx.beginPath();
++      ctx.moveTo(0, y + rowHeight + 0.5);
++      ctx.lineTo(keyboardWidth - 1, y + rowHeight + 0.5);
++      ctx.stroke();
++      if (p % 12 === 0) {
++        const octave = Math.floor(p / 12) - 1;
++        ctx.fillStyle = isBlack(p) ? '#ddd' : '#111';
++        ctx.font = '10px sans-serif';
++        ctx.fillText(`C${octave}`, 6, y + rowHeight - 5);
++      }
++    }
++
++    // separator line
++    ctx.strokeStyle = '#555';
++    ctx.beginPath();
++    ctx.moveTo(keyboardWidth + 0.5, 0);
++    ctx.lineTo(keyboardWidth + 0.5, cssH);
++    ctx.stroke();
++
++    // horizontal pitch lines
++    for (let r = 0; r <= numRows; r += 1) {
++      const y = r * rowHeight + 0.5;
++      ctx.strokeStyle = gridLine;
++      ctx.beginPath();
++      ctx.moveTo(keyboardWidth, y);
++      ctx.lineTo(cssW, y);
++      ctx.stroke();
++    }
++
++    // vertical time lines
++    for (let s = 0; s <= totalSteps; s += 1) {
++      const x = keyboardWidth + s * stepWidth + 0.5;
++      if (s % stepsPerBar === 0) ctx.strokeStyle = barLine;
++      else if (s % stepsPerBeat === 0) ctx.strokeStyle = beatLine;
++      else ctx.strokeStyle = gridLine;
++      ctx.beginPath();
++      ctx.moveTo(x, 0);
++      ctx.lineTo(x, cssH);
++      ctx.stroke();
++    }
++
++    // draw notes
++    for (let i = 0; i < notes.length; i += 1) {
++      const n = notes[i];
++      const x = keyboardWidth + n.start * stepWidth;
++      const y = (maxPitch - n.pitch) * rowHeight;
++      const w = n.duration * stepWidth;
++      const h = rowHeight - 2;
++      const isHovered = i === hoveredNoteIndex;
++      ctx.fillStyle = noteFillColor;
++      ctx.globalAlpha = isHovered ? 0.9 : 0.8;
++      ctx.fillRect(x + 1, y + 1, w - 2, h);
++      ctx.globalAlpha = 1;
++
++      // edge for resize affordance
++      ctx.fillStyle = 'rgba(255,255,255,0.5)';
++      ctx.fillRect(x + w - 4, y + 1, 3, h);
++    }
++  }, [
++    notes,
++    canvasWidth,
++    canvasHeight,
++    numRows,
++    rowHeight,
++    stepWidth,
++    totalSteps,
++    maxPitch,
++    hoveredNoteIndex,
++    stepsPerBar,
++    stepsPerBeat,
++  ]);
++
++  useEffect(() => {
++    draw();
++  }, [draw]);
++
++  useEffect(() => {
++    onChange?.(notes);
++  }, [notes, onChange]);
++
++  // Zoom handling: Ctrl/⌘ + wheel → horizontal zoom, Alt + wheel → vertical zoom
++  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
++    const container = containerRef.current;
++    if (!container) return;
++    const isHorizontalZoom = e.ctrlKey || e.metaKey;
++    const isVerticalZoom = e.altKey && !isHorizontalZoom;
++    if (!isHorizontalZoom && !isVerticalZoom) return; // normal scroll
++
++    e.preventDefault();
++    const rect = container.getBoundingClientRect();
++    const pointerX = e.clientX - rect.left; // within container
++    const pointerY = e.clientY - rect.top;
++
++    if (isHorizontalZoom) {
++      const MIN_STEP = 6;
++      const MAX_STEP = 48;
++      // Anchor: current step under cursor
++      const anchorX = container.scrollLeft + pointerX - keyboardWidth;
++      const anchorStep = anchorX > 0 ? anchorX / stepWidth : 0;
++      const factor = e.deltaY > 0 ? 0.9 : 1.1;
++      const next = clamp(stepWidth * factor, MIN_STEP, MAX_STEP);
++      if (next === stepWidth) return;
++      setStepWidth(next);
++      // Preserve anchor under cursor
++      const newAnchorX = anchorStep * next;
++      const newScrollLeft = Math.max(0, keyboardWidth + newAnchorX - pointerX);
++      // Schedule after state applied
++      requestAnimationFrame(() => {
++        container.scrollLeft = newScrollLeft;
++      });
++      return;
++    }
++
++    if (isVerticalZoom) {
++      const MIN_ROW = 12;
++      const MAX_ROW = 36;
++      const anchorY = container.scrollTop + pointerY;
++      const anchorRow = anchorY / rowHeight;
++      const factor = e.deltaY > 0 ? 0.9 : 1.1;
++      const next = clamp(rowHeight * factor, MIN_ROW, MAX_ROW);
++      if (next === rowHeight) return;
++      setRowHeight(next);
++      const newAnchorY = anchorRow * next;
++      const newScrollTop = Math.max(0, newAnchorY - pointerY);
++      requestAnimationFrame(() => {
++        container.scrollTop = newScrollTop;
++      });
++    }
++  };
++
++  // Auto-étendre la longueur (nombre de mesures) pour couvrir toutes les notes affichées
++  useEffect(() => {
++    if (!notes || notes.length === 0) return;
++    const farthestStepExclusive = notes.reduce(
++      (max, n) => Math.max(max, n.start + n.duration),
++      0
++    );
++    const requiredBars = Math.ceil((farthestStepExclusive + 1) / stepsPerBar);
++    setNumBars((prev) => (requiredBars > prev ? requiredBars : prev));
++  }, [notes, stepsPerBar]);
++
++  const handleMouseMove = (
++    e: React.MouseEvent<HTMLCanvasElement, MouseEvent>
++  ) => {
++    const { x, y } = getMousePos(e);
++    const rawStep = toStep(x);
++    if (rawStep >= totalSteps - 2) {
++      ensureCapacity(rawStep + stepsPerBar * 2);
++    }
++    const step = clamp(rawStep, 0, totalSteps - 1);
++    const pitch = toPitch(y);
++
++    if (x < keyboardWidth && interaction.type === 'idle') {
++      setHoveredNoteIndex(null);
++      return;
++    }
++
++    if (interaction.type === 'creating') {
++      setInteraction({ ...interaction, currentStep: step });
++      return;
++    }
++
++    if (interaction.type === 'dragging') {
++      const delta = step - interaction.dragStartXStep;
++      setNotes((prev) =>
++        prev.map((n, idx) => {
++          if (idx !== interaction.noteIndex) return n;
++          let newStart = interaction.noteStartAtDrag + delta;
++          if (newStart < 0) newStart = 0;
++          const endStep = newStart + n.duration;
++          if (endStep >= totalSteps - 1) ensureCapacity(endStep + stepsPerBar);
++          const newPitch = clamp(pitch, minPitch, maxPitch);
++          return { ...n, start: newStart, pitch: newPitch };
++        })
++      );
++      return;
++    }
++
++    if (interaction.type === 'resizing') {
++      const delta = step - interaction.dragStartXStep;
++      setNotes((prev) =>
++        prev.map((n, idx) => {
++          if (idx !== interaction.noteIndex) return n;
++          if (interaction.resizeAnchor === 'right') {
++            let nextDuration = interaction.originalDuration + delta;
++            if (nextDuration < 1) nextDuration = 1;
++            const endStep = n.start + nextDuration;
++            if (endStep >= totalSteps - 1)
++              ensureCapacity(endStep + stepsPerBar);
++            return { ...n, duration: nextDuration };
++          } else {
++            let newStart = interaction.originalStart + delta;
++            let newDuration = interaction.originalDuration - delta;
++            if (newStart < 0) {
++              newDuration += newStart; // reduce duration by the overflow
++              newStart = 0;
++            }
++            if (newDuration < 1) newDuration = 1;
++            const endStep = newStart + newDuration;
++            if (endStep >= totalSteps - 1)
++              ensureCapacity(endStep + stepsPerBar);
++            return { ...n, start: newStart, duration: newDuration };
++          }
++        })
++      );
++      return;
++    }
++
++    // hover logic when idle
++    const hitIndex = noteAt(pitch, step);
++    setHoveredNoteIndex(hitIndex === -1 ? null : hitIndex);
++  };
++
++  const handleMouseDown = (
++    e: React.MouseEvent<HTMLCanvasElement, MouseEvent>
++  ) => {
++    // Only react to left click
++    if (e.button !== 0) return;
++    const { x, y } = getMousePos(e);
++    const step = clamp(toStep(x), 0, totalSteps - 1);
++    const pitch = toPitch(y);
++    if (x < keyboardWidth) return; // ignore clicks on keyboard area
++    const idx = noteAt(pitch, step);
++
++    if (idx >= 0) {
++      // determine if resizing vs dragging based on proximity to right edge
++      const note = notes[idx];
++      const localX = x - keyboardWidth - note.start * stepWidth;
++      const isResizeRight = localX > note.duration * stepWidth - 8;
++      if (isResizeRight) {
++        setInteraction({
++          type: 'resizing',
++          noteIndex: idx,
++          resizeAnchor: 'right',
++          dragStartXStep: step,
++          originalStart: note.start,
++          originalDuration: note.duration,
++        });
++      } else {
++        setInteraction({
++          type: 'dragging',
++          noteIndex: idx,
++          dragStartXStep: step,
++          noteStartAtDrag: note.start,
++          notePitchAtDrag: note.pitch,
++        });
++      }
++      return;
++    }
++
++    // create new note
++    setInteraction({
++      type: 'creating',
++      pitch,
++      startStep: step,
++      currentStep: step + 1,
++    });
++  };
++
++  const handleMouseUp = () => {
++    if (interaction.type === 'creating') {
++      const start = Math.min(interaction.startStep, interaction.currentStep);
++      const end = Math.max(
++        interaction.startStep + 1,
++        interaction.currentStep + 1
++      );
++      const duration = clamp(end - start, 1, totalSteps - start);
++      setNotes((prev) => [
++        ...prev,
++        { pitch: interaction.pitch, start, duration, velocity: 0.9 },
++      ]);
++      setInteraction({ type: 'idle' });
++      return;
++    }
++    setInteraction({ type: 'idle' });
++  };
++
++  const handleDoubleClick = (
++    e: React.MouseEvent<HTMLCanvasElement, MouseEvent>
++  ) => {
++    // Only left-button double click should remove
++    if (e.button !== 0) return;
++    const { x, y } = getMousePos(e);
++    const step = clamp(toStep(x), 0, totalSteps - 1);
++    const pitch = toPitch(y);
++    if (x < keyboardWidth) return;
++    const idx = noteAt(pitch, step);
++    if (idx >= 0) {
++      setNotes((prev) => prev.filter((_, i) => i !== idx));
++    }
++  };
++
++  const clearAll = () => setNotes([]);
++
++  const exportJSON = () => {
++    const beatsPerStep = 1 / stepsPerBeat; // steps are sixteenths when stepsPerBeat=4
++    const normalized = notes
++      .map((n) => ({
++        note: midiToNoteName(n.pitch),
++        startBeat: n.start * beatsPerStep,
++        durationInBeats: n.duration * beatsPerStep,
++      }))
++      .sort((a, b) => a.startBeat - b.startBeat);
++
++    const dataStr = JSON.stringify(normalized, null, 2);
++    const blob = new Blob([dataStr], { type: 'application/json' });
++    const url = URL.createObjectURL(blob);
++    const a = document.createElement('a');
++    a.href = url;
++    a.download = 'piano-roll.json';
++    a.click();
++    URL.revokeObjectURL(url);
++  };
++
++  const exportMIDI = () => {
++    const midi = new Midi();
++    midi.header.setTempo(tempo);
++    const track = midi.addTrack();
++    const effectivePpq = midi.header.ppq; // use MIDI default ppq
++    const ticksPerStep = effectivePpq / stepsPerBeat;
++    for (const n of notes) {
++      const startTicks = Math.round(n.start * ticksPerStep);
++      const durationTicks = Math.max(1, Math.round(n.duration * ticksPerStep));
++      track.addNote({
++        midi: n.pitch,
++        ticks: startTicks,
++        durationTicks,
++        velocity: n.velocity ?? 0.9,
++      });
++    }
++    const bytes = midi.toArray();
++    const blob = new Blob([new Uint8Array(bytes)], { type: 'audio/midi' });
++    const url = URL.createObjectURL(blob);
++    const a = document.createElement('a');
++    a.href = url;
++    a.download = 'piano-roll.mid';
++    a.click();
++    URL.revokeObjectURL(url);
++  };
++
++  // Allow external update of initialNotes (if prop changes)
++  useEffect(() => {
++    setNotes(
++      convertToInternal(
++        initialNotes as Array<PianoRollNote | ExternalNote>,
++        stepsPerBeat
++      )
++    );
++  }, [initialNotes, stepsPerBeat]);
++
++  const toolbar = (
++    <div
++      style={{
++        display: 'flex',
++        gap: 8,
++        padding: '8px 12px',
++        alignItems: 'center',
++        background: '#151515',
++        borderBottom: '1px solid #2b2b2b',
++        position: 'sticky',
++        top: 0,
++        zIndex: 1,
++      }}
++    >
++      <button onClick={exportMIDI} style={buttonStyle}>
++        Exporter MIDI
++      </button>
++      <button onClick={exportJSON} style={buttonStyle}>
++        Exporter JSON (note/startBeat/durationInBeats)
++      </button>
++      <button onClick={clearAll} style={buttonStyle}>
++        Effacer
++      </button>
++      <div style={{ color: '#aaa', marginLeft: 8 }}>
++        Astuce: double-clic pour supprimer, tirer le bord droit pour
++        redimensionner
++      </div>
++    </div>
++  );
++
++  return (
++    <div
++      style={{
++        border: '1px solid #2b2b2b',
++        borderRadius: 8,
++        overflow: 'hidden',
++        background: '#111',
++        width: '100%',
++      }}
++    >
++      {!readOnly && toolbar}
++      <div
++        style={{
++          display: 'flex',
++          gap: 8,
++          padding: '8px 12px',
++          alignItems: 'center',
++          background: '#151515',
++          borderBottom: '1px solid #2b2b2b',
++        }}
++      >
++        <div style={{ color: '#ddd', fontSize: 12, marginRight: 4 }}>Zoom</div>
++        <button
++          onClick={() => setStepWidth((v) => Math.max(6, v / 1.1))}
++          style={buttonStyle}
++        >
++          − H
++        </button>
++        <button
++          onClick={() => setStepWidth((v) => Math.min(48, v * 1.1))}
++          style={buttonStyle}
++        >
++          + H
++        </button>
++        <div style={{ width: 8 }} />
++        <button
++          onClick={() => setRowHeight((v) => Math.max(12, v / 1.1))}
++          style={buttonStyle}
++        >
++          − V
++        </button>
++        <button
++          onClick={() => setRowHeight((v) => Math.min(36, v * 1.1))}
++          style={buttonStyle}
++        >
++          + V
++        </button>
++        <div style={{ width: 8 }} />
++        <button
++          onClick={() => {
++            setStepWidth(24);
++            setRowHeight(18);
++          }}
++          style={buttonStyle}
++        >
++          Reset
++        </button>
++      </div>
++      <div
++        ref={containerRef}
++        style={{
++          width: typeof width === 'number' ? `${width}px` : width,
++          height,
++          overflow: 'scroll',
++          position: 'relative',
++          background: gridBg,
++        }}
++        onWheel={handleWheel}
++      >
++        <canvas
++          ref={canvasRef}
++          width={canvasWidth}
++          height={canvasHeight}
++          onMouseMove={readOnly ? undefined : handleMouseMove}
++          onMouseDown={readOnly ? undefined : handleMouseDown}
++          onMouseUp={readOnly ? undefined : handleMouseUp}
++          onDoubleClick={readOnly ? undefined : handleDoubleClick}
++          onContextMenu={readOnly ? undefined : (e) => e.preventDefault()}
++          style={{ display: 'block' }}
++        />
++      </div>
++    </div>
++  );
++}
++
++const buttonStyle: React.CSSProperties = {
++  background: '#2f2f2f',
++  border: '1px solid #3a3a3a',
++  color: '#fff',
++  padding: '6px 10px',
++  borderRadius: 6,
++  cursor: 'pointer',
++};
+
+---
+## Fichier: virtuo-piano/src/components/piano-roll/PianoRollEditor.tsx
+- **Statut:** added
+- **Additions:** 23
+- **Deletions:** 0
+- **Changes:** 23
+
+### Différences:
+@@ -0,0 +1,23 @@
++'use client';
++
++import React from 'react';
++import PianoRoll, { type PianoRollNote } from './PianoRoll';
++
++export type PianoRollEditorProps = {
++  initialNotes?:
++    | PianoRollNote[]
++    | Array<{ note: string; startBeat: number; durationInBeats: number }>;
++  minPitch?: number;
++  maxPitch?: number;
++  height?: number;
++  width?: number | string;
++  stepsPerBeat?: number;
++  beatsPerBar?: number;
++  bars?: number;
++  tempo?: number;
++  onChange?: (notes: PianoRollNote[]) => void;
++};
++
++export default function PianoRollEditor(props: PianoRollEditorProps) {
++  return <PianoRoll {...props} readOnly={false} />;
++}
+
+---
+## Fichier: virtuo-piano/src/components/piano-roll/PianoRollViewer.tsx
+- **Statut:** added
+- **Additions:** 25
+- **Deletions:** 0
+- **Changes:** 25
+
+### Différences:
+@@ -0,0 +1,25 @@
++'use client';
++
++import React from 'react';
++import PianoRoll, { type PianoRollNote } from './PianoRoll';
++
++export type PianoRollViewerProps = {
++  notes:
++    | PianoRollNote[]
++    | Array<{ note: string; startBeat: number; durationInBeats: number }>;
++  minPitch?: number;
++  maxPitch?: number;
++  height?: number;
++  width?: number | string;
++  stepsPerBeat?: number;
++  beatsPerBar?: number;
++  bars?: number;
++  tempo?: number;
++};
++
++export default function PianoRollViewer({
++  notes,
++  ...rest
++}: PianoRollViewerProps) {
++  return <PianoRoll initialNotes={notes} readOnly={true} {...rest} />;
++}
+
+---
+## Fichier: virtuo-piano/src/customHooks/useCreateImport.ts
+- **Statut:** added
+- **Additions:** 14
+- **Deletions:** 0
+- **Changes:** 14
+
+### Différences:
+@@ -0,0 +1,14 @@
++import { useMutation, useQueryClient } from '@tanstack/react-query';
++import { createImportedSongAction } from '@/lib/actions/imports-actions';
++
++export const useCreateImport = () => {
++  const queryClient = useQueryClient();
++  return useMutation({
++    mutationFn: createImportedSongAction,
++    onSuccess: () => {
++      // Invalider toutes les listes d'import pour forcer le rafraîchissement
++      queryClient.invalidateQueries({ queryKey: ['importedSongs'] });
++      queryClient.invalidateQueries({ queryKey: ['importedSongsGenres'] });
++    },
++  });
++};
+
+---
+## Fichier: virtuo-piano/src/customHooks/useImportedSongs.tsx
+- **Statut:** added
+- **Additions:** 104
+- **Deletions:** 0
+- **Changes:** 104
+
+### Différences:
+@@ -0,0 +1,104 @@
++import { useQuery, useQueryClient } from '@tanstack/react-query';
++import {
++  getImportedSongsAction,
++  getImportedSongsGenresAction,
++  type ImportedSongsResult,
++} from '@/lib/actions/imports-actions';
++
++type UseImportedSongsParams = {
++  page: number;
++  search?: string;
++  genre?: string;
++  favorites?: boolean;
++  sortBy: 'title' | 'composer' | 'duration' | 'difficulty';
++  sortOrder: 'asc' | 'desc';
++};
++
++export function useImportedSongs(params: UseImportedSongsParams) {
++  const queryClient = useQueryClient();
++
++  // Créer une clé de cache unique basée sur les paramètres
++  const queryKey = [
++    'importedSongs',
++    params.page,
++    params.search,
++    params.genre,
++    params.favorites,
++    params.sortBy,
++    params.sortOrder,
++  ];
++
++  const {
++    data: importedSongsData,
++    isLoading,
++    error,
++    refetch,
++    isFetching,
++  } = useQuery({
++    queryKey,
++    queryFn: async () => {
++      return await getImportedSongsAction(
++        params.page,
++        params.search,
++        params.genre,
++        params.favorites,
++        params.sortBy,
++        params.sortOrder
++      );
++    },
++    staleTime: 5 * 60 * 1000, // 5 minutes
++    gcTime: 10 * 60 * 1000, // 10 minutes (anciennement cacheTime)
++    refetchOnWindowFocus: false,
++    retry: 2,
++  });
++
++  // Fonction pour vider le cache
++  const clearCache = () => {
++    queryClient.removeQueries({ queryKey: ['importedSongs'] });
++  };
++
++  // Fonction pour invalider et recharger
++  const invalidateAndRefetch = () => {
++    queryClient.invalidateQueries({ queryKey: ['importedSongs'] });
++  };
++
++  // Fonction pour mettre à jour les données en cache
++  const updateCacheData = (newData: ImportedSongsResult) => {
++    queryClient.setQueryData(queryKey, newData);
++  };
++
++  // Vérifier si on a des données en cache
++  const hasCache = queryClient.getQueryData(queryKey) !== undefined;
++
++  return {
++    data: importedSongsData,
++    isLoading,
++    error: error ? (error as Error).message : null,
++    clearCache,
++    refetch,
++    invalidateAndRefetch,
++    hasCache,
++    updateCacheData,
++    isFetching,
++  };
++}
++
++// Hook pour charger tous les genres (pour les filtres)
++export function useAllGenres() {
++  const {
++    data: allGenres,
++    isLoading,
++    error,
++  } = useQuery({
++    queryKey: ['importedSongsGenres'],
++    queryFn: getImportedSongsGenresAction,
++    staleTime: 10 * 60 * 1000, // 10 minutes
++    gcTime: 30 * 60 * 1000, // 30 minutes
++  });
++
++  return {
++    allGenres: allGenres || [],
++    isLoading,
++    error: error ? (error as Error).message : null,
++  };
++}
+
+---
+## Fichier: virtuo-piano/src/features/imports/ImportModal.tsx
+- **Statut:** added
+- **Additions:** 550
+- **Deletions:** 0
+- **Changes:** 550
+
+### Différences:
+@@ -0,0 +1,550 @@
++'use client';
++
++import { useState } from 'react';
++import { useRouter } from 'next/navigation';
++import { X, Upload, Music, FileText, User, Clock } from 'lucide-react';
++
++interface ImportModalProps {
++  isOpen: boolean;
++  onClose: () => void;
++}
++
++export default function ImportModal({ isOpen, onClose }: ImportModalProps) {
++  const [formData, setFormData] = useState({
++    title: '',
++    composer: '',
++    difficulty: '5',
++    genre: '',
++    songType: 'song',
++    key: 'C major',
++    image: null as File | null,
++    file: null as File | null,
++  });
++  const router = useRouter();
++
++  const handleSubmit = (e: React.FormEvent) => {
++    e.preventDefault();
++    // Préparer les données pour la page de récapitulatif
++    const imageUrl = formData.image
++      ? URL.createObjectURL(formData.image)
++      : null;
++    const midiUrl = formData.file ? URL.createObjectURL(formData.file) : null;
++
++    const payload = {
++      title: formData.title,
++      composer: formData.composer,
++      difficulty: formData.difficulty,
++      genre: formData.genre,
++      songType: formData.songType,
++      key: formData.key,
++      imageUrl,
++      imageName: formData.image?.name ?? null,
++      midiUrl,
++      midiName: formData.file?.name ?? null,
++    };
++
++    try {
++      sessionStorage.setItem('importReview:data', JSON.stringify(payload));
++      router.push('/imports/review');
++    } catch (err) {
++      console.error('Impossible de préparer la page de récapitulatif:', err);
++    }
++  };
++
++  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
++    const file = e.target.files?.[0];
++    if (file) {
++      setFormData((prev) => ({ ...prev, file }));
++    }
++  };
++
++  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
++    const image = e.target.files?.[0];
++    if (image) {
++      setFormData((prev) => ({ ...prev, image }));
++    }
++  };
++
++  if (!isOpen) return null;
++
++  return (
++    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
++      <div className="bg-slate-800/95 backdrop-blur-md rounded-2xl border border-white/10 shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
++        {/* En-tête de la modale */}
++        <div className="bg-gradient-to-r from-blue-500/20 via-indigo-500/20 to-orange-400/20 p-6 rounded-t-2xl">
++          <div className="flex items-center justify-between">
++            <div className="flex items-center space-x-3">
++              <div className="w-10 h-10 bg-gradient-to-br from-blue-500/30 to-orange-500/30 rounded-lg flex items-center justify-center">
++                <Upload size={20} className="text-orange-300" />
++              </div>
++              <div>
++                <h2 className="text-xl font-bold text-white">
++                  Importer une chanson
++                </h2>
++                <p className="text-white/70 text-sm">
++                  Ajoutez votre composition ou morceau personnalisé
++                </p>
++              </div>
++            </div>
++            <button
++              onClick={onClose}
++              className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors duration-200"
++            >
++              <X size={18} className="text-white" />
++            </button>
++          </div>
++        </div>
++
++        {/* Contenu de la modale */}
++        <div className="p-6">
++          <form onSubmit={handleSubmit} className="space-y-6">
++            {/* Informations de base */}
++            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
++              <div>
++                <label className="block text-sm font-medium text-white/80 mb-2">
++                  Titre de la chanson *
++                </label>
++                <input
++                  type="text"
++                  required
++                  value={formData.title}
++                  onChange={(e) =>
++                    setFormData((prev) => ({ ...prev, title: e.target.value }))
++                  }
++                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:border-orange-300 focus:outline-none transition-colors duration-200"
++                  placeholder="Ex: Nocturne en mi mineur"
++                />
++              </div>
++              <div>
++                <label className="block text-sm font-medium text-white/80 mb-2">
++                  Compositeur
++                </label>
++                <input
++                  type="text"
++                  value={formData.composer}
++                  onChange={(e) =>
++                    setFormData((prev) => ({
++                      ...prev,
++                      composer: e.target.value,
++                    }))
++                  }
++                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:border-orange-300 focus:outline-none transition-colors duration-200"
++                  placeholder="Ex: Frédéric Chopin"
++                />
++              </div>
++            </div>
++
++            {/* Difficulté, type de musique et gamme */}
++            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
++              <div>
++                <label className="block text-sm font-medium text-white/80 mb-2">
++                  Niveau de difficulté (1 à 10)
++                </label>
++                <select
++                  value={formData.difficulty}
++                  onChange={(e) =>
++                    setFormData((prev) => ({
++                      ...prev,
++                      difficulty: e.target.value,
++                    }))
++                  }
++                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:border-orange-300 focus:outline-none transition-colors duration-200 appearance-none cursor-pointer"
++                  style={{
++                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23fbbf24' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
++                    backgroundPosition: 'right 0.5rem center',
++                    backgroundRepeat: 'no-repeat',
++                    backgroundSize: '1.5em 1.5em',
++                    paddingRight: '2.5rem',
++                  }}
++                >
++                  {Array.from({ length: 10 }, (_, i) => String(i + 1)).map(
++                    (v) => (
++                      <option
++                        key={v}
++                        value={v}
++                        className="bg-slate-800 text-white hover:bg-slate-700"
++                      >
++                        {v}
++                      </option>
++                    )
++                  )}
++                </select>
++              </div>
++              <div>
++                <label className="block text-sm font-medium text-white/80 mb-2">
++                  Type de musique
++                </label>
++                <select
++                  value={formData.songType}
++                  onChange={(e) =>
++                    setFormData((prev) => ({
++                      ...prev,
++                      songType: e.target.value,
++                    }))
++                  }
++                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:border-orange-300 focus:outline-none transition-colors duration-200 appearance-none cursor-pointer"
++                  style={{
++                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23fbbf24' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
++                    backgroundPosition: 'right 0.5rem center',
++                    backgroundRepeat: 'no-repeat',
++                    backgroundSize: '1.5em 1.5em',
++                    paddingRight: '2.5rem',
++                  }}
++                >
++                  <option
++                    value="song"
++                    className="bg-slate-800 text-white hover:bg-slate-700"
++                  >
++                    Chanson
++                  </option>
++                  <option
++                    value="arpeggioEx"
++                    className="bg-slate-800 text-white hover:bg-slate-700"
++                  >
++                    Arpèges
++                  </option>
++                  <option
++                    value="scaleEx"
++                    className="bg-slate-800 text-white hover:bg-slate-700"
++                  >
++                    Gammes
++                  </option>
++                  <option
++                    value="chordEx"
++                    className="bg-slate-800 text-white hover:bg-slate-700"
++                  >
++                    Accords
++                  </option>
++                  <option
++                    value="rythmEx"
++                    className="bg-slate-800 text-white hover:bg-slate-700"
++                  >
++                    Exercice rythmique
++                  </option>
++                </select>
++              </div>
++              <div>
++                <label className="block text-sm font-medium text-white/80 mb-2">
++                  Gamme
++                </label>
++                <select
++                  value={formData.key}
++                  onChange={(e) =>
++                    setFormData((prev) => ({
++                      ...prev,
++                      key: e.target.value,
++                    }))
++                  }
++                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:border-orange-300 focus:outline-none transition-colors duration-200 appearance-none cursor-pointer"
++                  style={{
++                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23fbbf24' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
++                    backgroundPosition: 'right 0.5rem center',
++                    backgroundRepeat: 'no-repeat',
++                    backgroundSize: '1.5em 1.5em',
++                    paddingRight: '2.5rem',
++                  }}
++                >
++                  <option
++                    value="C major"
++                    className="bg-slate-800 text-white hover:bg-slate-700"
++                  >
++                    Do majeur
++                  </option>
++                  <option
++                    value="G major"
++                    className="bg-slate-800 text-white hover:bg-slate-700"
++                  >
++                    Sol majeur
++                  </option>
++                  <option
++                    value="D major"
++                    className="bg-slate-800 text-white hover:bg-slate-700"
++                  >
++                    Ré majeur
++                  </option>
++                  <option
++                    value="A major"
++                    className="bg-slate-800 text-white hover:bg-slate-700"
++                  >
++                    La majeur
++                  </option>
++                  <option
++                    value="E major"
++                    className="bg-slate-800 text-white hover:bg-slate-700"
++                  >
++                    Mi majeur
++                  </option>
++                  <option
++                    value="B major"
++                    className="bg-slate-800 text-white hover:bg-slate-700"
++                  >
++                    Si majeur
++                  </option>
++                  <option
++                    value="F# major"
++                    className="bg-slate-800 text-white hover:bg-slate-700"
++                  >
++                    Fa# majeur
++                  </option>
++                  <option
++                    value="C# major"
++                    className="bg-slate-800 text-white hover:bg-slate-700"
++                  >
++                    Do# majeur
++                  </option>
++                  <option
++                    value="F major"
++                    className="bg-slate-800 text-white hover:bg-slate-700"
++                  >
++                    Fa majeur
++                  </option>
++                  <option
++                    value="Bb major"
++                    className="bg-slate-800 text-white hover:bg-slate-700"
++                  >
++                    Sib majeur
++                  </option>
++                  <option
++                    value="Eb major"
++                    className="bg-slate-800 text-white hover:bg-slate-700"
++                  >
++                    Mib majeur
++                  </option>
++                  <option
++                    value="Ab major"
++                    className="bg-slate-800 text-white hover:bg-slate-700"
++                  >
++                    Lab majeur
++                  </option>
++                  <option
++                    value="Db major"
++                    className="bg-slate-800 text-white hover:bg-slate-700"
++                  >
++                    Réb majeur
++                  </option>
++                  <option
++                    value="Gb major"
++                    className="bg-slate-800 text-white hover:bg-slate-700"
++                  >
++                    Solb majeur
++                  </option>
++                  <option
++                    value="Cb major"
++                    className="bg-slate-800 text-white hover:bg-slate-700"
++                  >
++                    Dob majeur
++                  </option>
++                  <option
++                    value="A minor"
++                    className="bg-slate-800 text-white hover:bg-slate-700"
++                  >
++                    La mineur
++                  </option>
++                  <option
++                    value="E minor"
++                    className="bg-slate-800 text-white hover:bg-slate-700"
++                  >
++                    Mi mineur
++                  </option>
++                  <option
++                    value="B minor"
++                    className="bg-slate-800 text-white hover:bg-slate-700"
++                  >
++                    Si mineur
++                  </option>
++                  <option
++                    value="F# minor"
++                    className="bg-slate-800 text-white hover:bg-slate-700"
++                  >
++                    Fa# mineur
++                  </option>
++                  <option
++                    value="C# minor"
++                    className="bg-slate-800 text-white hover:bg-slate-700"
++                  >
++                    Do# mineur
++                  </option>
++                  <option
++                    value="G# minor"
++                    className="bg-slate-800 text-white hover:bg-slate-700"
++                  >
++                    Sol# mineur
++                  </option>
++                  <option
++                    value="D# minor"
++                    className="bg-slate-800 text-white hover:bg-slate-700"
++                  >
++                    Ré# mineur
++                  </option>
++                  <option
++                    value="A# minor"
++                    className="bg-slate-800 text-white hover:bg-slate-700"
++                  >
++                    La# mineur
++                  </option>
++                  <option
++                    value="D minor"
++                    className="bg-slate-800 text-white hover:bg-slate-700"
++                  >
++                    Ré mineur
++                  </option>
++                  <option
++                    value="G minor"
++                    className="bg-slate-800 text-white hover:bg-slate-700"
++                  >
++                    Sol mineur
++                  </option>
++                  <option
++                    value="C minor"
++                    className="bg-slate-800 text-white hover:bg-slate-700"
++                  >
++                    Do mineur
++                  </option>
++                  <option
++                    value="F minor"
++                    className="bg-slate-800 text-white hover:bg-slate-700"
++                  >
++                    Fa mineur
++                  </option>
++                  <option
++                    value="Bb minor"
++                    className="bg-slate-800 text-white hover:bg-slate-700"
++                  >
++                    Sib mineur
++                  </option>
++                  <option
++                    value="Eb minor"
++                    className="bg-slate-800 text-white hover:bg-slate-700"
++                  >
++                    Mib mineur
++                  </option>
++                  <option
++                    value="Ab minor"
++                    className="bg-slate-800 text-white hover:bg-slate-700"
++                  >
++                    Lab mineur
++                  </option>
++                </select>
++              </div>
++            </div>
++
++            {/* Genre musical */}
++            <div>
++              <label className="block text-sm font-medium text-white/80 mb-2">
++                Genre musical
++              </label>
++              <input
++                type="text"
++                value={formData.genre}
++                onChange={(e) =>
++                  setFormData((prev) => ({ ...prev, genre: e.target.value }))
++                }
++                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:border-orange-300 focus:outline-none transition-colors duration-200"
++                placeholder="Ex: Classique, Jazz, Pop..."
++              />
++            </div>
++
++            {/* Upload de photo et fichier */}
++            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
++              {/* Upload de photo */}
++              <div>
++                <label className="block text-sm font-medium text-white/80 mb-2">
++                  Photo de couverture
++                </label>
++                <div className="border-2 border-dashed border-white/20 rounded-lg p-4 text-center hover:border-orange-300 transition-colors duration-200">
++                  <input
++                    type="file"
++                    accept="image/*"
++                    onChange={handleImageChange}
++                    className="hidden"
++                    id="image-upload"
++                  />
++                  <label htmlFor="image-upload" className="cursor-pointer">
++                    <div className="flex flex-col items-center space-y-2">
++                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500/20 to-orange-500/20 rounded-lg flex items-center justify-center">
++                        <Upload size={20} className="text-orange-300" />
++                      </div>
++                      <div>
++                        <p className="text-white text-sm font-medium">
++                          Ajouter une image
++                        </p>
++                        <p className="text-white/60 text-xs mt-1">
++                          JPG, PNG, GIF
++                        </p>
++                      </div>
++                    </div>
++                  </label>
++                  {formData.image && (
++                    <div className="mt-3 p-2 bg-white/5 rounded-lg">
++                      <p className="text-white text-xs">
++                        <Upload size={12} className="inline mr-1" />
++                        {formData.image.name}
++                      </p>
++                    </div>
++                  )}
++                </div>
++              </div>
++
++              {/* Upload de fichier */}
++              <div>
++                <label className="block text-sm font-medium text-white/80 mb-2">
++                  Fichier de partition *
++                </label>
++                <div className="border-2 border-dashed border-white/20 rounded-lg p-4 text-center hover:border-orange-300 transition-colors duration-200">
++                  <input
++                    type="file"
++                    accept=".mid,.midi"
++                    onChange={handleFileChange}
++                    className="hidden"
++                    id="file-upload"
++                    required
++                  />
++                  <label htmlFor="file-upload" className="cursor-pointer">
++                    <div className="flex flex-col items-center space-y-2">
++                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500/20 to-orange-500/20 rounded-lg flex items-center justify-center">
++                        <FileText size={20} className="text-orange-300" />
++                      </div>
++                      <div>
++                        <p className="text-white text-sm font-medium">
++                          Sélectionner un fichier MIDI
++                        </p>
++                        <p className="text-white/60 text-xs mt-1">
++                          .mid ou .midi uniquement
++                        </p>
++                      </div>
++                    </div>
++                  </label>
++                  {formData.file && (
++                    <div className="mt-3 p-2 bg-white/5 rounded-lg">
++                      <p className="text-white text-xs">
++                        <FileText size={12} className="inline mr-1" />
++                        {formData.file.name}
++                      </p>
++                    </div>
++                  )}
++                </div>
++              </div>
++            </div>
++
++            {/* Boutons d'action */}
++            <div className="flex items-center justify-end space-x-3 pt-4 border-t border-white/10">
++              <button
++                type="button"
++                onClick={onClose}
++                className="px-6 py-2 text-white/70 hover:text-white border border-white/20 hover:border-white/30 rounded-lg transition-colors duration-200"
++              >
++                Annuler
++              </button>
++              <button
++                type="submit"
++                className="px-6 py-2 bg-gradient-to-r from-blue-500 to-orange-500 hover:from-blue-600 hover:to-orange-600 text-white font-medium rounded-lg transition-all duration-200 transform hover:scale-105"
++              >
++                Importer la chanson
++              </button>
++            </div>
++          </form>
++        </div>
++      </div>
++    </div>
++  );
++}
+
+---
+## Fichier: virtuo-piano/src/features/imports/ImportedSongs.tsx
+- **Statut:** added
+- **Additions:** 551
+- **Deletions:** 0
+- **Changes:** 551
+
+### Différences:
+@@ -0,0 +1,551 @@
++'use client';
++
++import React, { useState, useRef, useEffect, useTransition } from 'react';
++import {
++  IconMusic,
++  IconHeart,
++  IconClockHour3,
++  IconPlayerPlay,
++  IconSearch,
++  IconFilter,
++  IconChevronLeft,
++  IconChevronRight,
++} from '@tabler/icons-react';
++
++import styles from '../library/SongList.module.css';
++import DifficultyBadge from '@/components/DifficultyBadge';
++import SongTypeBadge from '@/components/SongTypeBadge';
++import { castMsToMin } from '@/common/utils/function';
++import { toggleFavorite } from '@/lib/actions/songs';
++import { toast } from 'react-hot-toast';
++import { useRouter } from 'next/navigation';
++import { Spinner } from '@/components/ui/spinner';
++import { useImportedSongs, useAllGenres } from '@/customHooks/useImportedSongs';
++import { convertMidiToSongFormat } from '@/common/utils/function';
++
++export default function ImportedSongs() {
++  const [searchQuery, setSearchQuery] = useState('');
++  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
++  const [activeFilter, setActiveFilter] = useState<string | null>(null);
++  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
++  const [sortBy, setSortBy] = useState<
++    'title' | 'composer' | 'duration' | 'difficulty'
++  >('title');
++  const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
++  const [currentPage, setCurrentPage] = useState(1);
++  const [isPending, startTransition] = useTransition();
++  const [isDebugModalOpen, setIsDebugModalOpen] = useState(false);
++  const [debugResult, setDebugResult] = useState<any>(null);
++  const [debugError, setDebugError] = useState<string | null>(null);
++  const filterMenuRef = useRef<HTMLDivElement>(null);
++  const router = useRouter();
++  const [filterMenuPosition, setFilterMenuPosition] = useState<
++    'top' | 'bottom'
++  >('bottom');
++
++  // Utilisation du custom hook React Query pour la gestion du cache
++  const {
++    data: importedSongsData,
++    isLoading,
++    error,
++
++    invalidateAndRefetch,
++  } = useImportedSongs({
++    page: currentPage,
++    search: debouncedSearchQuery.trim() || undefined,
++    genre:
++      activeFilter && activeFilter !== 'Favoris' ? activeFilter : undefined,
++    favorites: activeFilter === 'Favoris',
++    sortBy,
++    sortOrder,
++  });
++
++  // Hook pour charger tous les genres
++  const { allGenres } = useAllGenres();
++
++  // Debounce pour la recherche
++  useEffect(() => {
++    const timer = setTimeout(() => {
++      setDebouncedSearchQuery(searchQuery);
++    }, 300); // 300ms de délai
++
++    return () => clearTimeout(timer);
++  }, [searchQuery]);
++
++  // Valeurs par défaut si pas de données
++  const safeImportedSongsData = importedSongsData || {
++    songs: [],
++    pagination: {
++      currentPage: 1,
++      totalPages: 0,
++      totalSongs: 0,
++      hasNextPage: false,
++      hasPreviousPage: false,
++    },
++  };
++
++  // Afficher les erreurs avec toast
++  useEffect(() => {
++    if (error) {
++      toast.error(error);
++    }
++  }, [error]);
++
++  // Fonction pour calculer la position du menu
++  const calculateMenuPosition = (
++    buttonRef: React.RefObject<HTMLDivElement | null>,
++    setPosition: (position: 'top' | 'bottom') => void
++  ) => {
++    if (buttonRef.current) {
++      const buttonRect = buttonRef.current.getBoundingClientRect();
++      const windowHeight = window.innerHeight;
++      const spaceBelow = windowHeight - buttonRect.bottom;
++      const spaceAbove = buttonRect.top;
++      const menuHeight = 150;
++
++      setPosition(
++        spaceBelow < menuHeight && spaceAbove > spaceBelow ? 'top' : 'bottom'
++      );
++    }
++  };
++
++  // Mise à jour des positions lors de l'ouverture des menus
++  useEffect(() => {
++    if (isFilterMenuOpen) {
++      calculateMenuPosition(filterMenuRef, setFilterMenuPosition);
++    }
++  }, [isFilterMenuOpen]);
++
++  // Gestion du clic en dehors des menus
++  useEffect(() => {
++    function handleClickOutside(event: MouseEvent) {
++      if (
++        filterMenuRef.current &&
++        !filterMenuRef.current.contains(event.target as Node)
++      ) {
++        setIsFilterMenuOpen(false);
++      }
++    }
++
++    document.addEventListener('mousedown', handleClickOutside);
++    return () => {
++      document.removeEventListener('mousedown', handleClickOutside);
++    };
++  }, []);
++
++  // Réinitialiser la page courante lorsque les filtres changent
++  useEffect(() => {
++    if (currentPage !== 1) {
++      setCurrentPage(1);
++    }
++  }, [debouncedSearchQuery, activeFilter, sortBy, sortOrder]);
++
++  // Fonction pour gérer le clic sur le bouton favori
++  const handleFavoriteClick = (
++    songId: string,
++    currentFavoriteState: boolean
++  ) => {
++    // Appeler l'action serveur
++    startTransition(async () => {
++      try {
++        const result = await toggleFavorite(songId);
++
++        if (result.success) {
++          toast.success(result.message);
++          // Recharger les données pour refléter le changement
++          invalidateAndRefetch();
++        } else {
++          toast.error(result.message);
++        }
++      } catch (error) {
++        console.error('Erreur lors de la modification des favoris:', error);
++        toast.error(
++          'Une erreur est survenue lors de la modification des favoris'
++        );
++      }
++    });
++  };
++
++  const handleSongClick = (songId: string) => {
++    router.push(`/library/${songId}`);
++  };
++
++  // Les chansons sont déjà filtrées côté serveur
++  const filteredSongs = safeImportedSongsData.songs;
++
++  // Fonctions de navigation
++  const goToNextPage = () => {
++    if (safeImportedSongsData.pagination.hasNextPage) {
++      setCurrentPage(currentPage + 1);
++    }
++  };
++
++  const goToPreviousPage = () => {
++    if (safeImportedSongsData.pagination.hasPreviousPage) {
++      setCurrentPage(currentPage - 1);
++    }
++  };
++
++  // Création des filtres disponibles à partir de tous les genres
++  const availableFilters = [
++    { id: 'all', label: 'Tous' },
++    { id: 'Favoris', label: 'Favoris' },
++    ...allGenres.map((genre) => ({ id: genre, label: genre })),
++  ];
++
++  // Gestion du tri
++  const handleSort = (column: typeof sortBy) => {
++    if (sortBy === column) {
++      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
++    } else {
++      setSortBy(column);
++      setSortOrder('asc');
++    }
++  };
++
++  // Fonction de debug pour tester la conversion MIDI
++  const handleDebugMidi = async (e: React.ChangeEvent<HTMLInputElement>) => {
++    const file = e.target.files?.[0];
++    if (!file) return;
++
++    try {
++      setDebugError(null);
++      setDebugResult(null);
++      setIsDebugModalOpen(true);
++
++      const result = await convertMidiToSongFormat(file);
++      setDebugResult(result);
++    } catch (error) {
++      setDebugError(error instanceof Error ? error.message : 'Erreur inconnue');
++    }
++  };
++
++  return (
++    <div className="w-full">
++      <div className="space-y-4">
++        {/* Barre de recherche et filtres */}
++        <div className={styles.searchContainer}>
++          <div className={styles.searchWrapper}>
++            <div className={styles.searchIcon}>
++              <IconSearch size={18} />
++            </div>
++            <input
++              type="text"
++              placeholder="Rechercher par titre ou compositeur..."
++              className={styles.searchInput}
++              value={searchQuery}
++              onChange={(e) => setSearchQuery(e.target.value)}
++            />
++          </div>
++
++          <div className={styles.filtersContainer}>
++            <div className="relative" ref={filterMenuRef}>
++              <button
++                className={styles.filterButton}
++                onClick={() => setIsFilterMenuOpen(!isFilterMenuOpen)}
++              >
++                <IconFilter size={20} />
++              </button>
++              {isFilterMenuOpen && (
++                <div
++                  className={`${styles.filterMenu} ${
++                    filterMenuPosition === 'top'
++                      ? styles.filterMenuTop
++                      : styles.filterMenuBottom
++                  }`}
++                >
++                  {availableFilters.map((filter) => (
++                    <button
++                      key={filter.id}
++                      className={`${styles.filterOption} ${
++                        (filter.id === 'all' && !activeFilter) ||
++                        activeFilter === filter.id
++                          ? styles.filterOptionActive
++                          : ''
++                      }`}
++                      onClick={() => {
++                        setActiveFilter(filter.id === 'all' ? null : filter.id);
++                        setIsFilterMenuOpen(false);
++                      }}
++                    >
++                      {filter.label}
++                    </button>
++                  ))}
++                </div>
++              )}
++            </div>
++          </div>
++        </div>
++
++        {/* Filtres actifs */}
++        {activeFilter && (
++          <div className={styles.activeFilters}>
++            <div className={styles.activeFilter}>
++              <span>
++                {availableFilters.find((f) => f.id === activeFilter)?.label}
++              </span>
++              <button
++                className={styles.removeFilter}
++                onClick={() => setActiveFilter(null)}
++              >
++                ×
++              </button>
++            </div>
++          </div>
++        )}
++
++        {/* Nombre de morceaux avec indicateur de cache */}
++        <div
++          className={`${styles.songCount} flex items-center justify-between`}
++        >
++          <div>
++            {safeImportedSongsData.pagination.totalSongs} morceau
++            {safeImportedSongsData.pagination.totalSongs !== 1 ? 'x' : ''}{' '}
++            importé
++            {safeImportedSongsData.pagination.totalSongs !== 1 ? 's' : ''}
++          </div>
++
++          {/* Bouton de debug MIDI */}
++          <div className="flex items-center space-x-2">
++            <input
++              type="file"
++              accept=".mid,.midi"
++              onChange={handleDebugMidi}
++              className="hidden"
++              id="debug-midi-input"
++            />
++          </div>
++        </div>
++
++        {/* Tableau des chansons */}
++        <div className={`${styles.tableContainer}`}>
++          <table className={styles.table}>
++            <thead className={styles.tableHeader}>
++              <tr>
++                <th className={styles.tableHeaderCell}></th>
++                <th className={styles.tableHeaderCell}>
++                  <button
++                    className={styles.sortButton}
++                    onClick={() => handleSort('title')}
++                  >
++                    Titre{' '}
++                    {sortBy === 'title' && (sortOrder === 'asc' ? '↑' : '↓')}
++                  </button>
++                </th>
++                <th
++                  className={`${styles.tableHeaderCell} ${styles.hideOnMobile}`}
++                >
++                  <button
++                    className={styles.sortButton}
++                    onClick={() => handleSort('composer')}
++                  >
++                    Compositeur{' '}
++                    {sortBy === 'composer' && (sortOrder === 'asc' ? '↑' : '↓')}
++                  </button>
++                </th>
++                <th
++                  className={`${styles.tableHeaderCell} ${styles.hideOnMobile}`}
++                >
++                  <button className={styles.sortButton}>Type </button>
++                </th>
++                <th
++                  className={`${styles.tableHeaderCell} ${styles.hideOnMobile}`}
++                >
++                  <button className={styles.sortButton}>Difficulté</button>
++                </th>
++                <th
++                  className={`${styles.tableHeaderCell} ${styles.hideOnMobile}`}
++                >
++                  <button
++                    className={styles.sortButton}
++                    onClick={() => handleSort('duration')}
++                  >
++                    Durée
++                    {sortBy === 'duration' && (sortOrder === 'asc' ? '↑' : '↓')}
++                  </button>
++                </th>
++                <th className={styles.tableHeaderCell}></th>
++              </tr>
++            </thead>
++            <tbody className={styles.tableBody}>
++              {isLoading ? (
++                <tr>
++                  <td colSpan={7} className="text-center py-12">
++                    <div className="flex justify-center items-center">
++                      <Spinner
++                        variant="bars"
++                        size={32}
++                        className="text-white"
++                      />
++                    </div>
++                  </td>
++                </tr>
++              ) : (
++                filteredSongs.map((song) => (
++                  <tr key={song.id} className={styles.tableRow}>
++                    <td className={styles.tableCell}>
++                      <button
++                        className={`${styles.favoriteButton} ${
++                          song.isFavorite ? styles.favoriteButtonActive : ''
++                        }`}
++                        onClick={() =>
++                          handleFavoriteClick(song.id, song.isFavorite)
++                        }
++                        disabled={isPending}
++                      >
++                        <IconHeart
++                          size={20}
++                          fill={song.isFavorite ? 'currentColor' : 'none'}
++                        />
++                      </button>
++                    </td>
++                    <td
++                      className={styles.tableCell}
++                      style={{ cursor: 'pointer' }}
++                      onClick={() => handleSongClick(song.id)}
++                    >
++                      <div className={styles.songInfo}>
++                        <div className={styles.songIcon}>
++                          {song.imageUrl ? (
++                            <img
++                              src={song.imageUrl}
++                              alt={song.title}
++                              className="h-10 w-10 rounded object-cover"
++                            />
++                          ) : (
++                            <IconMusic
++                              size={20}
++                              className={styles.songIconText}
++                            />
++                          )}
++                        </div>
++                        <div
++                          className={styles.songDetails}
++                          style={{ textAlign: 'left' }}
++                        >
++                          <div className={styles.songTitle}>{song.title}</div>
++                          {song.lastPlayed && (
++                            <div className={styles.songLastPlayed}>
++                              Joué le{' '}
++                              {new Date(song.lastPlayed).toLocaleDateString(
++                                'fr-FR',
++                                {
++                                  year: 'numeric',
++                                  month: 'long',
++                                  day: 'numeric',
++                                }
++                              )}
++                            </div>
++                          )}
++                        </div>
++                      </div>
++                    </td>
++                    <td
++                      className={`${styles.tableCell} ${styles.hideOnMobile} ${styles.songComposer}`}
++                      style={{ textAlign: 'left' }}
++                    >
++                      {song.composer}
++                    </td>
++                    <td
++                      className={`${styles.tableCell} ${styles.hideOnMobile}`}
++                    >
++                      <SongTypeBadge songType={song.SongType} />
++                    </td>
++                    <td className={styles.tableCell}>
++                      <DifficultyBadge difficulty={song.Level} />
++                    </td>
++                    <td
++                      className={`${styles.tableCell} ${styles.hideOnMobile}`}
++                    >
++                      <div className={styles.durationContainer}>
++                        <IconClockHour3
++                          size={16}
++                          className={styles.durationIcon}
++                        />
++                        {castMsToMin(song.duration_ms)}
++                      </div>
++                    </td>
++                    <td className={styles.tableCell}>
++                      <button className={styles.playButton}>
++                        <IconPlayerPlay size={16} />
++                      </button>
++                    </td>
++                  </tr>
++                ))
++              )}
++            </tbody>
++          </table>
++        </div>
++
++        {/* Pagination */}
++        {(safeImportedSongsData.pagination.totalSongs > 0 || isLoading) && (
++          <div className={styles.paginationContainer}>
++            <div className={styles.paginationControls}>
++              <button
++                className={`${styles.paginationButton} ${
++                  !safeImportedSongsData.pagination.hasPreviousPage || isLoading
++                    ? styles.paginationButtonDisabled
++                    : ''
++                }`}
++                onClick={goToPreviousPage}
++                disabled={
++                  !safeImportedSongsData.pagination.hasPreviousPage || isLoading
++                }
++              >
++                <IconChevronLeft size={20} />
++              </button>
++              <div className={styles.paginationPageInfo}>
++                {isLoading
++                  ? 'Chargement...'
++                  : `Page ${safeImportedSongsData.pagination.currentPage} sur ${safeImportedSongsData.pagination.totalPages}`}
++              </div>
++              <button
++                className={`${styles.paginationButton} ${
++                  !safeImportedSongsData.pagination.hasNextPage || isLoading
++                    ? styles.paginationButtonDisabled
++                    : ''
++                }`}
++                onClick={goToNextPage}
++                disabled={
++                  !safeImportedSongsData.pagination.hasNextPage || isLoading
++                }
++              >
++                <IconChevronRight size={20} />
++              </button>
++            </div>
++          </div>
++        )}
++
++        {/* État vide */}
++        {!isLoading && safeImportedSongsData.pagination.totalSongs === 0 && (
++          <div className={styles.emptyState}>
++            <div className={styles.emptyIcon}>
++              <IconMusic size={32} className={styles.emptyIconText} />
++            </div>
++            <h3 className={styles.emptyTitle}>
++              {debouncedSearchQuery || activeFilter
++                ? 'Aucune chanson trouvée.'
++                : 'Aucune chanson importée'}
++            </h3>
++            <p className={styles.emptyDescription}>
++              {debouncedSearchQuery || activeFilter
++                ? 'Aucune chanson ne correspond à vos critères de recherche. Essayez de modifier vos filtres ou votre recherche.'
++                : "Vous n'avez encore importé aucune chanson. Commencez à importer pour voir vos chansons ici !"}
++            </p>
++            {debouncedSearchQuery || activeFilter ? (
++              <button
++                className={styles.resetButton}
++                onClick={() => {
++                  setSearchQuery('');
++                  setActiveFilter(null);
++                }}
++              >
++                Réinitialiser les filtres
++              </button>
++            ) : null}
++          </div>
++        )}
++      </div>
++    </div>
++  );
++}
+
+---
+## Fichier: virtuo-piano/src/features/imports/SongImports.tsx
+- **Statut:** added
+- **Additions:** 72
+- **Deletions:** 0
+- **Changes:** 72
+
+### Différences:
+@@ -0,0 +1,72 @@
++'use client';
++
++import { useState } from 'react';
++import { FolderUp, Upload, Music, FileText } from 'lucide-react';
++import ImportModal from '@/features/imports/ImportModal';
++import ImportedSongs from './ImportedSongs';
++
++export default function SongImports() {
++  const [isModalOpen, setIsModalOpen] = useState(false);
++
++  return (
++    <div className="max-w-[98.5%] mx-auto bg-transparent shadow-md rounded-2xl p-6 border border-slate-200/20 dark:border-slate-700/20">
++      {/* En-tête avec dégradé bleu/orange */}
++      <div className="bg-gradient-to-r from-blue-500/20 via-indigo-500/20 to-orange-400/20 rounded-t-xl p-8 mb-6 -mx-6 -mt-6">
++        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
++          <div>
++            <h1 className="text-xl font-bold text-white flex items-center">
++              <FolderUp size={28} className="mr-2 text-orange-300" />
++              Gérez vos compositions et morceaux personnalisés
++            </h1>
++          </div>
++        </div>
++      </div>
++
++      {/* Contenu principal */}
++      <div className="space-y-6">
++        {/* Carte d'imports */}
++        <div className="flex justify-center">
++          <div
++            className="bg-white/5 backdrop-blur-sm rounded-xl p-8 border border-white/10 hover:border-white/20 transition-all duration-300 cursor-pointer group w-80 h-120
++             flex flex-col items-center justify-center text-center"
++            onClick={() => setIsModalOpen(true)}
++          >
++            <div className="w-16 h-16 bg-gradient-to-br from-blue-500/20 to-orange-500/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 mb-6">
++              <Upload size={32} className="text-orange-300" />
++            </div>
++            <h3 className="text-xl font-semibold text-white group-hover:text-orange-300 transition-colors duration-300 mb-3">
++              Importer une nouvelle chanson
++            </h3>
++            <p className="text-white/60 text-sm mb-6 leading-relaxed">
++              Ajoutez vos compositions ou morceaux personnalisés à votre
++              bibliothèque
++            </p>
++            <div className="flex items-center space-x-2 text-white/40 group-hover:text-white/60 transition-colors duration-300">
++              <span className="text-sm font-medium">Cliquer pour importer</span>
++              <Upload
++                size={16}
++                className="group-hover:translate-x-1 transition-transform duration-300"
++              />
++            </div>
++          </div>
++        </div>
++
++        {/* Section des chansons importées (à venir) */}
++        <div className="bg-transparent backdrop-blur-sm rounded-xl p-6 border border-white/10">
++          <div className="flex items-center space-x-3 mb-4">
++            <Music size={20} className="text-blue-300" />
++            <h3 className="text-lg font-semibold text-white">
++              Mes chansons importées
++            </h3>
++          </div>
++          <div className="text-center py-8">
++            <ImportedSongs />
++          </div>
++        </div>
++      </div>
++
++      {/* Modale d'import */}
++      <ImportModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
++    </div>
++  );
++}
+
+---
+## Fichier: virtuo-piano/src/features/layout/Header.tsx
+- **Statut:** modified
+- **Additions:** 11
+- **Deletions:** 2
+- **Changes:** 13
+
+### Différences:
+@@ -15,10 +15,16 @@ export default function Header() {
+   const isSongPage =
+     pathname.startsWith('/library/') && pathname !== '/library';
+   const isPerformancePage = pathname.startsWith('/performances/');
++  const isPerformanceSessionPage = pathname.startsWith('/performances/session');
+ 
+   useEffect(() => {
++    // Sur la page de session, pas de titre de chanson à charger
++    if (isPerformanceSessionPage) {
++      setIsLoadingSong(false);
++      return;
++    }
+     if (isSongPage || isPerformancePage) {
+-      // Si nous sommes sur une page de chanson mais qu'aucune chanson n'est chargée
++      // Si nous sommes sur une page nécessitant une chanson mais qu'aucune n'est chargée
+       if (!currentSong) {
+         setIsLoadingSong(true);
+       } else {
+@@ -27,10 +33,13 @@ export default function Header() {
+     } else {
+       setIsLoadingSong(false);
+     }
+-  }, [currentSong, isSongPage, isPerformancePage]);
++  }, [currentSong, isSongPage, isPerformancePage, isPerformanceSessionPage]);
+ 
+   // Déterminer le titre à afficher
+   const getDisplayTitle = () => {
++    if (isPerformanceSessionPage) {
++      return 'Session';
++    }
+     if ((isSongPage || isPerformancePage) && isLoadingSong) {
+       return 'Chargement...';
+     }
+
+---
+## Fichier: virtuo-piano/src/features/layout/Navbar.tsx
+- **Statut:** modified
+- **Additions:** 0
+- **Deletions:** 11
+- **Changes:** 11
+
+### Différences:
+@@ -146,17 +146,6 @@ export default function Navbar() {
+               </span>
+             </Link>
+           </li>
+-          <li className={pathname === '/pageTest' ? styles.active : ''}>
+-            <Link href="/pageTest">
+-              <span
+-                className={`${styles.menuItem} ${styles.menuItemWithIcon} ${
+-                  pathname === '/pageTest' ? styles.active : ''
+-                }`}
+-              >
+-                Page Test
+-              </span>
+-            </Link>
+-          </li>
+         </ul>
+       </div>
+       <SignOutButton />
+
+---
+## Fichier: virtuo-piano/src/features/performances/HistoryStats.tsx
+- **Statut:** modified
+- **Additions:** 7
+- **Deletions:** 1
+- **Changes:** 8
+
+### Différences:
+@@ -12,6 +12,7 @@ import { ScoreSummary } from '@/components/cards/ScoreCard';
+ import { getFilteredSessions } from '@/lib/actions/history-actions';
+ import { Spinner } from '@/components/ui/spinner';
+ import { useSearchCache } from '@/customHooks/useSearchCache';
++import { useRouter } from 'next/navigation';
+ 
+ const SESSIONS_PER_PAGE = 30;
+ 
+@@ -23,6 +24,7 @@ type SessionsResult = {
+ };
+ 
+ export default function HistoryStats() {
++  const router = useRouter();
+   // Lire les filtres depuis sessionStorage au mount
+   const getInitialFilters = () => {
+     if (typeof window !== 'undefined') {
+@@ -467,7 +469,11 @@ export default function HistoryStats() {
+           </div>
+           <div className="grid cursor-pointer grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+             {allScores.map((score) => (
+-              <ScoreCard key={score.id} score={score} />
++              <ScoreCard
++                key={score.id}
++                score={score}
++                onClick={() => router.push(`/performances/session/${score.id}`)}
++              />
+             ))}
+           </div>
+ 
+
+---
+## Fichier: virtuo-piano/src/features/performances/PlayedSongs.tsx
+- **Statut:** modified
+- **Additions:** 3
+- **Deletions:** 11
+- **Changes:** 14
+
+### Différences:
+@@ -18,7 +18,7 @@ import SongTypeBadge from '@/components/SongTypeBadge';
+ import { castMsToMin } from '@/common/utils/function';
+ import {
+   getPlayedSongsAction,
+-  getAllPlayedSongsAction,
++  getPlayedSongsGenresAction,
+   type PlayedSongsResult,
+ } from '@/lib/actions/playedSongs-actions';
+ import { toggleFavorite } from '@/lib/actions/songs';
+@@ -91,16 +91,8 @@ export default function PlayedSongs() {
+   useEffect(() => {
+     const loadAllGenres = async () => {
+       try {
+-        const allSongs = await getAllPlayedSongsAction();
+-        const uniqueGenres = Array.from(
+-          new Set(
+-            allSongs
+-              .filter((song) => song.genre)
+-              .map((song) => song.genre)
+-              .filter((genre): genre is string => genre !== null)
+-          )
+-        ).sort();
+-        setAllGenres(uniqueGenres);
++        const genres = await getPlayedSongsGenresAction();
++        setAllGenres(genres);
+       } catch (error) {
+         console.error('Erreur lors du chargement des genres:', error);
+       }
+
+---
+## Fichier: virtuo-piano/src/lib/actions/imports-actions.ts
+- **Statut:** added
+- **Additions:** 111
+- **Deletions:** 0
+- **Changes:** 111
+
+### Différences:
+@@ -0,0 +1,111 @@
++'use server';
++
++import { getServerSession } from 'next-auth';
++import { PlayedSong } from '../types';
++import { ImportsServices } from '../services/imports-services';
++import { authOptions } from '../authoption';
++
++import {
++  createImportSchema,
++  type CreateImportInput,
++} from '@/lib/validations/imports-schemas';
++
++export type ImportedSongsResult = {
++  songs: PlayedSong[];
++  pagination: {
++    currentPage: number;
++    totalPages: number;
++    totalSongs: number;
++    hasNextPage: boolean;
++    hasPreviousPage: boolean;
++  };
++};
++
++export async function getImportedSongsAction(
++  page: number = 1,
++  searchQuery?: string,
++  genreFilter?: string,
++  favoritesOnly?: boolean,
++  sortBy?:
++    | 'title'
++    | 'composer'
++    | 'lastPlayed'
++    | 'genre'
++    | 'duration'
++    | 'difficulty',
++  sortOrder?: 'asc' | 'desc'
++): Promise<ImportedSongsResult> {
++  try {
++    const session = await getServerSession(authOptions);
++
++    if (!session?.user?.id) {
++      throw new Error('Accès non autorisé');
++    }
++
++    const result = await ImportsServices.getImportedSongs(
++      session.user.id,
++      {
++        page,
++        limit: 20, // 20 chansons par page
++      },
++      {
++        searchQuery,
++        genreFilter,
++        favoritesOnly,
++        sortBy,
++        sortOrder,
++      }
++    );
++
++    return result;
++  } catch (error) {
++    console.error(
++      'Erreur lors de la récupération des chansons importées:',
++      error
++    );
++    throw new Error('Impossible de récupérer les chansons importées');
++  }
++}
++
++// Action pour récupérer uniquement les genres des chansons importées
++export async function getImportedSongsGenresAction(): Promise<string[]> {
++  try {
++    const session = await getServerSession(authOptions);
++
++    if (!session?.user?.id) {
++      throw new Error('Accès non autorisé');
++    }
++
++    const genres = await ImportsServices.getImportedSongsGenres(
++      session.user.id
++    );
++    return genres;
++  } catch (error) {
++    console.error(
++      'Erreur lors de la récupération des genres des chansons importées:',
++      error
++    );
++    throw new Error('Impossible de récupérer les genres');
++  }
++}
++
++export async function createImportedSongAction(
++  input: unknown
++): Promise<{ success: boolean; songId?: string; message?: string }> {
++  try {
++    const session = await getServerSession(authOptions);
++    if (!session?.user?.id) {
++      return { success: false, message: 'Accès non autorisé' };
++    }
++
++    const parsed = createImportSchema.parse(input);
++    const result = await ImportsServices.createImportedSong(
++      session.user.id,
++      parsed
++    );
++    return { success: true, songId: result.songId };
++  } catch (error: any) {
++    console.error("Erreur lors de la création de l'import:", error);
++    return { success: false, message: error?.message || 'Erreur inconnue' };
++  }
++}
+
+---
+## Fichier: virtuo-piano/src/lib/actions/playedSongs-actions.ts
+- **Statut:** modified
+- **Additions:** 8
+- **Deletions:** 10
+- **Changes:** 18
+
+### Différences:
+@@ -59,26 +59,24 @@ export async function getPlayedSongsAction(
+   }
+ }
+ 
+-// Action simplifiée pour récupérer toutes les chansons sans pagination (utile pour certains cas)
+-export async function getAllPlayedSongsAction(): Promise<PlayedSong[]> {
++// Action pour récupérer uniquement les genres des chansons jouées
++export async function getPlayedSongsGenresAction(): Promise<string[]> {
+   try {
+     const session = await getServerSession(authOptions);
+ 
+     if (!session?.user?.id) {
+       throw new Error('Accès non autorisé');
+     }
+ 
+-    const result = await PerformancesServices.getPlayedSongs(session.user.id, {
+-      page: 1,
+-      limit: 999999, // Récupérer toutes les chansons
+-    });
+-
+-    return result.songs;
++    const genres = await PerformancesServices.getPlayedSongsGenres(
++      session.user.id
++    );
++    return genres;
+   } catch (error) {
+     console.error(
+-      'Erreur lors de la récupération de toutes les chansons jouées:',
++      'Erreur lors de la récupération des genres des chansons jouées:',
+       error
+     );
+-    throw new Error('Impossible de récupérer les chansons jouées');
++    throw new Error('Impossible de récupérer les genres');
+   }
+ }
+
+---
+## Fichier: virtuo-piano/src/lib/services/imports-services.ts
+- **Statut:** added
+- **Additions:** 270
+- **Deletions:** 0
+- **Changes:** 270
+
+### Différences:
+@@ -0,0 +1,270 @@
++import prisma from '@/lib/prisma';
++import { PlayedSong } from '../types';
++import { uploadImage } from '@/lib/cloudinary';
++import { CreateImportInput } from '@/lib/validations/imports-schemas';
++import { SourceType, SongType } from '@prisma/client';
++
++export class ImportsServices {
++  static async getImportedSongs(
++    userId: string,
++    pagination?: {
++      page: number;
++      limit: number;
++    },
++    filters?: {
++      searchQuery?: string;
++      genreFilter?: string;
++      favoritesOnly?: boolean;
++      sortBy?:
++        | 'title'
++        | 'composer'
++        | 'lastPlayed'
++        | 'genre'
++        | 'duration'
++        | 'difficulty';
++      sortOrder?: 'asc' | 'desc';
++    }
++  ): Promise<{
++    songs: PlayedSong[];
++    pagination: {
++      currentPage: number;
++      totalPages: number;
++      totalSongs: number;
++      hasNextPage: boolean;
++      hasPreviousPage: boolean;
++    };
++  }> {
++    // Récupérer toutes les chansons importées par l'utilisateur via la table UsersImports
++    const userImports = await prisma.usersImports.findMany({
++      where: {
++        user_id: userId,
++      },
++      include: {
++        song: {
++          include: {
++            userFavorites: {
++              where: {
++                user_id: userId,
++              },
++            },
++            scores: {
++              where: {
++                user_id: userId,
++              },
++              orderBy: {
++                sessionStartTime: 'desc',
++              },
++              take: 1,
++            },
++          },
++        },
++      },
++      orderBy: {
++        song: {
++          createdAt: 'desc',
++        },
++      },
++    });
++
++    // Transformer les données
++    const songsWithDetails = userImports.map((userImport) => ({
++      id: userImport.song.id,
++      title: userImport.song.title,
++      composer: userImport.song.composer,
++      genre: userImport.song.genre,
++      tempo: userImport.song.tempo,
++      duration_ms: userImport.song.duration_ms,
++      timeSignature: userImport.song.timeSignature,
++      SourceType: userImport.song.SourceType,
++      notes: userImport.song.notes,
++      Level: userImport.song.Level,
++      imageUrl: userImport.song.imageUrl,
++      SongType: userImport.song.SongType,
++      isFavorite: userImport.song.userFavorites.length > 0,
++      lastPlayed:
++        userImport.song.scores[0]?.sessionStartTime?.toISOString() || '',
++    }));
++
++    // Filtrer les chansons nulles
++    let filteredSongs = songsWithDetails.filter(
++      (song): song is PlayedSong => song !== null
++    );
++
++    // Appliquer le filtrage par recherche
++    if (filters?.searchQuery && filters.searchQuery.trim()) {
++      const searchTerm = filters.searchQuery.toLowerCase().trim();
++      filteredSongs = filteredSongs.filter(
++        (song) =>
++          song.title.toLowerCase().includes(searchTerm) ||
++          (song.composer && song.composer.toLowerCase().includes(searchTerm)) ||
++          (song.genre && song.genre.toLowerCase().includes(searchTerm))
++      );
++    }
++
++    // Appliquer le filtrage par genre
++    if (filters?.genreFilter) {
++      filteredSongs = filteredSongs.filter(
++        (song) => song.genre === filters.genreFilter
++      );
++    }
++
++    // Appliquer le filtrage par favoris
++    if (filters?.favoritesOnly) {
++      filteredSongs = filteredSongs.filter((song) => song.isFavorite);
++    }
++
++    // Appliquer le tri
++    if (filters?.sortBy) {
++      filteredSongs.sort((a, b) => {
++        let aValue: string | number;
++        let bValue: string | number;
++
++        switch (filters.sortBy) {
++          case 'title':
++            aValue = a.title.toLowerCase();
++            bValue = b.title.toLowerCase();
++            break;
++          case 'composer':
++            aValue = (a.composer || '').toLowerCase();
++            bValue = (b.composer || '').toLowerCase();
++            break;
++          case 'lastPlayed':
++            aValue = new Date(a.lastPlayed).getTime();
++            bValue = new Date(b.lastPlayed).getTime();
++            break;
++          case 'genre':
++            aValue = (a.genre || '').toLowerCase();
++            bValue = (b.genre || '').toLowerCase();
++            break;
++          case 'duration':
++            aValue = a.duration_ms;
++            bValue = b.duration_ms;
++            break;
++          case 'difficulty':
++            aValue = a.Level;
++            bValue = b.Level;
++            break;
++          default:
++            return 0;
++        }
++
++        if (aValue < bValue) return filters.sortOrder === 'desc' ? 1 : -1;
++        if (aValue > bValue) return filters.sortOrder === 'desc' ? -1 : 1;
++        return 0;
++      });
++    } else {
++      // Tri par défaut : par dernière date de jeu (plus récent en premier)
++      filteredSongs.sort(
++        (a, b) =>
++          new Date(b.lastPlayed).getTime() - new Date(a.lastPlayed).getTime()
++      );
++    }
++
++    // Calculer la pagination
++    const totalSongs = filteredSongs.length;
++    const limit = pagination?.limit || 20;
++    const currentPage = pagination?.page || 1;
++    const totalPages = Math.ceil(totalSongs / limit);
++    const startIndex = (currentPage - 1) * limit;
++    const endIndex = startIndex + limit;
++
++    const paginatedSongs = filteredSongs.slice(startIndex, endIndex);
++
++    return {
++      songs: paginatedSongs,
++      pagination: {
++        currentPage,
++        totalPages,
++        totalSongs,
++        hasNextPage: currentPage < totalPages,
++        hasPreviousPage: currentPage > 1,
++      },
++    };
++  }
++
++  // Méthode  pour récupérer uniquement les genres
++  static async getImportedSongsGenres(userId: string): Promise<string[]> {
++    const genres = await prisma.usersImports.findMany({
++      where: {
++        user_id: userId,
++      },
++      select: {
++        song: {
++          select: {
++            genre: true,
++          },
++        },
++      },
++    });
++
++    // Extraire et dédupliquer les genres
++    const uniqueGenres = Array.from(
++      new Set(
++        genres
++          .map((item) => item.song.genre)
++          .filter((genre): genre is string => genre !== null)
++      )
++    ).sort();
++
++    return uniqueGenres;
++  }
++
++  static async createImportedSong(
++    userId: string,
++    input: CreateImportInput
++  ): Promise<{ success: boolean; songId: string }> {
++    // Uploader l'image si fournie (Data URL)
++    let imageUrl: string | undefined;
++    if (input.imageDataUrl) {
++      imageUrl = await uploadImage(input.imageDataUrl);
++    }
++
++    // Trouver ou créer la Key
++    const key = await prisma.key.upsert({
++      where: { name: input.keyName },
++      update: {},
++      create: { name: input.keyName, notes: [] },
++    });
++
++    // Conserver uniquement les pistes sélectionnées
++    const selectedTracks = input.tracks.filter((t) =>
++      input.selectedTrackIds.includes(t.track)
++    );
++
++    // Notes combinées triées par startBeat
++    const combinedNotes = selectedTracks
++      .flatMap((t) => t.notes)
++      .sort((a, b) => a.startBeat - b.startBeat);
++
++    const tempo = input.midiMeta.tempo;
++    const timeSignature = input.midiMeta.timeSignature;
++    const duration_ms = input.midiMeta.duration_ms;
++
++    const song = await prisma.songs.create({
++      data: {
++        imageUrl,
++        title: input.title,
++        composer: input.composer || null,
++        genre: input.genre || null,
++        tempo,
++        duration_ms,
++        notes: combinedNotes as any,
++        timeSignature,
++        SourceType: 'import' as SourceType,
++        Level: input.difficulty,
++        SongType: input.songType as SongType,
++        key_id: key.id,
++      },
++    });
++
++    // Lier à l'utilisateur
++    await prisma.usersImports.create({
++      data: {
++        user_id: userId,
++        song_id: song.id,
++      },
++    });
++
++    return { success: true, songId: song.id };
++  }
++}
+
+---
+## Fichier: virtuo-piano/src/lib/services/performances-services.ts
+- **Statut:** modified
+- **Additions:** 37
+- **Deletions:** 0
+- **Changes:** 37
+
+### Différences:
+@@ -2321,4 +2321,41 @@ export class PerformancesServices {
+ 
+     return { records };
+   }
++
++  // Méthode pour récupérer uniquement les genres des chansons jouées
++  static async getPlayedSongsGenres(userId: string): Promise<string[]> {
++    const genres = await prisma.scores.groupBy({
++      by: ['song_id'],
++      where: {
++        user_id: userId,
++      },
++      _max: {
++        sessionStartTime: true,
++      },
++    });
++
++    // Récupérer les genres des chansons jouées
++    const songIds = genres.map((g) => g.song_id);
++    const songs = await prisma.songs.findMany({
++      where: {
++        id: {
++          in: songIds,
++        },
++      },
++      select: {
++        genre: true,
++      },
++    });
++
++    // Extraire et dédupliquer les genres
++    const uniqueGenres = Array.from(
++      new Set(
++        songs
++          .map((song) => song.genre)
++          .filter((genre): genre is string => genre !== null)
++      )
++    ).sort();
++
++    return uniqueGenres;
++  }
+ }
+
+---
+## Fichier: virtuo-piano/src/lib/validations/imports-schemas.ts
+- **Statut:** added
+- **Additions:** 31
+- **Deletions:** 0
+- **Changes:** 31
+
+### Différences:
+@@ -0,0 +1,31 @@
++import { z } from 'zod';
++
++export const noteSchema = z.object({
++  note: z.string().min(1),
++  startBeat: z.number().min(0),
++  durationInBeats: z.number().min(0),
++});
++
++export const trackSchema = z.object({
++  track: z.number().int().min(0),
++  notes: z.array(noteSchema),
++});
++
++export const createImportSchema = z.object({
++  title: z.string().min(1),
++  composer: z.string().optional().nullable(),
++  difficulty: z.number().int().min(1).max(10),
++  genre: z.string().optional().nullable(),
++  songType: z.enum(['song', 'scaleEx', 'chordEx', 'rythmEx', 'arpeggioEx']),
++  keyName: z.string().min(1),
++  imageDataUrl: z.string().url().optional().nullable(),
++  midiMeta: z.object({
++    tempo: z.number().min(1),
++    timeSignature: z.string().min(1),
++    duration_ms: z.number().min(0),
++  }),
++  tracks: z.array(trackSchema),
++  selectedTrackIds: z.array(z.number().int()).min(1),
++});
++
++export type CreateImportInput = z.infer<typeof createImportSchema>;
+
+---
