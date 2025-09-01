@@ -593,7 +593,12 @@ export default function Song({
               <IconCalendar size={18} className={styles.sectionIcon} />
               Historique des sessions de jeu
               <div className={styles.titleButtonSpacer}></div>
-              <button className={styles.titleButton}>Voir plus</button>
+              <button
+                onClick={() => router.push(`/performances/${song.id}`)}
+                className={styles.titleButton}
+              >
+                Voir plus
+              </button>
             </h3>
 
             <div className="space-y-3">
@@ -636,7 +641,12 @@ export default function Song({
               <IconCalendar size={18} className={styles.sectionIcon} />
               Historique des sessions d'apprentissage
               <div className={styles.titleButtonSpacer}></div>
-              <button className={styles.titleButton}>Voir plus</button>
+              <button
+                onClick={() => router.push(`/performances/${song.id}`)}
+                className={styles.titleButton}
+              >
+                Voir plus
+              </button>
             </h3>
 
             <div className="space-y-3">
@@ -687,7 +697,12 @@ export default function Song({
             <IconUsers size={18} className={styles.sectionIcon} />
             Classement des joueurs
             <div className={styles.titleButtonSpacer}></div>
-            <button className={styles.titleButton}>Voir plus</button>
+            <button
+              style={{ visibility: 'hidden' }}
+              className={styles.titleButton}
+            >
+              Voir plus
+            </button>
           </h3>
 
           <div className="space-y-2">
