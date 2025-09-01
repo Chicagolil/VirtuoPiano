@@ -25,6 +25,7 @@ import {
   useFavoritesGenres,
 } from '@/customHooks/useFavoritesSongs';
 import { convertMidiToSongFormat } from '@/common/utils/function';
+import PreviewModal from '../library/PreviewModal';
 
 export default function FavoritesList() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -45,7 +46,7 @@ export default function FavoritesList() {
   const [filterMenuPosition, setFilterMenuPosition] = useState<
     'top' | 'bottom'
   >('bottom');
-
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   // Utilisation du custom hook React Query pour la gestion du cache des favoris
   const {
     data: favoritesSongsData,
@@ -170,6 +171,13 @@ export default function FavoritesList() {
     router.push(`/library/${songId}`);
   };
 
+  const handlePreviewClick = () => {
+    setIsPreviewModalOpen(true);
+  };
+
+  const handleClosePreviewModal = () => {
+    setIsPreviewModalOpen(false);
+  };
   // Les chansons favorites sont déjà filtrées côté serveur
   const filteredSongs = safeFavoritesSongsData.songs;
 
@@ -465,7 +473,10 @@ export default function FavoritesList() {
                       </div>
                     </td>
                     <td className={styles.tableCell}>
-                      <button className={styles.playButton}>
+                      <button
+                        className={styles.playButton}
+                        onClick={() => handlePreviewClick()}
+                      >
                         <IconPlayerPlay size={16} />
                       </button>
                     </td>
@@ -547,6 +558,10 @@ export default function FavoritesList() {
           </div>
         )}
       </div>
+      <PreviewModal
+        isOpen={isPreviewModalOpen}
+        onClose={handleClosePreviewModal}
+      />
     </div>
   );
 }

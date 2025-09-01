@@ -277,47 +277,6 @@ export default function GeneralStats({
           </>
         )}
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Carte avec Avatar et progression */}
-        <div className="bg-white/3 shadow-md rounded-2xl p-5 border border-slate-200/10 dark:border-slate-700/10">
-          <div className="flex items-start space-x-3">
-            <UserAvatar name="Jean Dupont" />
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-white">Jean Dupont</h3>
-              <p className="text-sm text-white/70">Niveau intermédiaire</p>
-            </div>
-          </div>
-
-          <div className="mt-4 space-y-3">
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-white/70">Progression niveau</span>
-                <span className="text-white font-medium">68%</span>
-              </div>
-              <ProgressBar value={68} max={100} />
-            </div>
-
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-white/70">Objectif hebdomadaire</span>
-                <span className="text-white font-medium">5h / 7h</span>
-              </div>
-              <ProgressBar value={5} max={7} className="h-2.5" />
-            </div>
-          </div>
-
-          <Separator.Root className="h-px bg-white/20 my-4" />
-
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-white/70">4 jours consécutifs</span>
-            <button className="text-indigo-400 hover:text-indigo-300 text-sm font-medium">
-              Profil complet
-            </button>
-          </div>
-        </div>
-        <AchievementsCard achievements={achievements} />
-      </div>
     </div>
   );
 }

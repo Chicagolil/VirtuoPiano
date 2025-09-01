@@ -22,6 +22,7 @@ import { useRouter } from 'next/navigation';
 import { Spinner } from '@/components/ui/spinner';
 import { useImportedSongs, useAllGenres } from '@/customHooks/useImportedSongs';
 import { convertMidiToSongFormat } from '@/common/utils/function';
+import PreviewModal from '../library/PreviewModal';
 
 export default function ImportedSongs() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -42,7 +43,7 @@ export default function ImportedSongs() {
   const [filterMenuPosition, setFilterMenuPosition] = useState<
     'top' | 'bottom'
   >('bottom');
-
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   // Utilisation du custom hook React Query pour la gestion du cache
   const {
     data: importedSongsData,
@@ -170,6 +171,13 @@ export default function ImportedSongs() {
     router.push(`/library/${songId}`);
   };
 
+  const handlePreviewClick = () => {
+    setIsPreviewModalOpen(true);
+  };
+
+  const handleClosePreviewModal = () => {
+    setIsPreviewModalOpen(false);
+  };
   // Les chansons sont déjà filtrées côté serveur
   const filteredSongs = safeImportedSongsData.songs;
 
@@ -466,7 +474,10 @@ export default function ImportedSongs() {
                       </div>
                     </td>
                     <td className={styles.tableCell}>
-                      <button className={styles.playButton}>
+                      <button
+                        className={styles.playButton}
+                        onClick={() => handlePreviewClick()}
+                      >
                         <IconPlayerPlay size={16} />
                       </button>
                     </td>
@@ -546,6 +557,10 @@ export default function ImportedSongs() {
           </div>
         )}
       </div>
+      <PreviewModal
+        isOpen={isPreviewModalOpen}
+        onClose={handleClosePreviewModal}
+      />
     </div>
   );
 }
